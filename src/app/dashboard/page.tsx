@@ -13,6 +13,7 @@ import Onboarding from "@/components/onboarding";
 import { OWNER_STEPS, MEMBER_STEPS } from "@/lib/onboarding-steps";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { SETUP_CALL_URL } from "@/lib/contact-links";
 
 
 
@@ -132,7 +133,7 @@ export default async function DashboardPage() {
                     </p>
                     <h2 className="font-semibold text-sm mb-1">Regarding setup:</h2>
                     <p className="text-muted-foreground mb-6">
-                        <a href="https://calendly.com/szurilo/30min" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        <a href={SETUP_CALL_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                             Book a free 15-minute setup call with the founder.
                         </a>
                     </p>
