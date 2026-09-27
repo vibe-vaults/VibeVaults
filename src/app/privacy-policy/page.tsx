@@ -24,7 +24,7 @@ import { SiteFooter } from "@/components/landing/site-footer";
 import { OPERATOR } from "@/lib/legal-entity";
 
 
-const LAST_UPDATED = "September 1, 2026";
+const LAST_UPDATED = "September 27, 2026";
 
 export default function PrivacyPolicy() {
     return (
@@ -149,6 +149,11 @@ export default function PrivacyPolicy() {
                         <strong>You can object at any time and we will stop.</strong> Reply to any message from us, or write to {OPERATOR.email}. We delete your details on request, except for the minimum needed to make sure we do not contact you again. We also delete contacts who never engaged after a reasonable period. You have the same rights over this data as anyone else in section 13, including the right to complain to a supervisory authority.
                     </p>
 
+                    <h3 className="text-xl font-bold mb-3 text-gray-800">3.5 Setup Calls</h3>
+                    <p className="mb-6">
+                        If you book a setup call, we receive your name, email address, the time you picked, and anything you write in the booking form. Bookings are handled by Calendly and the call itself takes place on Zoom. We do not record these calls. We use this only to hold the call and follow up on it. Legal basis is taking steps at your request before entering into a contract, Art. 6(1)(b).
+                    </p>
+
                     <hr className="my-8 border-gray-100" />
 
                     <h2 className="text-2xl font-bold mb-4 text-gray-900">4. Data Controller and Data Processor Roles</h2>
@@ -207,6 +212,8 @@ export default function PrivacyPolicy() {
                         <li><strong>Cloudflare Turnstile</strong> &ndash; anti-bot verification during authentication</li>
                         <li><strong>PostHog</strong> &ndash; product analytics, session replays, and error tracking, on PostHog&apos;s EU hosting</li>
                         <li><strong>GitHub</strong> &ndash; source control and automation, and the private storage location for our encrypted nightly database backups</li>
+                        <li><strong>Calendly</strong> &ndash; scheduling for setup calls you choose to book</li>
+                        <li><strong>Zoom</strong> &ndash; video calls for setup calls you choose to book</li>
                     </ul>
                     <p className="mb-6">
                         These providers process data only as necessary to deliver their services, on our instructions, and under their own privacy policies. We do not authorise them to use the data for their own purposes.
@@ -255,6 +262,7 @@ export default function PrivacyPolicy() {
                         <li><strong>Widget access tokens</strong> that are never used are deleted automatically 30 days after they are issued.</li>
                         <li><strong>Analytics data</strong> is retained for 1 year.</li>
                         <li><strong>Prospect contact data</strong> is deleted on objection, and contacts who never engaged are removed periodically. An opt-out record is kept indefinitely, because that is what stops us contacting you again.</li>
+                        <li><strong>Setup call bookings</strong> are kept in our scheduling tool for as long as it holds them, so that we can follow up after the call.</li>
                         <li><strong>Support correspondence</strong> is kept for as long as the mailbox holds it, so that we can pick up an old thread if you write again.</li>
                     </ul>
                     <p className="mb-6">

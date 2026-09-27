@@ -20,7 +20,7 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { OPERATOR } from "@/lib/legal-entity";
 
-const LAST_UPDATED = "September 1, 2026";
+const LAST_UPDATED = "September 27, 2026";
 
 export default function TermsOfService() {
     return (
@@ -212,6 +212,8 @@ export default function TermsOfService() {
                         <li><strong>Cloudflare Turnstile</strong> (anti-bot verification)</li>
                         <li><strong>PostHog</strong> (product analytics and error tracking)</li>
                         <li><strong>GitHub</strong> (source control, automation, and private database backup storage)</li>
+                        <li><strong>Calendly</strong> (scheduling setup calls)</li>
+                        <li><strong>Zoom</strong> (video calls for setup calls)</li>
                     </ul>
                     <p className="mb-6">
                         We are not responsible for outages or failures caused by these providers. Where they process personal data on our behalf, they are listed as sub-processors in our <Link href="/privacy-policy" className="underline">Privacy Policy</Link>.
