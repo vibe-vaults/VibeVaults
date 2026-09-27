@@ -11,7 +11,7 @@
 #
 # Sensitive Dependencies:
 #   - .github/workflows/supabase-backup.yml pushes nightly dumps to the PRIVATE
-#     repo szurilo/VibeVaults-backups under daily/. If that layout or the tar
+#     repo vibe-vaults/VibeVaults-backups under daily/. If that layout or the tar
 #     contents (backups/{roles,schema,data}.sql) change, this script breaks.
 #   - Local Supabase must be running (`supabase start`). psql is executed inside
 #     the supabase_db_* container, so no host psql install is required.
@@ -32,7 +32,7 @@ cd "$REPO_ROOT"
 
 CONTAINER="${VV_DB_CONTAINER:-supabase_db_VibeVaults}"
 SCRATCH_DB="${VV_SCRATCH_DB:-prod_rehearsal}"
-BACKUP_REPO="${VV_BACKUP_REPO:-szurilo/VibeVaults-backups}"
+BACKUP_REPO="${VV_BACKUP_REPO:-vibe-vaults/VibeVaults-backups}"
 AGE_KEY="${VV_AGE_KEY:-$HOME/.config/vibevaults/backup-age-key.txt}"
 BASE_REF="origin/main"
 ARCHIVE=""
