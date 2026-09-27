@@ -1,6 +1,6 @@
 # Main Responsibility:
 #   Nightly logical backup of the production Supabase database, pushed to the
-#   PRIVATE repo szurilo/VibeVaults-backups.
+#   PRIVATE repo vibe-vaults/VibeVaults-backups.
 #
 # Sensitive Dependencies:
 #   - The dump contains personal data (auth.users, auth.sessions, feedback
@@ -32,7 +32,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  BACKUP_REPO: szurilo/VibeVaults-backups
+  BACKUP_REPO: vibe-vaults/VibeVaults-backups
   RETENTION: 30 # how many nightly backups to keep
 
 jobs:
@@ -118,7 +118,7 @@ jobs:
           # VibeVaults production backups
 
           Nightly logical dumps of the production Supabase database, written by
-          `.github/workflows/supabase-backup.yml` in szurilo/VibeVaults.
+          `.github/workflows/supabase-backup.yml` in vibe-vaults/VibeVaults.
 
           **This repository contains personal data** (account emails, auth
           sessions, and customer end-user feedback content). It must stay

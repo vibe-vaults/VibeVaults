@@ -1,7 +1,7 @@
 # docs/
 
 Internal operations and compliance records are **not** kept here. They live in the
-private repository `szurilo/VibeVaults-internal`, because this repository is public
+private repository `vibe-vaults/VibeVaults-internal`, because this repository is public
 and those are internal operations records.
 
 Moved there on 2026-09-08:
