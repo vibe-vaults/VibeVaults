@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 /**
@@ -48,6 +49,13 @@ export const ProductDemo = ({ videoUrl }: ProductDemoProps) => {
             allowFullScreen
           />
         </motion.div>
+
+        <p className="mt-8 text-center text-gray-500">
+          Rather click than watch?{" "}
+          <Link href="/demo" className="font-semibold text-primary hover:underline underline-offset-4">
+            Try the widget live on a sample site, no signup &rarr;
+          </Link>
+        </p>
       </div>
     </section>
   );
