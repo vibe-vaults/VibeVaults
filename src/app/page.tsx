@@ -50,9 +50,9 @@ export default function Home() {
               <Link href="/auth/register" className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 bg-secondary text-white hover:bg-secondary/90 hover:shadow-2xl hover:-translate-y-1 active:translate-y-0">
                 Start free trial
               </Link>
-              <a href={SETUP_CALL_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 border-2 border-gray-200 text-gray-700 hover:border-primary hover:text-primary hover:shadow-lg hover:-translate-y-1 active:translate-y-0">
-                Book a 15-min setup call
-              </a>
+              <Link href="/demo" className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 border-2 border-gray-200 text-gray-700 hover:border-primary hover:text-primary hover:shadow-lg hover:-translate-y-1 active:translate-y-0">
+                Try it live, no signup
+              </Link>
             </div>
             <p className="text-sm text-gray-400">
               14-day free trial &middot; No credit card required

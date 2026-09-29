@@ -23,6 +23,17 @@
     const API_CAPTURE_INFO = `${origin}/api/widget/capture-info`;
     const API_HEARTBEAT = `${origin}/api/widget/heartbeat`;
 
+    // --- Transport ---
+    // Every widget API call goes through widgetFetch(). Normally that is plain
+    // fetch; on the public /demo sandbox, `public/widget-demo-backend.js`
+    // installs `window.__vvDemoBackend` first and answers every request inside
+    // the visitor's browser, so the demo writes nothing to our database. The
+    // hook grants nothing a host page could not already do by patching fetch.
+    const demoBackend = window.__vvDemoBackend || null;
+    const widgetFetch = (url, opts) => demoBackend
+      ? demoBackend.handle(String(url), opts || {})
+      : fetch(url, opts);
+
     // The key baked into the customer's embed snippet. Can go stale (project
     // deleted and recreated, snippet never updated), so it is only the
     // starting point: a successful review-link exchange returns the project's
@@ -101,6 +112,10 @@
       }
     }
 
+    // The sandbox identity lives in memory only: persisting it would leave a
+    // dead token behind that the real widget on this origin would try to use.
+    if (demoBackend) widgetToken = demoBackend.token;
+
     const authHeaders = () => widgetToken ? { 'Authorization': `Bearer ${widgetToken}` } : {};
 
     const clearWidgetIdentity = () => {
@@ -119,7 +134,9 @@
     let pollInterval = null;
     let listPollInterval = null;
     let eventSource = null;
-    let sseSupported = typeof EventSource !== 'undefined';
+    // The demo sandbox has no server to hold a stream open, so it rides the
+    // polling fallback (tightened below so its scripted replies feel live).
+    let sseSupported = !demoBackend && typeof EventSource !== 'undefined';
     let replyAttachments = []; // Files queued for upload with reply
     let pinAttachments = []; // Files queued for upload with a pinned report
     let pendingAnchor = null; // Anchor for the pin currently being composed
@@ -299,10 +316,10 @@
           metadata: { screen: `${window.innerWidth}x${window.innerHeight}` }
         });
         // Use sendBeacon for reliability (fires even on page unload), fallback to fetch
-        if (navigator.sendBeacon) {
+        if (navigator.sendBeacon && !demoBackend) {
           navigator.sendBeacon(API_ERRORS, new Blob([payload], { type: 'application/json' }));
         } else {
-          fetch(API_ERRORS, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => { });
+          widgetFetch(API_ERRORS, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload }).catch(() => { });
         }
       } catch (e) { /* silently fail — error reporting must never break the widget */ }
     };
@@ -329,7 +346,7 @@
 
       // Step 1: Request presigned upload URLs (small JSON, no file bytes)
       const fileMeta = files.map(f => ({ name: f.name, size: f.size, type: f.type }));
-      const urlRes = await fetch(API_UPLOAD, {
+      const urlRes = await widgetFetch(API_UPLOAD, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ apiKey, files: fileMeta }),
@@ -345,7 +362,7 @@
       for (let i = 0; i < uploads.length; i++) {
         const upload = uploads[i];
         const file = files[i];
-        const storageRes = await fetch(upload.signedUrl, {
+        const storageRes = await widgetFetch(upload.signedUrl, {
           method: 'PUT',
           headers: { 'Content-Type': upload.mimeType },
           body: file,
@@ -363,7 +380,7 @@
       }
 
       // Step 3: Confirm uploads and create DB records
-      const confirmRes = await fetch(API_UPLOAD_CONFIRM, {
+      const confirmRes = await widgetFetch(API_UPLOAD_CONFIRM, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ apiKey, projectId, feedbackId, replyId, files: completedFiles }),
@@ -1137,7 +1154,7 @@
     // for the authenticated identity. 401 means the token has been revoked
     // or never existed — clear local state and stay hidden.
     const loadConfig = () => {
-      return fetch(`${API_BASE}?key=${apiKey}`, { headers: authHeaders() })
+      return widgetFetch(`${API_BASE}?key=${apiKey}`, { headers: authHeaders() })
         .then(r => r.json().then(data => ({ ok: r.ok, status: r.status, data })))
         .then(({ ok, status, data }) => {
           if (!ok) {
@@ -1189,7 +1206,7 @@
     const bootstrapIdentity = async () => {
       if (inviteToken) {
         try {
-          const res = await fetch(API_IDENTITY_EXCHANGE, {
+          const res = await widgetFetch(API_IDENTITY_EXCHANGE, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ apiKey, inviteToken }),
@@ -1217,7 +1234,7 @@
     // the owner right after pasting the snippet) makes no other request, so
     // without this the dashboard could never confirm the embed. Fire-and-
     // forget: the widget's behaviour must not depend on it.
-    try {
+    if (!demoBackend) try {
       const beacon = `${API_HEARTBEAT}?key=${encodeURIComponent(apiKey)}`;
       if (navigator.sendBeacon) {
         navigator.sendBeacon(beacon);
@@ -1267,7 +1284,7 @@
         listEl.innerHTML = '<div class="feedback-loading">Loading feedback...</div>';
       }
       try {
-        const res = await fetch(`${API_FEEDBACK}?key=${apiKey}`, { headers: authHeaders() });
+        const res = await widgetFetch(`${API_FEEDBACK}?key=${apiKey}`, { headers: authHeaders() });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           if (res.status === 401 || res.status === 403) {
@@ -1492,7 +1509,7 @@
     const fetchReplies = async () => {
       if (!selectedFeedbackId) return;
       try {
-        const res = await fetch(`${API_REPLY}?feedbackId=${selectedFeedbackId}&key=${apiKey}`, { headers: authHeaders() });
+        const res = await widgetFetch(`${API_REPLY}?feedbackId=${selectedFeedbackId}&key=${apiKey}`, { headers: authHeaders() });
         if (!res.ok) {
           if (res.status === 401 || res.status === 403) {
             handleAuthRevocation();
@@ -1583,10 +1600,10 @@
       }
     };
 
-    const startPolling = () => { stopPolling(); pollInterval = setInterval(fetchReplies, 5000); };
+    const startPolling = () => { stopPolling(); pollInterval = setInterval(fetchReplies, demoBackend ? 1500 : 5000); };
     const stopPolling = () => { if (pollInterval) clearInterval(pollInterval); pollInterval = null; };
 
-    const startListPolling = () => { stopListPolling(); listPollInterval = setInterval(fetchAllFeedback, 10000); };
+    const startListPolling = () => { stopListPolling(); listPollInterval = setInterval(fetchAllFeedback, demoBackend ? 2500 : 10000); };
     const stopListPolling = () => { if (listPollInterval) clearInterval(listPollInterval); listPollInterval = null; };
 
     const stopAll = () => { stopStream(); stopPolling(); stopListPolling(); };
@@ -1615,7 +1632,7 @@
         progressEl.style.display = 'block';
       }
 
-      const res = await fetch(API_BASE, {
+      const res = await widgetFetch(API_BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ apiKey, content: text, metadata, notifyReplies })
@@ -1709,7 +1726,7 @@
           // beacon/ping requests by default, which spams the host site's console
           // with ERR_BLOCKED_BY_CLIENT. Blocked fetches are equally noisy, so the
           // endpoint is also named to avoid analytics-shaped filter matches.
-          fetch(API_CAPTURE_INFO, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
+          widgetFetch(API_CAPTURE_INFO, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
         } catch (_) { /* never break capture for telemetry */ }
       };
 
@@ -2476,7 +2493,7 @@
       const replyPin = pendingReplyPin;
 
       try {
-        const res = await fetch(API_REPLY, {
+        const res = await widgetFetch(API_REPLY, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({
