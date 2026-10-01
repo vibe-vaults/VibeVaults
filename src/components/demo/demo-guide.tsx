@@ -25,6 +25,9 @@ import { SETUP_CALL_URL } from "@/lib/contact-links";
  *   just left of whichever is further left, so the guide and the widget sit
  *   together. Renaming those classes in widget.js only degrades this to the
  *   CSS fallback offset (beside the collapsed launcher), never breaks it.
+ * - Lifts itself above the cookie banner via `--cookie-banner-height`, which
+ *   `CookieConsent` sets only while the banner is showing. Without it the
+ *   banner (z-50, bottom of the viewport) covers the docked card.
  * - Cleanup removes the widget host and the hook, so a soft navigation away
  *   (browser back) does not leave a sandbox widget floating over the site.
  * - PostHog is imported lazily and captures only after cookie consent: its
@@ -349,7 +352,7 @@ export function DemoGuide() {
       transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
       // Docked beside the widget from lg up. Below that there is no room next
       // to a 380px panel, so the card sits inline at the top of the page.
-      className="relative z-30 mx-4 mt-4 lg:mx-0 lg:mt-0 lg:fixed lg:bottom-5 lg:right-[var(--vv-dock-right)] lg:w-[340px] lg:transition-[right] lg:duration-300 lg:ease-out text-gray-900"
+      className="relative z-30 mx-4 mt-4 lg:mx-0 lg:mt-0 lg:fixed lg:bottom-[calc(var(--cookie-banner-height,0px)+1.25rem)] lg:right-[var(--vv-dock-right)] lg:w-[340px] lg:transition-[right,bottom] lg:duration-300 lg:ease-out text-gray-900"
       style={{ "--vv-dock-right": `${dockRight ?? 116}px` } as React.CSSProperties}
     >
       {/* Soft pulsing halo behind the card until the visitor has pinned. */}

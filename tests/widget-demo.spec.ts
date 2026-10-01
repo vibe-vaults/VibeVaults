@@ -53,6 +53,10 @@ async function mountDemo(page: Page, opts: { fakeSnapdom?: boolean } = {}) {
     const apiCalls: string[] = [];
     await page.route('**', async (route: Route) => {
         const url = route.request().url();
+        // WebKit sends blob: fetches through interception too (Chromium and
+        // Firefox do not), so the catch-all abort below would fail the demo's
+        // own screenshot URLs there. They never leave the browser anyway.
+        if (url.startsWith('blob:')) return route.continue();
         if (url.includes('/api/')) {
             apiCalls.push(`${route.request().method()} ${url}`);
             return route.abort();
@@ -68,6 +72,19 @@ async function mountDemo(page: Page, opts: { fakeSnapdom?: boolean } = {}) {
     await recordDemoEvents(page);
     await page.goto(`${HOST}/demo`);
     return { apiCalls };
+}
+
+/**
+ * A reload the page can recognise as one. The guide decides between resuming
+ * and starting over from the Navigation Timing entry (`isReloadOfDemo`), and
+ * Playwright's page.reload() in Firefox is reported there as `navigate`, not
+ * `reload`. A real F5 or location.reload() reports `reload` in every browser.
+ */
+async function browserReload(page: Page) {
+    await Promise.all([
+        page.waitForEvent('load'),
+        page.evaluate(() => location.reload()).catch(() => { /* context torn down by the reload */ }),
+    ]);
 }
 
 const events = (page: Page) =>
@@ -201,7 +218,7 @@ test.describe('demo page lifecycle', () => {
 
         await pinAndSubmit(page, 'Second visit');
         await expect(guide(page)).toContainText('1/2');
-        await page.reload();
+        await browserReload(page);
         await expect(guide(page)).toContainText('1/2');
         await openWidget(page);
         await expect.poll(async () => (await listed(page)).join('|')).toContain('Second visit');

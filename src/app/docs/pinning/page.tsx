@@ -1,10 +1,12 @@
 /**
  * Main Responsibility: Public reference for the widget's pinning model — the
- * Browse/Feedback modes, dropping a pin anywhere on the page, and how a pin
+ * Pin/Feedback controls, dropping a pin anywhere on the page, and how a pin
  * stays attached to the right place after the site changes or is viewed at a
  * different width. Written for the agency handing this to a client.
  *
  * Sensitive Dependencies:
+ * - "Pin and Feedback" mirrors the widget's action bar (#vv-action-pin,
+ *   #vv-action-list) and the rule that collapsing the widget hides the pins.
  * - Mirrors the anchoring behaviour in `public/widget.js` (resolveAnchor,
  *   pickAnchorElement, resolvePinPosition). If the anchoring model changes,
  *   the "when a pin loses its place" section is the claim that goes stale.
@@ -21,7 +23,7 @@ const page = getDocPage("pinning")!;
 export const metadata: Metadata = {
     title: page.title,
     description:
-        "How pinned feedback works in VibeVaults: drop a pin anywhere on the page, switch between browsing and commenting, and see everyone's pins in context on the live site.",
+        "How pinned feedback works in VibeVaults: drop a pin anywhere on the page, keep the site usable in between, and see everyone's pins in context on the live site.",
 };
 
 export default function PinningDoc() {
@@ -35,8 +37,8 @@ export default function PinningDoc() {
             <div className="docs-prose">
                 <h2 id="dropping-a-pin">Dropping a pin</h2>
                 <p>
-                    In the widget, click anywhere on the page and a small dialog opens right next to where you clicked. Write
-                    the feedback, press send, and the pin stays on the page.
+                    Open the widget, press <strong>Pin</strong>, then click the spot you mean. A small dialog opens right
+                    next to where you clicked. Write the feedback, press send, and the pin stays on the page.
                 </p>
                 <p>
                     You can pin <em>anything</em>, not only buttons and images. The empty gap between two sections, the space
@@ -49,21 +51,23 @@ export default function PinningDoc() {
                     it. You do not have to ask for one.
                 </p>
 
-                <h2 id="modes">Browsing versus commenting</h2>
-                <p>The widget has two modes, and the toggle sits at the top of the panel.</p>
+                <h2 id="modes">Pin and Feedback</h2>
+                <p>Opening the widget shows everyone&apos;s pins on the page and two buttons.</p>
                 <ul>
                     <li>
-                        <strong>Feedback</strong> shows every pin on the page and lets you add more. Clicking the page drops a
-                        pin rather than following a link.
+                        <strong>Pin</strong> gets the widget ready for exactly one pin. The next click on the page drops it
+                        instead of following a link, and the site goes straight back to normal once the dialog opens. While
+                        you are choosing the spot the widget steps out of the way, so it never covers what you want to pin.
+                        Press <strong>Esc</strong> to change your mind.
                     </li>
                     <li>
-                        <strong>Browse</strong> hides the pins and gives the site back. Links, buttons and forms behave
-                        normally, so this is the mode for clicking through to the page you actually want to review.
+                        <strong>Feedback</strong> opens and closes the list of conversations for this project.
                     </li>
                 </ul>
                 <p>
-                    The widget opens in Feedback mode so pins are visible straight away, and it remembers whichever mode you
-                    picked last.
+                    Apart from that one click, links, buttons and forms keep working while the widget is open, so you can
+                    click through to the page you actually want to review. Collapsing the widget hides the pins and gives
+                    the site back completely.
                 </p>
 
                 <h2 id="reading-pins">Reading what other people left</h2>
@@ -71,6 +75,12 @@ export default function PinningDoc() {
                     Pins are numbered in the order they were created across the whole project, so pin 1 is the oldest and a
                     number means the same thing on every page. Click one to open its conversation in the panel and reply
                     there. Replies appear live for everyone with the site open.
+                </p>
+                <p>
+                    It works the other way round too. Pick a conversation from the feedback list and its pins pulse on the
+                    page for as long as the conversation is open, reply pins included, and the page scrolls to bring them
+                    into view. If the pins are on another page of the site, the widget takes you there and reopens the
+                    conversation.
                 </p>
 
                 <h3 id="reply-pins">Pinning inside a conversation</h3>

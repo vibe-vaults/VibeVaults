@@ -89,7 +89,7 @@ export interface MountedWidget {
     /** The most recent POST body the widget sent to /api/widget/reply, if any. */
     repliedWith: () => Record<string, unknown> | null;
     /** Saved pin markers currently painted, in DOM order. */
-    markers: () => Promise<{ label: string; cluster: boolean; approximate: boolean; sub: boolean; pending: boolean }[]>;
+    markers: () => Promise<{ label: string; cluster: boolean; approximate: boolean; sub: boolean; pending: boolean; pulsing: boolean }[]>;
 }
 
 
@@ -196,6 +196,7 @@ export async function mountWidget(page: Page, opts: Harness): Promise<MountedWid
                     approximate: m.classList.contains('approximate'),
                     sub: m.classList.contains('sub'),
                     pending: m.classList.contains('pending-reply'),
+                    pulsing: m.classList.contains('pulsing'),
                 }));
             }),
     };

@@ -327,6 +327,53 @@ test.describe('on-page pin layer', () => {
         expect((await box()).top).toBeGreaterThanOrEqual(0);
     });
 
+    /**
+     * Records every JPEG the widget encodes, so a test can read the screenshot
+     * itself. The preview's blob: URL is not decodable in WebKit under the
+     * harness's catch-all route, so the thumbnail cannot be sampled directly.
+     */
+    const recordJpegs = (page: Page) => page.evaluate(() => {
+        const w = window as unknown as { __vvJpegs: string[] };
+        w.__vvJpegs = [];
+        const orig = HTMLCanvasElement.prototype.toDataURL;
+        HTMLCanvasElement.prototype.toDataURL = function (this: HTMLCanvasElement, ...args: [string?, number?]) {
+            const url = orig.apply(this, args);
+            if (args[0] === 'image/jpeg') w.__vvJpegs.push(url);
+            return url;
+        };
+    });
+    /** RGB near the bottom-right corner of the last screenshot, far from the pin. */
+    const screenshotCornerPixel = (page: Page) => page.evaluate(async () => {
+        const shots = (window as unknown as { __vvJpegs: string[] }).__vvJpegs;
+        if (!shots.length) return null;
+        const img = new Image();
+        img.src = shots[shots.length - 1];
+        await img.decode();
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        const ctx = c.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+        return Array.from(ctx.getImageData(c.width - 5, c.height - 5, 1, 1).data.slice(0, 3));
+    });
+    const nearRgb = (px: number[] | null, rgb: number[]) => !!px && px.every((v, i) => Math.abs(v - rgb[i]) <= 8);
+
+    // snapdom only paints the body's own box, so on a page shorter than the
+    // viewport the rest came back transparent and JPEG turned it black. The
+    // harness's fake snapdom returns a fully transparent canvas: the worst case.
+    test('the screenshot is white, not black, below short content', async ({ page }) => {
+        await mountWidget(page, { body: '<div>One short line</div>', fakeSnapdom: true });
+        await recordJpegs(page);
+        await dropPin(page, 40, 10);
+        await expect.poll(async () => nearRgb(await screenshotCornerPixel(page), [255, 255, 255])).toBe(true);
+    });
+
+    test('the screenshot keeps the page\'s own background colour', async ({ page }) => {
+        await mountWidget(page, { body: '<style>html{background:#1e2a3a}</style><div>Dark site</div>', fakeSnapdom: true });
+        await recordJpegs(page);
+        await dropPin(page, 40, 10);
+        await expect.poll(async () => nearRgb(await screenshotCornerPixel(page), [0x1e, 0x2a, 0x3a])).toBe(true);
+    });
+
     test('placing hides the widget chrome so it cannot block the page', async ({ page }) => {
         await mountWidget(page, { body: LAYOUT, feedback: PINS });
         await openWidget(page);
@@ -700,4 +747,105 @@ test.describe('reply pins', () => {
             .toEqual(['Pin 2a', 'Pin 2c · /other']);
     });
 
+});
+
+test.describe('opening a thread points at its pins', () => {
+    // f1 (#c1) takes 1, f2 takes 2 with a reply pin 2a on #see-work, and f3 is
+    // pinned far below the fold. f4 lives only on /other.
+    const FAR = '<div style="height:2200px"></div><div id="far" style="height:80px;margin:0 56px;background:#fee">far</div>';
+    const THREADS: StubFeedback[] = [
+        {
+            id: 'f4', content: 'other page only', created_at: '2026-08-27T10:03:00Z',
+            anchor: anchor('#c2', { ref: 'pct', d: 0.5 }, { ref: 'pct', d: 0.5 }), page_key: `${PAGE_KEY}other`,
+        },
+        {
+            id: 'f3', content: 'far down', created_at: '2026-08-27T10:02:00Z',
+            anchor: anchor('#far', { ref: 'pct', d: 0.5 }, { ref: 'pct', d: 0.5 }), page_key: PAGE_KEY,
+        },
+        {
+            id: 'f2', content: 'card three', created_at: '2026-08-27T10:01:00Z',
+            anchor: anchor('#c3', { ref: 'pct', d: 0.5 }, { ref: 'pct', d: 0.5 }), page_key: PAGE_KEY,
+            pins: [{ reply_id: 'r1', created_at: '2026-08-27T10:04:00Z', page_key: PAGE_KEY, anchor: anchor('#see-work', { ref: 'pct', d: 0.5 }, { ref: 'pct', d: 0.5 }) }],
+        },
+        {
+            id: 'f1', content: 'card one', created_at: '2026-08-27T10:00:00Z',
+            anchor: anchor('#c1', { ref: 'pct', d: 0.5 }, { ref: 'pct', d: 0.5 }), page_key: PAGE_KEY,
+        },
+    ];
+
+    const pulsing = (widget: Awaited<ReturnType<typeof mountWidget>>) =>
+        widget.markers().then((m) => m.filter((x) => x.pulsing).map((x) => x.label).sort());
+
+    /** Opens the list and clicks a thread in it, the way a reviewer would. */
+    async function openFromList(page: Page, id: string) {
+        await openWidget(page);
+        await clickAction(page, '#vv-action-list');
+        await expect.poll(() => page.evaluate((i) =>
+            !!document.querySelector('#vibe-vaults-widget-host')!.shadowRoot!.querySelector(`.feedback-item[data-id="${i}"]`), id)).toBe(true);
+        await clickAction(page, `.feedback-item[data-id="${id}"]`);
+    }
+
+    test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+    });
+
+    test('the thread\'s own pin and its reply pins pulse, and nothing else', async ({ page }) => {
+        const widget = await mountWidget(page, { body: LAYOUT + FAR, feedback: THREADS });
+        await openFromList(page, 'f2');
+        await expect.poll(() => pulsing(widget)).toEqual(['2', '2a']);
+        expect((await widget.markers()).find((m) => m.label === '1')!.pulsing).toBe(false);
+    });
+
+    test('the pulse survives the repaint a scroll triggers', async ({ page }) => {
+        // Markers are rebuilt on every scroll frame, so a class set once would
+        // be wiped by the first scroll.
+        const widget = await mountWidget(page, { body: LAYOUT + FAR, feedback: THREADS });
+        await openFromList(page, 'f2');
+        await expect.poll(() => pulsing(widget)).toEqual(['2', '2a']);
+        await page.mouse.wheel(0, 40);
+        await page.waitForTimeout(300);
+        expect(await pulsing(widget)).toEqual(['2', '2a']);
+    });
+
+    test('the pulse lasts while the thread is open and ends with it', async ({ page }) => {
+        const widget = await mountWidget(page, { body: LAYOUT + FAR, feedback: THREADS });
+        await openFromList(page, 'f2');
+        await expect.poll(() => pulsing(widget)).toEqual(['2', '2a']);
+
+        await clickAction(page, '#vv-back-btn');
+        await expect.poll(() => pulsing(widget)).toEqual([]);
+
+        // Hiding the list takes the thread off screen too.
+        await clickAction(page, '.feedback-item[data-id="f1"]');
+        await expect.poll(() => pulsing(widget)).toEqual(['1']);
+        await clickAction(page, '#vv-action-list');
+        await expect.poll(() => pulsing(widget)).toEqual([]);
+    });
+
+    test('a pin below the fold is scrolled into view', async ({ page }) => {
+        const widget = await mountWidget(page, { body: LAYOUT + FAR, feedback: THREADS });
+        const inView = async () => {
+            const box = (await page.locator('#far').boundingBox())!;
+            return box.y >= 0 && box.y + box.height <= 800;
+        };
+        expect(await inView()).toBe(false);
+
+        await openFromList(page, 'f3');
+        await expect.poll(inView).toBe(true);
+        await expect.poll(() => pulsing(widget)).toEqual(['3']);
+    });
+
+    test('a thread pinned only on another page navigates there and resumes', async ({ page }) => {
+        const widget = await mountWidget(page, { body: LAYOUT + FAR, feedback: THREADS });
+        await openFromList(page, 'f4');
+
+        await page.waitForURL(`${PAGE_KEY}other`);
+        await expect.poll(() => page.evaluate(() => {
+            const root = document.querySelector('#vibe-vaults-widget-host')?.shadowRoot;
+            return (root?.querySelector('.view-detail') as HTMLElement | null)?.style.display ?? null;
+        })).toBe('flex');
+        await expect.poll(() => pulsing(widget)).toEqual(['4']);
+        // Consumed on arrival, so a reload does not reopen the thread.
+        expect(await page.evaluate(() => Object.keys(sessionStorage).filter((k) => k.startsWith('vv_focus_')))).toEqual([]);
+    });
 });
