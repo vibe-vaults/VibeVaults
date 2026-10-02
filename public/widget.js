@@ -143,6 +143,10 @@
     let replyAttachments = []; // Files queued for upload with reply
     let pinAttachments = []; // Files queued for upload with a pinned report
     let pendingAnchor = null; // Anchor for the pin currently being composed
+    // Page the composer's pin was dropped on, `{ key, url }`. Read at drop time,
+    // not at submit, so a client-side route change in between cannot file the
+    // report under the page the reviewer moved on to.
+    let pendingPage = null;
     // Reply pins: `pinTarget` is the thread a placement is armed for (null =
     // new report), `pendingReplyPin` the { anchor, page_key } waiting on the
     // reply being typed, and `optimisticReplyPins` keeps a just-sent pin on the
@@ -1650,11 +1654,12 @@
     // means a pinned report and a plain report can never drift apart.
     //
     // Returns { revoked } | { error } | { feedbackId }.
-    const submitFeedback = async ({ text, attachments, anchor, notifyReplies, progressEl }) => {
+    const submitFeedback = async ({ text, attachments, anchor, page, notifyReplies, progressEl }) => {
       const metadata = getMetadata();
+      if (page) metadata.url = page.url;
       if (anchor) {
         metadata.anchor = anchor;
-        metadata.page_key = currentPageKey();
+        metadata.page_key = page ? page.key : currentPageKey();
         // The element under the pin is still the most useful thing to show a
         // developer, so the legacy field stays populated rather than being
         // replaced by the anchor.
@@ -2035,6 +2040,7 @@
       unwatchComposerSize();
       clearPendingPin();
       pendingAnchor = null;
+      pendingPage = null;
       pinAttachments = [];
       const previews = wrapper.querySelector('#vv-composer-previews');
       if (previews) previews.innerHTML = '';
@@ -2125,6 +2131,7 @@
     const openComposer = (anchor, x, y) => {
       disarmPin();
       pendingAnchor = anchor;
+      pendingPage = { key: currentPageKey(), url: window.location.href };
       pinAttachments = [];
 
       const composer = wrapper.querySelector('#vv-composer');
@@ -2156,11 +2163,16 @@
       const progressEl = wrapper.querySelector('#vv-composer-progress');
       const notifyCheckbox = wrapper.querySelector('#vv-notify-replies');
       btn.disabled = true;
+      // Read before the first await: a route change mid-submit closes the
+      // composer, which clears both.
+      const placedAnchor = pendingAnchor;
+      const page = pendingPage;
       try {
         const result = await submitFeedback({
           text,
           attachments: pinAttachments,
-          anchor: pendingAnchor,
+          anchor: placedAnchor,
+          page,
           notifyReplies: notifyCheckbox ? notifyCheckbox.checked : notifyRepliesSetting,
           progressEl,
         });
@@ -2175,7 +2187,6 @@
         // pending marker, and waiting for the next poll would make the pin the
         // user just placed vanish for up to ten seconds. The background refetch
         // then reconciles it with the server's own copy.
-        const placedAnchor = pendingAnchor;
         if (placedAnchor && result.feedbackId) {
           cachedFeedback.unshift({
             id: result.feedbackId,
@@ -2186,7 +2197,7 @@
             reply_count: 0,
             attachments: [],
             anchor: placedAnchor,
-            page_key: currentPageKey(),
+            page_key: page ? page.key : currentPageKey(),
           });
           optimisticIds.add(result.feedbackId);
           renderFeedbackList(cachedFeedback);
@@ -2422,9 +2433,7 @@
         }
         return;
       }
-      // The sandbox is one page and its identity is never persisted, so there
-      // is nowhere to go and nothing that would survive the load.
-      if (!navigate || demoBackend) return;
+      if (!navigate) return;
       const pageKey = (f.anchor && f.page_key)
         || ((f.pins || []).find((p) => p.anchor && p.page_key) || {}).page_key;
       if (!pageKey || pageKey === currentPageKey()) return;
@@ -2433,6 +2442,15 @@
       // The widget token lives in this origin's localStorage, so a pin left on
       // another origin (a staging domain) would land on a signed-out widget.
       if (dest.origin !== window.location.origin) return;
+      // The sandbox never persists its identity, so a full load would drop the
+      // visitor's run. It routes client-side through the backend's hook and
+      // onPageChange() reveals the pins once the new page is up.
+      if (demoBackend) {
+        if (typeof demoBackend.navigate !== 'function') return;
+        pendingRevealId = feedbackId;
+        demoBackend.navigate(dest.pathname);
+        return;
+      }
       try { sessionStorage.setItem(focusKey, feedbackId); } catch (_) { return; }
       window.location.assign(dest.href);
     };
@@ -2456,6 +2474,66 @@
       setWidgetOpen(true);
       setListOpen(true);
       openFeedbackDetail(feedbackId, { reveal: true, navigate: false });
+    };
+
+    // --- Client-side navigation ---------------------------------------------
+    // Main responsibility: keep the pin layer in step with the page on sites
+    // that change pages without a reload (React Router, Next.js, Vue Router).
+    // Those routers move with history.pushState/replaceState, which fire no
+    // event, so the shared patch below announces them as `vv:locationchange`;
+    // back/forward arrive as popstate. A router that grabbed pushState before
+    // this script loaded bypasses the patch, so a once-a-second check of the
+    // page key is the backstop.
+    //
+    // Only a change of page key counts (origin + path, see pagePathKey): a
+    // router rewriting ?tab= or the hash is not a new page and must not close
+    // the composer under someone's typing.
+    let lastPageKey = currentPageKey();
+    let pendingRevealId = null;
+    const REVEAL_WAIT_MS = 2000;
+
+    const onPageChange = () => {
+      const key = currentPageKey();
+      if (key === lastPageKey) return;
+      lastPageKey = key;
+      // The armed overlay and the composer's pin both belong to the old page's
+      // elements, which are gone. Discarding the draft is deliberate, the same
+      // as Escape.
+      disarmPin();
+      closeComposer();
+      expandedCluster = null;
+      rebuildLivePins();
+      if (!pendingRevealId) return;
+      const revealId = pendingRevealId;
+      pendingRevealId = null;
+      // Routers often render the new page a beat after the URL changes, so wait
+      // for one of the thread's anchors to exist before scrolling to it.
+      const startedAt = Date.now();
+      const tryReveal = () => {
+        if (currentPageKey() !== key) return;
+        const ready = livePins.some((p) => p.feedbackId === revealId && !p.pending && anchorElementFor(p));
+        if (ready || Date.now() - startedAt > REVEAL_WAIT_MS) { revealThreadPins(revealId, false); return; }
+        setTimeout(tryReveal, 100);
+      };
+      tryReveal();
+    };
+
+    const watchClientNavigation = () => {
+      if (!window.__vvHistoryPatched) {
+        window.__vvHistoryPatched = true;
+        ['pushState', 'replaceState'].forEach((method) => {
+          const original = history[method];
+          if (typeof original !== 'function') return;
+          history[method] = function (...args) {
+            const result = original.apply(this, args);
+            try { window.dispatchEvent(new Event('vv:locationchange')); } catch (_) { /* never break the host's router */ }
+            return result;
+          };
+        });
+      }
+      window.addEventListener('vv:locationchange', onPageChange);
+      window.addEventListener('popstate', onPageChange);
+      setInterval(onPageChange, 1000);
     };
 
     const scheduleLivePinPaint = () => {
@@ -2784,6 +2862,7 @@
     // composed and every saved pin need to follow the page as it moves.
     window.addEventListener('scroll', onPinTrackingEvent, true);
     window.addEventListener('resize', onPinTrackingEvent);
+    watchClientNavigation();
 
     wrapper.querySelector('#vv-back-btn').onclick = goBackToList;
 

@@ -224,6 +224,37 @@ test.describe('demo page lifecycle', () => {
         await expect.poll(async () => (await listed(page)).join('|')).toContain('Second visit');
     });
 
+    test('the bakery pages are client-side routes, each with its own pins', async ({ page }) => {
+        // The demo doubles as our own check of widget.js on a Next site: the
+        // nav is <Link>s, so every move below is a pushState, never a load.
+        const markers = () => shadow(page, `return root.querySelectorAll('.pin-marker:not(.pending)').length;`);
+        const sameDocument = () => page.evaluate(() => (window as unknown as { __vvSameDoc?: boolean }).__vvSameDoc === true);
+        await recordDemoEvents(page);
+        await page.goto('/demo');
+        await page.evaluate(() => { (window as unknown as { __vvSameDoc: boolean }).__vvSameDoc = true; });
+        await openWidget(page);
+        await expect.poll(markers).toBeGreaterThan(0); // the seeded pins live on the home page
+
+        await page.locator('header nav').getByRole('link', { name: 'Menu', exact: true }).click();
+        await page.waitForURL('**/demo/menu');
+        await expect.poll(markers).toBe(0);
+        await pinAndSubmit(page, 'This bread has no price');
+        await expect.poll(markers).toBe(1);
+
+        await page.locator('header nav').getByRole('link', { name: 'Our story', exact: true }).click();
+        await page.waitForURL('**/demo/story');
+        await expect.poll(markers).toBe(0);
+
+        // Opening the thread from the list takes the visitor to its page.
+        await shadow(page, `if (!root.querySelector('.popup').classList.contains('list-open')) root.querySelector('#vv-action-list').click();`);
+        await expect.poll(() => shadow(page, `return Array.from(root.querySelectorAll('.feedback-item')).some((el) => el.textContent.includes('This bread has no price'));`)).toBe(true);
+        await shadow(page, `Array.from(root.querySelectorAll('.feedback-item')).find((el) => el.textContent.includes('This bread has no price')).click();`);
+        await page.waitForURL('**/demo/menu');
+        await expect.poll(() => shadow(page, `return root.querySelectorAll('.pin-marker.pulsing').length;`)).toBe(1);
+
+        expect(await sameDocument()).toBe(true);
+    });
+
     test('an in-app back and return starts over, and the old run cannot leak in', async ({ page }) => {
         await recordDemoEvents(page);
         await page.goto('/');

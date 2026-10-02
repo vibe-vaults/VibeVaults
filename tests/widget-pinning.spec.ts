@@ -18,7 +18,7 @@
  * failure is a genuine behaviour change in the shipped widget.
  */
 import { test, expect, type Page } from '@playwright/test';
-import { mountWidget, anchor, PAGE_KEY, type StubFeedback } from './utils/widget-harness';
+import { mountWidget, anchor, HOST, PAGE_KEY, type StubFeedback } from './utils/widget-harness';
 import { describeAnchorOffset, describeAnchorConfidence, type FeedbackAnchor, type AnchorAxis } from '../src/lib/feedback-utils';
 
 const LAYOUT = `
@@ -847,5 +847,124 @@ test.describe('opening a thread points at its pins', () => {
         await expect.poll(() => pulsing(widget)).toEqual(['4']);
         // Consumed on arrival, so a reload does not reopen the thread.
         expect(await page.evaluate(() => Object.keys(sessionStorage).filter((k) => k.startsWith('vv_focus_')))).toEqual([]);
+    });
+});
+
+/**
+ * React, Next and Vue sites change pages with history.pushState and never
+ * reload, so the widget has to notice on its own. Missing it leaves the old
+ * page's pins over the new page and files new pins under the page the
+ * reviewer already left. The harness keeps the same DOM across a pushState,
+ * which is fine here: what is under test is which pins the widget *chooses*
+ * to draw, and that is decided by the page key alone.
+ */
+test.describe('client-side navigation', () => {
+    const OTHER = `${PAGE_KEY}other`;
+    const FEEDBACK: StubFeedback[] = [
+        // Newest first, as the list endpoint returns them.
+        { id: 'b', content: 'on other', created_at: '2026-08-27T10:01:00Z', anchor: anchor('#c3', { ref: 'pct', d: 0.5 }, { ref: 'pct', d: 0.5 }), page_key: OTHER },
+        { id: 'a', content: 'on home', created_at: '2026-08-27T10:00:00Z', anchor: anchor('#c1', { ref: 'pct', d: 0.5 }, { ref: 'pct', d: 0.5 }), page_key: PAGE_KEY },
+    ];
+    const labels = (widget: { markers: () => Promise<{ label: string }[]> }) =>
+        widget.markers().then((m) => m.map((x) => x.label).sort());
+    const pushPath = (page: Page, path: string) => page.evaluate((p) => history.pushState({}, '', p), path);
+    // A router that captured pushState before the widget loaded calls the
+    // prototype method, which the widget's patch never sees.
+    const pushBypassingPatch = (page: Page, path: string) =>
+        page.evaluate((p) => History.prototype.pushState.call(history, {}, '', p), path);
+    const armed = (page: Page) => page.evaluate(() =>
+        !!document.querySelector('#vibe-vaults-widget-host')!.shadowRoot!.querySelector('.capture-overlay'));
+    const gapCentre = async (page: Page) => {
+        const gap = (await page.locator('.dead-air').boundingBox())!;
+        return { x: Math.round(gap.x + gap.width / 2), y: Math.round(gap.y + gap.height / 2) };
+    };
+    const typeIntoComposer = (page: Page, text: string) => page.evaluate((t) => {
+        (document.querySelector('#vibe-vaults-widget-host')!.shadowRoot!
+            .querySelector('#vv-composer-text') as HTMLTextAreaElement).value = t;
+    }, text);
+
+    test.beforeEach(async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 });
+    });
+
+    test('pushState swaps the pins for the new page, and back restores them', async ({ page }) => {
+        const widget = await mountWidget(page, { body: LAYOUT, feedback: FEEDBACK });
+        await openWidget(page);
+        await expect.poll(() => labels(widget)).toEqual(['1']);
+
+        await pushPath(page, '/other');
+        await expect.poll(() => labels(widget)).toEqual(['2']);
+
+        await page.goBack();
+        await expect.poll(() => labels(widget)).toEqual(['1']);
+    });
+
+    test('a router that bypasses the patch is still caught by the backstop', async ({ page }) => {
+        const widget = await mountWidget(page, { body: LAYOUT, feedback: FEEDBACK });
+        await openWidget(page);
+        await expect.poll(() => labels(widget)).toEqual(['1']);
+
+        await pushBypassingPatch(page, '/other');
+        await expect.poll(() => labels(widget), { timeout: 3000 }).toEqual(['2']);
+    });
+
+    test('a pin dropped after navigating is filed under the new page', async ({ page }) => {
+        const widget = await mountWidget(page, { body: LAYOUT });
+        await pushPath(page, '/other?tab=2');
+        const at = await gapCentre(page);
+        await dropPin(page, at.x, at.y);
+        await typeIntoComposer(page, 'on the new page');
+        await clickAction(page, '#vv-composer-submit');
+        await expect.poll(() => widget.submitted()).not.toBeNull();
+
+        const metadata = widget.submitted()!.metadata as Record<string, unknown>;
+        expect(metadata.page_key).toBe(OTHER);
+        expect(metadata.url).toBe(`${HOST}/other?tab=2`);
+    });
+
+    test('a report keeps the page its pin was dropped on, even if the route changes before submit', async ({ page }) => {
+        // The route change lands in the same tick as the submit, before the
+        // backstop can close the composer: the page has to come from the drop.
+        const widget = await mountWidget(page, { body: LAYOUT });
+        const at = await gapCentre(page);
+        await dropPin(page, at.x, at.y);
+        await typeIntoComposer(page, 'on home');
+        await page.evaluate(() => {
+            History.prototype.pushState.call(history, {}, '', '/other');
+            (document.querySelector('#vibe-vaults-widget-host')!.shadowRoot!
+                .querySelector('#vv-composer-submit') as HTMLElement).click();
+        });
+        await expect.poll(() => widget.submitted()).not.toBeNull();
+
+        const metadata = widget.submitted()!.metadata as Record<string, unknown>;
+        expect(metadata.page_key).toBe(PAGE_KEY);
+        expect(metadata.url).toBe(`${HOST}/`);
+    });
+
+    test('navigating closes the composer and disarms placement', async ({ page }) => {
+        await mountWidget(page, { body: LAYOUT });
+        const at = await gapCentre(page);
+        await dropPin(page, at.x, at.y);
+        await pushPath(page, '/other');
+        await expect.poll(() => isOpen(page, '#vv-composer')).toBe(false);
+        await expect.poll(() => pendingTip(page)).toBeNull();
+
+        await clickAction(page, '#vv-action-pin');
+        expect(await armed(page)).toBe(true);
+        await page.goBack();
+        await expect.poll(() => armed(page)).toBe(false);
+    });
+
+    test('a query or hash change is not a new page and leaves the composer alone', async ({ page }) => {
+        await mountWidget(page, { body: LAYOUT });
+        const at = await gapCentre(page);
+        await dropPin(page, at.x, at.y);
+        await typeIntoComposer(page, 'half written');
+        await pushPath(page, '/?tab=2#reviews');
+        await page.evaluate(() => history.replaceState({}, '', '/?tab=3'));
+        await page.waitForTimeout(1200); // past one backstop tick
+        expect(await isOpen(page, '#vv-composer')).toBe(true);
+        expect(await page.evaluate(() => (document.querySelector('#vibe-vaults-widget-host')!.shadowRoot!
+            .querySelector('#vv-composer-text') as HTMLTextAreaElement).value)).toBe('half written');
     });
 });

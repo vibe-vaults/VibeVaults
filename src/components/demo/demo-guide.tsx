@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Calendar, Check, ChevronDown, RotateCcw, Sparkles } from "lucide-react";
 import { SETUP_CALL_URL } from "@/lib/contact-links";
@@ -28,8 +29,13 @@ import { SETUP_CALL_URL } from "@/lib/contact-links";
  * - Lifts itself above the cookie banner via `--cookie-banner-height`, which
  *   `CookieConsent` sets only while the banner is showing. Without it the
  *   banner (z-50, bottom of the viewport) covers the docked card.
- * - Cleanup removes the widget host and the hook, so a soft navigation away
- *   (browser back) does not leave a sandbox widget floating over the site.
+ * - Mounted by `src/app/demo/layout.tsx`, so it (and the widget) survives the
+ *   client-side moves between the bakery's pages. Cleanup removes the widget
+ *   host and the hook, so a soft navigation out of /demo (browser back) does
+ *   not leave a sandbox widget floating over the site.
+ * - Hands the Next router to the backend as `navigate`, which widget.js uses
+ *   to open a thread whose pin is on another demo page without a full load
+ *   (the sandbox identity is never persisted, so a load would end the run).
  * - PostHog is imported lazily and captures only after cookie consent: its
  *   singleton starts opted out (see `PostHogProvider`), so these calls are
  *   no-ops for visitors who declined analytics.
@@ -48,7 +54,7 @@ const STEPS = [
   },
   {
     title: "Pin anything, then watch the agency respond",
-    hint: "Click any spot (the typo in the headline, say) and describe it. The agency replies in that thread.",
+    hint: "Click any spot (the typo in the headline, say) and describe it. The Menu, Catering and Our story pages take pins too. The agency replies in that thread.",
   },
 ];
 
@@ -92,7 +98,7 @@ const EVENT_ANALYTICS: Record<string, string> = {
 };
 
 /**
- * True only when this document was loaded by reloading /demo itself. Every
+ * True only when this document was loaded by reloading a /demo page. Every
  * other arrival (a link from the landing page, a typed URL, back/forward)
  * starts the demo from scratch, so a returning visitor never lands on a
  * half-played or finished run.
@@ -100,7 +106,9 @@ const EVENT_ANALYTICS: Record<string, string> = {
 function isReloadOfDemo(): boolean {
   try {
     const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-    return nav?.type === "reload" && new URL(nav.name).pathname.replace(/\/+$/, "") === "/demo";
+    if (nav?.type !== "reload") return false;
+    const path = new URL(nav.name).pathname.replace(/\/+$/, "");
+    return path === "/demo" || path.startsWith("/demo/");
   } catch {
     return false;
   }
@@ -189,6 +197,11 @@ export function DemoGuide() {
   const barTimer = useRef<number | null>(null);
   const reduceMotion = useReducedMotion();
   const dockRight = useWidgetLeftEdge();
+  const router = useRouter();
+  // Read through a ref so the mount effect below never re-runs (and tears the
+  // widget down) just because the router object changed identity.
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
 
   // Mount the sandbox: backend first, widget second.
   useEffect(() => {
@@ -205,6 +218,9 @@ export function DemoGuide() {
     let widget: HTMLScriptElement | null = null;
     backend.onload = () => {
       if (cancelled) return;
+      const hook = (window as Window & { __vvDemoBackend?: { navigate?: ((path: string) => void) | null } }).__vvDemoBackend;
+      // Only ever within the sandbox: a stale pin must not route the visitor out.
+      if (hook) hook.navigate = (path) => { if (path === "/demo" || path.startsWith("/demo/")) routerRef.current.push(path); };
       widget = document.createElement("script");
       widget.src = "/widget.js";
       widget.setAttribute("data-key", DEMO_KEY);

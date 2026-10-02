@@ -23,7 +23,9 @@
   var AGENCY = 'Dani @ Pixel & Pine';
   var CLIENT = 'Maria (Crumb & Co.)';
 
-  var pageKey = location.origin + (location.pathname.replace(/\/+$/, '') || '/');
+  // The seeded pins sit on the bakery's home page. Fixed rather than read from
+  // the URL, because a visitor can load (or reload) any /demo/* page first.
+  var pageKey = location.origin + '/demo';
   var uid = function (p) { return p + '-' + Math.random().toString(36).slice(2, 10); };
   var ago = function (minutes) { return new Date(Date.now() - minutes * 60000).toISOString(); };
   // Set by dispose() when the /demo page unmounts. Scripted replies run on
@@ -268,5 +270,8 @@
     token: 'demo-sandbox',
     handle: handle,
     dispose: function () { disposed = true; },
+    // Set by DemoGuide to the Next router. widget.js calls it to reach a pin
+    // on another demo page without the full load that would drop the run.
+    navigate: null,
   };
 })();
