@@ -61,6 +61,9 @@
     const emailKey = `vv_email_${embedKey}`; // cached only for "self vs other" message styling
     const prefsKey = `vv_prefs_${embedKey}`;
     const keyMapKey = `vv_apikey_${embedKey}`;
+    // Session-scoped hand-off: a thread whose pins are all on another page is
+    // opened by navigating there, and the next page load picks it up from here.
+    const focusKey = `vv_focus_${embedKey}`;
     let apiKey = localStorage.getItem(keyMapKey) || embedKey;
 
     // Pin is a one-shot action rather than a mode: arming it places exactly one
@@ -140,6 +143,10 @@
     let replyAttachments = []; // Files queued for upload with reply
     let pinAttachments = []; // Files queued for upload with a pinned report
     let pendingAnchor = null; // Anchor for the pin currently being composed
+    // Page the composer's pin was dropped on, `{ key, url }`. Read at drop time,
+    // not at submit, so a client-side route change in between cannot file the
+    // report under the page the reviewer moved on to.
+    let pendingPage = null;
     // Reply pins: `pinTarget` is the thread a placement is armed for (null =
     // new report), `pendingReplyPin` the { anchor, page_key } waiting on the
     // reply being typed, and `optimisticReplyPins` keeps a just-sent pin on the
@@ -746,6 +753,24 @@
     .pin-marker.sub { background: #6366f1; }
     .pin-marker.sub span { font-size: 9px; letter-spacing: -0.2px; }
     .pin-marker.pending-reply { background: #f59e0b; }
+    /* Every pin of the open thread (its own and its reply pins) pulses, so a
+       reviewer can tell which marks on the page the thread is about. A ring,
+       not a scale(), for the same reason as the hover rule above. The markers
+       are rebuilt on every repaint, so paintLivePins() sets a negative
+       animation-delay from a shared clock to keep the ring from restarting. */
+    .pin-marker { --vv-pulse: 32, 156, 238; }
+    .pin-marker.sub { --vv-pulse: 99, 102, 241; }
+    .pin-marker.approximate { --vv-pulse: 148, 163, 184; }
+    .pin-marker.cluster { --vv-pulse: 32, 156, 238; }
+    .pin-marker.pulsing { z-index: 1; animation: vvPinPulse 1.6s ease-out infinite; }
+    @keyframes vvPinPulse {
+      0% { box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 0 0 rgba(var(--vv-pulse), 0.6); }
+      70% { box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 0 14px rgba(var(--vv-pulse), 0); }
+      100% { box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 0 0 rgba(var(--vv-pulse), 0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pin-marker.pulsing { animation: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 0 5px rgba(var(--vv-pulse), 0.45); }
+    }
     .msg-pin {
       display: inline-flex; align-items: center; margin: 0 0 4px; padding: 2px 8px; border-radius: 999px;
       background: #eef2ff; color: #3730a3; font-size: 10px; font-weight: 700; letter-spacing: 0.2px;
@@ -1224,9 +1249,7 @@
           }
         } catch (_) { /* fall through to config fetch */ }
       }
-      if (widgetToken) {
-        await loadConfig();
-      }
+      return widgetToken ? loadConfig() : false;
     };
 
     // Embed heartbeat: tells the dashboard the snippet is live on this page.
@@ -1243,7 +1266,7 @@
       }
     } catch (_) { /* never block the widget on telemetry */ }
 
-    bootstrapIdentity();
+    const identityReady = bootstrapIdentity();
 
     // --- View switching ---
     const switchView = (v) => {
@@ -1316,6 +1339,8 @@
 
         const merged = pendingLocal.concat(server);
         cachedFeedback = merged;
+        const openThread = selectedFeedbackId && merged.find((f) => f.id === selectedFeedbackId);
+        if (openThread) renderDetailHeader(openThread);
         if (merged.length > 0) {
           renderFeedbackList(merged);
           rebuildLivePins();
@@ -1327,7 +1352,7 @@
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             </div>
             <p style="font-weight:600;margin:0 0 4px;font-size:13px;color:#6b7280">No feedback yet</p>
-            <p style="font-size:12px;margin:0">Click anywhere on the page to pin your first one.</p>
+            <p style="font-size:12px;margin:0">Press Pin, then click the spot you mean.</p>
           </div>
         `;
         }
@@ -1355,37 +1380,49 @@
       if (listEl.innerHTML !== html) {
         listEl.innerHTML = html;
         listEl.querySelectorAll('.feedback-item').forEach(item => {
-          item.onclick = () => openFeedbackDetail(item.dataset.id);
+          item.onclick = () => openFeedbackDetail(item.dataset.id, { reveal: true, navigate: true });
         });
       }
     };
 
     // --- Feedback detail / conversation ---
-    const openFeedbackDetail = (feedbackId) => {
+    // `reveal` scrolls the thread's pins into view (a pin click needs none, the
+    // pin is already on screen); `navigate` also allows leaving for the page the
+    // pins are on when none is on this one.
+    // Also re-run by fetchAllFeedback() while the thread is open: the header
+    // is otherwise drawn once, so a thread opened from a list fetched before
+    // its screenshot finished uploading would never show it, and a status the
+    // agency changes would stay stale. Skipped when nothing it shows changed,
+    // so images do not reload on every refetch.
+    let detailHeaderSignature = '';
+    const renderDetailHeader = (feedback) => {
+      const signature = JSON.stringify([feedback.id, feedback.status, feedback.content, (feedback.attachments || []).map((a) => a.file_url)]);
+      if (signature === detailHeaderSignature) return;
+      detailHeaderSignature = signature;
+      const headerEl = wrapper.querySelector('#vv-detail-header');
+      const feedbackAttachmentsHtml = feedback.attachments && feedback.attachments.length > 0
+        ? `<div class="msg-attachments" style="margin-top:10px; padding:0 20px;">${feedback.attachments.map(a => {
+          const isImage = a.mime_type && a.mime_type.startsWith('image/');
+          if (isImage) {
+            return `<a class="msg-attachment" href="${a.file_url}" target="_blank" rel="noopener"><img src="${a.file_url}" alt="${escapeHtml(a.file_name)}" loading="lazy"></a>`;
+          }
+          return `<a class="msg-attachment-file" href="${a.file_url}" target="_blank" rel="noopener">${escapeHtml(a.file_name)}</a>`;
+        }).join('')}</div>`
+        : '';
+      headerEl.innerHTML = `
+      <div class="detail-header-top">
+        <span class="feedback-status ${getStatusClass(feedback.status)}">${feedback.status || 'open'}</span>
+        <span class="detail-sender">${escapeHtml(feedback.sender)}</span>
+      </div>
+      <p class="detail-content">${escapeHtml(feedback.content)}</p>
+      ${feedbackAttachmentsHtml}
+    `;
+    };
+
+    const openFeedbackDetail = (feedbackId, opts = {}) => {
       selectedFeedbackId = feedbackId;
       const feedback = cachedFeedback.find(f => f.id === feedbackId);
-
-      // Render detail header with feedback-level attachments
-      const headerEl = wrapper.querySelector('#vv-detail-header');
-      if (feedback) {
-        const feedbackAttachmentsHtml = feedback.attachments && feedback.attachments.length > 0
-          ? `<div class="msg-attachments" style="margin-top:10px; padding:0 20px;">${feedback.attachments.map(a => {
-            const isImage = a.mime_type && a.mime_type.startsWith('image/');
-            if (isImage) {
-              return `<a class="msg-attachment" href="${a.file_url}" target="_blank" rel="noopener"><img src="${a.file_url}" alt="${escapeHtml(a.file_name)}" loading="lazy"></a>`;
-            }
-            return `<a class="msg-attachment-file" href="${a.file_url}" target="_blank" rel="noopener">${escapeHtml(a.file_name)}</a>`;
-          }).join('')}</div>`
-          : '';
-        headerEl.innerHTML = `
-        <div class="detail-header-top">
-          <span class="feedback-status ${getStatusClass(feedback.status)}">${feedback.status || 'open'}</span>
-          <span class="detail-sender">${escapeHtml(feedback.sender)}</span>
-        </div>
-        <p class="detail-content">${escapeHtml(feedback.content)}</p>
-        ${feedbackAttachmentsHtml}
-      `;
-      }
+      if (feedback) renderDetailHeader(feedback);
 
       // Render reply section (email prompt if no email stored, or chat input)
       renderReplySection();
@@ -1396,6 +1433,8 @@
       wrapper.querySelector('.popup').classList.add('tall');
       fetchReplies();
       startStream();
+      paintLivePins();
+      if (opts.reveal) revealThreadPins(feedbackId, opts.navigate);
     };
 
     const renderReplySection = () => {
@@ -1460,6 +1499,7 @@
       wrapper.querySelector('.popup').classList.remove('tall');
       fetchAllFeedback(); // Refresh list
       startListPolling();
+      paintLivePins();
     };
 
     // --- Replies ---
@@ -1614,11 +1654,12 @@
     // means a pinned report and a plain report can never drift apart.
     //
     // Returns { revoked } | { error } | { feedbackId }.
-    const submitFeedback = async ({ text, attachments, anchor, notifyReplies, progressEl }) => {
+    const submitFeedback = async ({ text, attachments, anchor, page, notifyReplies, progressEl }) => {
       const metadata = getMetadata();
+      if (page) metadata.url = page.url;
       if (anchor) {
         metadata.anchor = anchor;
-        metadata.page_key = currentPageKey();
+        metadata.page_key = page ? page.key : currentPageKey();
         // The element under the pin is still the most useful thing to show a
         // developer, so the legacy field stays populated rather than being
         // replaced by the anchor.
@@ -1674,9 +1715,22 @@
     // Sensitive dependencies: snapdom (lazy-loaded from CDN on first use),
     // /api/widget/capture-info for telemetry, and the known Firefox + GPU
     // foreignObject rasterization bug documented at /docs/screenshots#firefox-bug.
+    // The colour the browser paints behind the page. snapdom only paints the
+    // body's own box, so on a page shorter than the viewport everything below
+    // the content comes back transparent, which JPEG encodes as black. Mirrors
+    // CSS canvas propagation: <html>'s background, else <body>'s, else white.
+    const pageCanvasColor = () => {
+      const isPainted = (c) => c && c !== 'transparent' && !/^rgba\(.*,\s*0\)$/.test(c);
+      const htmlBg = getComputedStyle(document.documentElement).backgroundColor;
+      if (isPainted(htmlBg)) return htmlBg;
+      const bodyBg = getComputedStyle(document.body).backgroundColor;
+      return isPainted(bodyBg) ? bodyBg : '#ffffff';
+    };
+
     const captureViewport = ({ highlightRect = null, pinPoint = null } = {}) => {
+      const canvasColor = pageCanvasColor();
       const captureOptions = {
-        backgroundColor: '#ffffff',
+        backgroundColor: canvasColor,
         exclude: ['#vibe-vaults-widget-host'],
         excludeMode: 'remove',
         embedFonts: true,
@@ -1770,6 +1824,11 @@
               cropped.width = Math.round(vw * scale);
               cropped.height = Math.round(vh * scale);
               const ctx = cropped.getContext('2d');
+              // White first so a semi-transparent page colour still lands opaque.
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, cropped.width, cropped.height);
+              ctx.fillStyle = canvasColor;
+              ctx.fillRect(0, 0, cropped.width, cropped.height);
               ctx.drawImage(fullCanvas, Math.round(window.scrollX * scale), Math.round(window.scrollY * scale), Math.round(vw * scale), Math.round(vh * scale), 0, 0, cropped.width, cropped.height);
 
               // Annotations are viewport-relative, so they map directly onto the
@@ -1981,6 +2040,7 @@
       unwatchComposerSize();
       clearPendingPin();
       pendingAnchor = null;
+      pendingPage = null;
       pinAttachments = [];
       const previews = wrapper.querySelector('#vv-composer-previews');
       if (previews) previews.innerHTML = '';
@@ -2071,6 +2131,7 @@
     const openComposer = (anchor, x, y) => {
       disarmPin();
       pendingAnchor = anchor;
+      pendingPage = { key: currentPageKey(), url: window.location.href };
       pinAttachments = [];
 
       const composer = wrapper.querySelector('#vv-composer');
@@ -2102,11 +2163,16 @@
       const progressEl = wrapper.querySelector('#vv-composer-progress');
       const notifyCheckbox = wrapper.querySelector('#vv-notify-replies');
       btn.disabled = true;
+      // Read before the first await: a route change mid-submit closes the
+      // composer, which clears both.
+      const placedAnchor = pendingAnchor;
+      const page = pendingPage;
       try {
         const result = await submitFeedback({
           text,
           attachments: pinAttachments,
-          anchor: pendingAnchor,
+          anchor: placedAnchor,
+          page,
           notifyReplies: notifyCheckbox ? notifyCheckbox.checked : notifyRepliesSetting,
           progressEl,
         });
@@ -2121,7 +2187,6 @@
         // pending marker, and waiting for the next poll would make the pin the
         // user just placed vanish for up to ten seconds. The background refetch
         // then reconciles it with the server's own copy.
-        const placedAnchor = pendingAnchor;
         if (placedAnchor && result.feedbackId) {
           cachedFeedback.unshift({
             id: result.feedbackId,
@@ -2132,7 +2197,7 @@
             reply_count: 0,
             attachments: [],
             anchor: placedAnchor,
-            page_key: currentPageKey(),
+            page_key: page ? page.key : currentPageKey(),
           });
           optimisticIds.add(result.feedbackId);
           renderFeedbackList(cachedFeedback);
@@ -2164,6 +2229,7 @@
     const optimisticIds = new Set();
 
     const PIN_CLUSTER_RADIUS = 30;
+    const PIN_PULSE_MS = 1600; // keep in step with the vvPinPulse duration
     const CLUSTER_FAN_RADIUS = 34;
 
     // Numbering is project-wide by age so a label means one thing on every
@@ -2240,6 +2306,10 @@
       el.style.top = (y - PIN_TIP_OFFSET) + 'px';
     };
 
+    // The open thread's pins pulse for as long as the thread is on screen:
+    // Back, hiding the list, or collapsing the widget all end it.
+    const isPulsing = (pin) => listOpen && !!selectedFeedbackId && !pin.pending && pin.feedbackId === selectedFeedbackId;
+
     const paintLivePins = () => {
       const layer = wrapper.querySelector('#vv-pin-layer');
       if (!layer) return;
@@ -2260,12 +2330,16 @@
         (pin.pending ? solo : placed).push({ pin, x: pos.x, y: pos.y, state: pos.state });
       });
 
+      const pulseDelay = -(performance.now() % PIN_PULSE_MS) + 'ms';
+      const pulse = (el) => { el.classList.add('pulsing'); el.style.animationDelay = pulseDelay; };
+
       const markerFor = (m, x, y) => {
         const el = document.createElement('div');
         el.className = 'pin-marker'
           + (m.state === 'approximate' ? ' approximate' : '')
           + (m.pin.sub ? ' sub' : '')
           + (m.pin.pending ? ' pending-reply' : '');
+        if (isPulsing(m.pin)) pulse(el);
         el.innerHTML = '<span>' + m.pin.label + '</span>';
         el.title = m.pin.pending
           ? 'This pin is attached to the reply you are writing'
@@ -2309,6 +2383,7 @@
         el.className = 'pin-marker cluster';
         el.innerHTML = '<span>' + cluster.members.length + '</span>';
         el.title = cluster.members.length + ' pins here. Click to fan them out.';
+        if (cluster.members.some((m) => isPulsing(m.pin))) pulse(el);
         placeMarker(el, cluster.x, cluster.y);
         el.onclick = (e) => {
           e.preventDefault();
@@ -2318,6 +2393,147 @@
         };
         layer.appendChild(el);
       });
+    };
+
+    // Brings the thread's pins into view: the report's own pin if it is on this
+    // page, otherwise its first reply pin here. With none here, `navigate`
+    // leaves for the page they are on and the next load resumes the thread
+    // (resumeFocusedThread). The resume passes navigate=false, so a page that
+    // redirects elsewhere cannot bounce the reviewer around in a loop.
+    const revealThreadPins = (feedbackId, navigate) => {
+      const f = cachedFeedback.find((x) => x.id === feedbackId);
+      if (!f) return;
+      const target = livePins.find((p) => p.id === f.id)
+        || livePins.find((p) => p.feedbackId === f.id && p.sub && !p.pending);
+      if (target) {
+        const pos = positionOf(target);
+        if (!pos) return;
+        // A pin hidden inside a count badge would pulse as a "3", so fan it out.
+        // Only when it really is clustered: an expanded cluster swallows the
+        // next overlay click, which would eat the reviewer's next pin drop.
+        const others = livePins.filter((p) => p !== target && !p.pending).map((p) => {
+          const at = positionOf(p);
+          return at && { pin: p, x: at.x, y: at.y };
+        }).filter(Boolean);
+        const cluster = clusterPins([{ pin: target, x: pos.x, y: pos.y }].concat(others))
+          .find((c) => c.members.some((m) => m.pin === target));
+        if (cluster && cluster.members.length > 1) { expandedCluster = target.id; paintLivePins(); }
+        const margin = 40;
+        const inView = pos.x >= margin && pos.y >= margin
+          && pos.x <= window.innerWidth - margin && pos.y <= window.innerHeight - margin;
+        if (inView) return;
+        const el = anchorElementFor(target);
+        // scrollIntoView also scrolls any scrolling container the element sits
+        // in, but centres the element rather than the pin, so a pin on a
+        // taller-than-viewport element is centred by scrolling the window.
+        if (el && el.getBoundingClientRect().height < window.innerHeight * 0.8) {
+          el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+        } else {
+          window.scrollBy({ top: pos.y - window.innerHeight / 2, left: pos.x - window.innerWidth / 2, behavior: 'smooth' });
+        }
+        return;
+      }
+      if (!navigate) return;
+      const pageKey = (f.anchor && f.page_key)
+        || ((f.pins || []).find((p) => p.anchor && p.page_key) || {}).page_key;
+      if (!pageKey || pageKey === currentPageKey()) return;
+      let dest;
+      try { dest = new URL(pageKey); } catch (_) { return; }
+      // The widget token lives in this origin's localStorage, so a pin left on
+      // another origin (a staging domain) would land on a signed-out widget.
+      if (dest.origin !== window.location.origin) return;
+      // The sandbox never persists its identity, so a full load would drop the
+      // visitor's run. It routes client-side through the backend's hook and
+      // onPageChange() reveals the pins once the new page is up.
+      if (demoBackend) {
+        if (typeof demoBackend.navigate !== 'function') return;
+        pendingRevealId = feedbackId;
+        demoBackend.navigate(dest.pathname);
+        return;
+      }
+      try { sessionStorage.setItem(focusKey, feedbackId); } catch (_) { return; }
+      window.location.assign(dest.href);
+    };
+
+    // Second half of the cross-page hand-off: reopen the thread the previous
+    // page navigated for and bring its pins into view. Runs once the identity
+    // is confirmed, and consumes the key first so a reload does not repeat it.
+    const resumeFocusedThread = async () => {
+      let feedbackId = null;
+      try {
+        feedbackId = sessionStorage.getItem(focusKey);
+        if (feedbackId) sessionStorage.removeItem(focusKey);
+      } catch (_) { return; }
+      if (!feedbackId) return;
+      await fetchAllFeedback();
+      if (!cachedFeedback.some((f) => f.id === feedbackId)) return;
+      // Late images and fonts move anchors, so measure after the page settles.
+      if (document.readyState !== 'complete') {
+        await new Promise((resolve) => window.addEventListener('load', resolve, { once: true }));
+      }
+      setWidgetOpen(true);
+      setListOpen(true);
+      openFeedbackDetail(feedbackId, { reveal: true, navigate: false });
+    };
+
+    // --- Client-side navigation ---------------------------------------------
+    // Main responsibility: keep the pin layer in step with the page on sites
+    // that change pages without a reload (React Router, Next.js, Vue Router).
+    // Those routers move with history.pushState/replaceState, which fire no
+    // event, so the shared patch below announces them as `vv:locationchange`;
+    // back/forward arrive as popstate. A router that grabbed pushState before
+    // this script loaded bypasses the patch, so a once-a-second check of the
+    // page key is the backstop.
+    //
+    // Only a change of page key counts (origin + path, see pagePathKey): a
+    // router rewriting ?tab= or the hash is not a new page and must not close
+    // the composer under someone's typing.
+    let lastPageKey = currentPageKey();
+    let pendingRevealId = null;
+    const REVEAL_WAIT_MS = 2000;
+
+    const onPageChange = () => {
+      const key = currentPageKey();
+      if (key === lastPageKey) return;
+      lastPageKey = key;
+      // The armed overlay and the composer's pin both belong to the old page's
+      // elements, which are gone. Discarding the draft is deliberate, the same
+      // as Escape.
+      disarmPin();
+      closeComposer();
+      expandedCluster = null;
+      rebuildLivePins();
+      if (!pendingRevealId) return;
+      const revealId = pendingRevealId;
+      pendingRevealId = null;
+      // Routers often render the new page a beat after the URL changes, so wait
+      // for one of the thread's anchors to exist before scrolling to it.
+      const startedAt = Date.now();
+      const tryReveal = () => {
+        if (currentPageKey() !== key) return;
+        const ready = livePins.some((p) => p.feedbackId === revealId && !p.pending && anchorElementFor(p));
+        if (ready || Date.now() - startedAt > REVEAL_WAIT_MS) { revealThreadPins(revealId, false); return; }
+        setTimeout(tryReveal, 100);
+      };
+      tryReveal();
+    };
+
+    const watchClientNavigation = () => {
+      if (!window.__vvHistoryPatched) {
+        window.__vvHistoryPatched = true;
+        ['pushState', 'replaceState'].forEach((method) => {
+          const original = history[method];
+          if (typeof original !== 'function') return;
+          history[method] = function (...args) {
+            const result = original.apply(this, args);
+            try { window.dispatchEvent(new Event('vv:locationchange')); } catch (_) { /* never break the host's router */ }
+            return result;
+          };
+        });
+      }
+      window.addEventListener('vv:locationchange', onPageChange);
+      window.addEventListener('popstate', onPageChange);
+      setInterval(onPageChange, 1000);
     };
 
     const scheduleLivePinPaint = () => {
@@ -2479,6 +2695,7 @@
       listBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
       if (open) switchView(selectedFeedbackId ? 'detail' : 'feedback');
       else { stopAll(); popupEl.classList.remove('tall'); }
+      paintLivePins();
     };
 
     // --- Send reply ---
@@ -2645,8 +2862,11 @@
     // composed and every saved pin need to follow the page as it moves.
     window.addEventListener('scroll', onPinTrackingEvent, true);
     window.addEventListener('resize', onPinTrackingEvent);
+    watchClientNavigation();
 
     wrapper.querySelector('#vv-back-btn').onclick = goBackToList;
+
+    identityReady.then((ok) => { if (ok) resumeFocusedThread(); });
 
     const notifyCheckbox = wrapper.querySelector('#vv-notify-replies');
     if (notifyCheckbox) {

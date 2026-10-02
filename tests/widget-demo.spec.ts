@@ -53,6 +53,10 @@ async function mountDemo(page: Page, opts: { fakeSnapdom?: boolean } = {}) {
     const apiCalls: string[] = [];
     await page.route('**', async (route: Route) => {
         const url = route.request().url();
+        // WebKit sends blob: fetches through interception too (Chromium and
+        // Firefox do not), so the catch-all abort below would fail the demo's
+        // own screenshot URLs there. They never leave the browser anyway.
+        if (url.startsWith('blob:')) return route.continue();
         if (url.includes('/api/')) {
             apiCalls.push(`${route.request().method()} ${url}`);
             return route.abort();
@@ -68,6 +72,19 @@ async function mountDemo(page: Page, opts: { fakeSnapdom?: boolean } = {}) {
     await recordDemoEvents(page);
     await page.goto(`${HOST}/demo`);
     return { apiCalls };
+}
+
+/**
+ * A reload the page can recognise as one. The guide decides between resuming
+ * and starting over from the Navigation Timing entry (`isReloadOfDemo`), and
+ * Playwright's page.reload() in Firefox is reported there as `navigate`, not
+ * `reload`. A real F5 or location.reload() reports `reload` in every browser.
+ */
+async function browserReload(page: Page) {
+    await Promise.all([
+        page.waitForEvent('load'),
+        page.evaluate(() => location.reload()).catch(() => { /* context torn down by the reload */ }),
+    ]);
 }
 
 const events = (page: Page) =>
@@ -201,10 +218,41 @@ test.describe('demo page lifecycle', () => {
 
         await pinAndSubmit(page, 'Second visit');
         await expect(guide(page)).toContainText('1/2');
-        await page.reload();
+        await browserReload(page);
         await expect(guide(page)).toContainText('1/2');
         await openWidget(page);
         await expect.poll(async () => (await listed(page)).join('|')).toContain('Second visit');
+    });
+
+    test('the bakery pages are client-side routes, each with its own pins', async ({ page }) => {
+        // The demo doubles as our own check of widget.js on a Next site: the
+        // nav is <Link>s, so every move below is a pushState, never a load.
+        const markers = () => shadow(page, `return root.querySelectorAll('.pin-marker:not(.pending)').length;`);
+        const sameDocument = () => page.evaluate(() => (window as unknown as { __vvSameDoc?: boolean }).__vvSameDoc === true);
+        await recordDemoEvents(page);
+        await page.goto('/demo');
+        await page.evaluate(() => { (window as unknown as { __vvSameDoc: boolean }).__vvSameDoc = true; });
+        await openWidget(page);
+        await expect.poll(markers).toBeGreaterThan(0); // the seeded pins live on the home page
+
+        await page.locator('header nav').getByRole('link', { name: 'Menu', exact: true }).click();
+        await page.waitForURL('**/demo/menu');
+        await expect.poll(markers).toBe(0);
+        await pinAndSubmit(page, 'This bread has no price');
+        await expect.poll(markers).toBe(1);
+
+        await page.locator('header nav').getByRole('link', { name: 'Our story', exact: true }).click();
+        await page.waitForURL('**/demo/story');
+        await expect.poll(markers).toBe(0);
+
+        // Opening the thread from the list takes the visitor to its page.
+        await shadow(page, `if (!root.querySelector('.popup').classList.contains('list-open')) root.querySelector('#vv-action-list').click();`);
+        await expect.poll(() => shadow(page, `return Array.from(root.querySelectorAll('.feedback-item')).some((el) => el.textContent.includes('This bread has no price'));`)).toBe(true);
+        await shadow(page, `Array.from(root.querySelectorAll('.feedback-item')).find((el) => el.textContent.includes('This bread has no price')).click();`);
+        await page.waitForURL('**/demo/menu');
+        await expect.poll(() => shadow(page, `return root.querySelectorAll('.pin-marker.pulsing').length;`)).toBe(1);
+
+        expect(await sameDocument()).toBe(true);
     });
 
     test('an in-app back and return starts over, and the old run cannot leak in', async ({ page }) => {

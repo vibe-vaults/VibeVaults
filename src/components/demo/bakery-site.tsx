@@ -1,15 +1,19 @@
-import { Clock, Coffee, Croissant, MapPin, Phone, Star, Wheat, Cake } from "lucide-react";
+import Link from "next/link";
+import { Clock, Coffee, Croissant, MapPin, Star, Wheat, Cake } from "lucide-react";
 
 /**
- * Main Responsibility: The pretend client website that /demo visitors mark up.
- * A small neighbourhood bakery, because that is the kind of SMB site the
- * agencies we sell to actually build. It carries a few deliberate flaws (a
- * typo in the hero, a price that sits out of line, a stale copyright year)
- * so there is something obvious to pin.
+ * Main Responsibility: The home page of the pretend client website that /demo
+ * visitors mark up, plus the footer every bakery page shares. A small
+ * neighbourhood bakery, because that is the kind of SMB site the agencies we
+ * sell to actually build. It carries a few deliberate flaws (a typo in the
+ * hero, a price that sits out of line, a stale copyright year) so there is
+ * something obvious to pin. The other pages live in `bakery-pages.tsx`, the
+ * nav in `bakery-header.tsx`.
  *
  * Sensitive Dependencies:
  * - `#demo-hours` and `#demo-order-btn` are anchor targets for the seeded
- *   pins in `public/widget-demo-backend.js`. Keep the ids.
+ *   pins in `public/widget-demo-backend.js`, which files them under `/demo`.
+ *   Keep the ids, and keep both elements on this page.
  * - Pure markup, no client JS: the widget anchors pins to these elements, and
  *   a re-render that swaps nodes would push pins onto their fallback position.
  */
@@ -26,30 +30,9 @@ const HOURS = [
   ["Sunday", "8:00 to 13:00"],
 ];
 
-export function BakerySite() {
+export function BakeryHome() {
   return (
     <div className="flex-1 text-[#3b2414]">
-      {/* Site nav */}
-      <header className="border-b border-[#ecdcc6]">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 py-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-[#6b3f1d] text-[#fffaf3]">
-              <Croissant className="h-5 w-5" aria-hidden />
-            </span>
-            <span className="font-[family-name:var(--font-bakery)] text-2xl font-semibold tracking-tight">Crumb &amp; Co.</span>
-          </div>
-          <nav className="hidden md:flex gap-8 text-sm font-medium text-[#7a5a40]">
-            <span>Menu</span>
-            <span>Catering</span>
-            <span>Our story</span>
-            <span>Visit</span>
-          </nav>
-          <span className="hidden sm:inline-flex items-center gap-2 text-sm font-medium text-[#7a5a40]">
-            <Phone className="h-4 w-4" aria-hidden /> (555) 014-2290
-          </span>
-        </div>
-      </header>
-
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div aria-hidden className="absolute -top-32 -right-32 h-[28rem] w-[28rem] rounded-full bg-[#f6c98f]/40 blur-3xl" />
@@ -72,9 +55,9 @@ export function BakerySite() {
               >
                 Order for pickup
               </span>
-              <span className="inline-flex items-center justify-center rounded-full border-2 border-[#d9c2a5] px-7 py-3.5 font-semibold text-[#6b3f1d]">
+              <Link href="/demo/menu" className="inline-flex items-center justify-center rounded-full border-2 border-[#d9c2a5] px-7 py-3.5 font-semibold text-[#6b3f1d] hover:bg-[#fdebd3] transition-colors">
                 See the menu
-              </span>
+              </Link>
             </div>
           </div>
 
@@ -146,10 +129,15 @@ export function BakerySite() {
           </dl>
         </div>
       </section>
-
-      <footer className="border-t border-[#ecdcc6] py-8 text-center text-sm text-[#9a7a60]">
-        &copy; 2019 Crumb &amp; Co. Bakery &middot; A made-up business for the VibeVaults demo
-      </footer>
     </div>
+  );
+}
+
+/** Shared by every bakery page. The stale year is one of the deliberate flaws. */
+export function BakeryFooter() {
+  return (
+    <footer className="border-t border-[#ecdcc6] py-8 text-center text-sm text-[#9a7a60]">
+      &copy; 2019 Crumb &amp; Co. Bakery &middot; A made-up business for the VibeVaults demo
+    </footer>
   );
 }

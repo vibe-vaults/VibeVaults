@@ -10,10 +10,13 @@
  * - Visibility logic: banner auto-shows only when (a) no decision recorded AND
  *   (b) the user is in a consent-required region. The dialog is always reachable
  *   via the footer link regardless of region.
+ * - While the banner is up it publishes its height as `--cookie-banner-height`
+ *   on <html>, so fixed bottom-docked UI (the /demo guide) can sit above it
+ *   instead of underneath. Removed again when the banner closes.
  */
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
     AlertDialog,
@@ -34,6 +37,21 @@ export function CookieConsent({ requireConsent }: { requireConsent: boolean }) {
     const [showBanner, setShowBanner] = useState(false)
     const [showDialog, setShowDialog] = useState(false)
     const [analytics, setAnalytics] = useState(false)
+    const bannerRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const banner = bannerRef.current
+        if (!showBanner || !banner || typeof ResizeObserver === 'undefined') return
+        const root = document.documentElement
+        const observer = new ResizeObserver(() => {
+            root.style.setProperty('--cookie-banner-height', `${banner.offsetHeight}px`)
+        })
+        observer.observe(banner)
+        return () => {
+            observer.disconnect()
+            root.style.removeProperty('--cookie-banner-height')
+        }
+    }, [showBanner])
 
     useEffect(() => {
         const existing = readConsent()
@@ -84,6 +102,7 @@ export function CookieConsent({ requireConsent }: { requireConsent: boolean }) {
         <>
             {showBanner && (
                 <div
+                    ref={bannerRef}
                     role="region"
                     aria-label="Cookie consent"
                     className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 sm:px-6 sm:pb-6 animate-in slide-in-from-bottom-4 duration-300"

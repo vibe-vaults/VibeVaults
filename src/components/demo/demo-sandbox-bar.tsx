@@ -9,13 +9,15 @@ import { FlaskConical } from "lucide-react";
  * - The "nothing leaves your browser" claim is only true because
  *   `public/widget-demo-backend.js` answers every widget request locally.
  *   Pinned by `tests/widget-demo.spec.ts`.
- * - Links are plain <a> on purpose, see the note in `src/app/demo/page.tsx`.
+ * - Links are plain <a> on purpose, see the note in `src/app/demo/layout.tsx`.
  */
+const NOTE = "A pretend client site. Use the Feedback button in the bottom-right corner. Nothing you type leaves your browser.";
+
 export function DemoSandboxBar() {
   return (
     <div className="sticky top-0 z-40 bg-gray-950 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 flex items-center gap-3 md:gap-5">
-        {/* Full page load on purpose: see the exits note in src/app/demo/page.tsx. */}
+        {/* Full page load on purpose: see the exits note in src/app/demo/layout.tsx. */}
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/" className="font-bold text-lg tracking-tight text-primary whitespace-nowrap hover:opacity-90 transition-opacity">
           VibeVaults
@@ -24,9 +26,7 @@ export function DemoSandboxBar() {
           <FlaskConical className="h-3.5 w-3.5 text-secondary" aria-hidden />
           Live sandbox
         </span>
-        <p className="hidden md:block flex-1 text-sm text-white/70 truncate">
-          A pretend client site. Use the Feedback button in the bottom-right corner. Nothing you type leaves your browser.
-        </p>
+        <p className="hidden md:block flex-1 text-sm text-white/70 truncate">{NOTE}</p>
         <div className="flex-1 md:hidden" />
         <a
           href="/auth/register"
@@ -35,6 +35,12 @@ export function DemoSandboxBar() {
           Start free trial
         </a>
       </div>
+      {/* No room beside the logo and CTA on narrow screens, and the promise
+          must not disappear there, so it wraps onto its own line instead. */}
+      <p className="md:hidden max-w-7xl mx-auto px-4 pb-3 -mt-1 flex gap-2 text-xs leading-snug text-white/70">
+        <FlaskConical className="sm:hidden h-3.5 w-3.5 shrink-0 mt-px text-secondary" aria-hidden />
+        <span>{NOTE}</span>
+      </p>
     </div>
   );
 }
