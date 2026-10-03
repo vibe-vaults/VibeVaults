@@ -35,11 +35,11 @@ const faqs: { question: string; answer: string; link?: { match: string; href: st
     },
     {
         question: "How easy is it to set up?",
-        answer: "Setup takes minutes. You create a project in your dashboard, paste one script tag into the website's code, and invite your clients by email. They click the link in the invite and can start leaving feedback right away.",
+        answer: "Setup takes minutes. You create a project in your dashboard, paste one script tag into the website's code, and send your client the project's review link. They enter their name and email, land on the site, and can start leaving feedback right away. If you prefer per-client control, you can also invite clients individually by email.",
     },
     {
         question: "Do clients need an account?",
-        answer: "No. Clients never create an account, set a password, or install anything. They open the invite link you send them and the feedback widget appears on the site. You also never pay per client: every plan includes unlimited clients and unlimited feedback.",
+        answer: "No. Clients never create an account, set a password, or install anything. They open the review link (or an email invite) and the feedback widget appears on the site. You also never pay per client: every plan includes unlimited clients and unlimited feedback.",
     },
     {
         question: "How much does VibeVaults cost?",

@@ -8,6 +8,7 @@ import { HowItWorks } from "@/components/landing/how-it-works";
 import { FounderNote } from "@/components/landing/founder-note";
 import { PricingCards } from "@/components/landing/pricing-cards";
 import { Faq } from "@/components/landing/faq";
+import { TrustStrip } from "@/components/landing/trust-strip";
 import { SETUP_CALL_URL } from "@/lib/contact-links";
 
 export default function Home() {
@@ -44,7 +45,7 @@ export default function Home() {
               Ship client sites faster without the <span className="text-primary font-black italic">feedback chaos.</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-500 max-w-3xl mb-12 leading-relaxed mx-auto">
-              VibeVaults is a visual feedback widget for websites. Clients comment right on the site you&apos;re building. No logins, no browser extensions, and you never pay per client. Send a link, they start marking up, you ship faster.
+              VibeVaults is a visual feedback widget for web agencies and design studios. Clients comment right on the site you&apos;re building. No logins, no browser extensions, and you never pay per client. Send a link, they start marking up, you ship faster.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-5">
               <Link href="/auth/register" className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 bg-secondary text-white hover:bg-secondary/90 hover:shadow-2xl hover:-translate-y-1 active:translate-y-0">
@@ -83,9 +84,10 @@ export default function Home() {
         <section id="pricing" className="py-32 w-full flex flex-col items-center bg-gray-50">
           <div className="max-w-7xl mx-auto px-8 text-center">
             <h2 className="text-5xl font-extrabold mb-6">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-16">
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-8">
               Choose the plan that fits your team. Scale up as you grow.
             </p>
+            <TrustStrip className="mb-14" />
             <PricingCards
               ctaLabel="Start free trial"
               staticCtaHref="/auth/register"

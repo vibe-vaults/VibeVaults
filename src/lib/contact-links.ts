@@ -8,5 +8,10 @@
  * - Calendly (booking) and Zoom (the call itself) are listed in
  *   /privacy-policy sections 3.5 and 7 and /terms-of-service section 11.
  *   Swapping either tool means updating those lists first.
+ * - STATUS_PAGE_URL is the public UptimeRobot status page. UptimeRobot only
+ *   pings our public URLs and never receives user data, so it is not a
+ *   sub-processor; visitors who open the status page are on UptimeRobot's
+ *   own site.
  */
 export const SETUP_CALL_URL = "https://calendly.com/jozsef-tar/15min";
+export const STATUS_PAGE_URL = "https://stats.uptimerobot.com/h0B96HrTXV";

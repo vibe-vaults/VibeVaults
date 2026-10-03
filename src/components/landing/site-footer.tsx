@@ -3,6 +3,8 @@ import { LinkedinIcon } from "@/components/icons/linkedin-icon";
 import { CookiePreferencesLink } from "@/components/CookiePreferencesLink";
 import { allComparisons } from "@/lib/compare-data";
 import { docsPages } from "@/lib/docs-data";
+import { OPERATOR } from "@/lib/legal-entity";
+import { STATUS_PAGE_URL } from "@/lib/contact-links";
 
 /**
  * Main Responsibility: Shared site footer used by the landing page, the
@@ -89,21 +91,36 @@ export function SiteFooter() {
 
                 {/* Brand / social row */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="text-sm text-gray-500">
-                        &copy; {new Date().getFullYear()} VibeVaults. All rights reserved.
+                    <div className="flex flex-col items-center md:items-start gap-1 text-sm text-gray-500">
+                        <div>&copy; {new Date().getFullYear()} VibeVaults. All rights reserved.</div>
+                        <div>
+                            Contact:{" "}
+                            <a href={`mailto:${OPERATOR.email}`} className="hover:text-primary transition-colors">
+                                {OPERATOR.email}
+                            </a>
+                            <span className="mx-2 text-gray-300" aria-hidden="true">&middot;</span>
+                            <a
+                                href={STATUS_PAGE_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-primary transition-colors"
+                            >
+                                System status
+                            </a>
+                        </div>
                     </div>
                     <div className="flex items-center gap-5">
                         <a
                             href="https://www.uneed.best/tool/vibevaults"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center opacity-70 hover:opacity-100 transition-opacity"
+                            className="inline-flex items-center hover:opacity-80 transition-opacity"
                         >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                                 src="https://www.uneed.best/EMBED1B.png"
                                 alt="VibeVaults is featured on Uneed"
-                                className="h-7 w-auto"
+                                className="h-10 w-auto"
                             />
                         </a>
                         <a
