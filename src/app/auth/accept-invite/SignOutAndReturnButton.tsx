@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { resetAnalyticsIdentity } from '@/lib/analytics-identity';
 import { Button } from '@/components/ui/button';
 
 export function SignOutAndReturnButton({ token }: { token: string }) {
@@ -11,6 +12,7 @@ export function SignOutAndReturnButton({ token }: { token: string }) {
         setLoading(true);
         const supabase = createClient();
         await supabase.auth.signOut();
+        await resetAnalyticsIdentity();
         // Return to the invite page so the user can sign in with the correct email.
         window.location.href = `/auth/accept-invite?token=${encodeURIComponent(token)}`;
     }

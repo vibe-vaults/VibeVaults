@@ -15,6 +15,7 @@ import {
 import { useState } from "react"
 import { usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { resetAnalyticsIdentity } from "@/lib/analytics-identity"
 import { LayoutDashboard, MessageSquare, Settings, LogOut, Users, ExternalLink, Crown, Loader2 } from "lucide-react"
 import { isTrialExpired as isTierExpired, type TierSlug } from "@/lib/tier-config"
 import { NotificationBell } from "@/components/notification-bell"
@@ -82,6 +83,7 @@ export function AppSidebar({
         } catch {
             // Intentionally ignored; see above.
         }
+        await resetAnalyticsIdentity();
         window.location.href = "/api/auth/logout";
     };
 

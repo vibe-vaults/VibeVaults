@@ -1,6 +1,7 @@
 'use client';
 
 import { createClient } from "@/lib/supabase/client";
+import { resetAnalyticsIdentity } from "@/lib/analytics-identity";
 import { DangerZoneCard } from "@/components/danger-zone-card";
 
 export function DeleteAccountCard() {
@@ -27,6 +28,7 @@ export function DeleteAccountCard() {
         // global logout would 403 on the revoke call. Local clears cookies
         // and localStorage without the server round-trip.
         await supabase.auth.signOut({ scope: 'local' });
+        await resetAnalyticsIdentity();
         // Hard navigation through the logout route, not router.push: a soft
         // navigation's RSC request can still carry the auth cookie, and the
         // proxy decodes the JWT locally (the deleted user still decodes fine),
