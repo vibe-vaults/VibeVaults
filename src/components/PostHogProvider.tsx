@@ -11,12 +11,15 @@
  * - posthog-js for client-side analytics, session replays, and error tracking.
  * - Must be wrapped in root layout to capture all page views and errors.
  * - Reacts to `vv:consent-changed` events from src/lib/consent.ts.
+ * - On consent, identifies a signed-in visitor by their Supabase user id via
+ *   src/lib/analytics-identity.ts (never the email). Sign-out paths reset it.
  */
 'use client'
 
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { CONSENT_CHANGED_EVENT, readConsent, type ConsentState } from '@/lib/consent'
+import { identifySignedInUser } from '@/lib/analytics-identity'
 
 type PostHogClient = typeof import('posthog-js').default
 type ProviderComponent = ComponentType<{ children: ReactNode }>
@@ -25,6 +28,7 @@ function applyConsent(posthog: PostHogClient, state: ConsentState | null) {
   if (state?.analytics) {
     posthog.opt_in_capturing()
     posthog.startSessionRecording()
+    void identifySignedInUser(posthog)
   } else {
     posthog.opt_out_capturing()
     posthog.stopSessionRecording()

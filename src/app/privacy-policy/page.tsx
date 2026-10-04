@@ -235,7 +235,7 @@ export default function PrivacyPolicy() {
                     <p className="mb-4">We use cookies and similar technologies for:</p>
                     <ul className="list-disc pl-6 mb-4 space-y-2">
                         <li><strong>Essential cookies</strong> &ndash; authentication sessions and workspace/project preferences. These are required for the Service to function and do not require consent.</li>
-                        <li><strong>Analytics (consent-based)</strong> &ndash; PostHog (EU-hosted) collects usage data, including page views, session replays, and error tracking, to help us improve the Service. These are loaded <strong>only after you accept</strong> via the cookie banner. Form inputs are masked by default in session replays.</li>
+                        <li><strong>Analytics (consent-based)</strong> &ndash; PostHog (EU-hosted) collects usage data, including page views, session replays, and error tracking, to help us improve the Service. These are loaded <strong>only after you accept</strong> via the cookie banner. Form inputs are masked by default in session replays. If you have an account and accept analytics, this usage data is linked to your account through an internal user ID (never your email), so we can understand how the Service is used.</li>
                         <li><strong>Anti-bot verification</strong> &ndash; Cloudflare Turnstile may set cookies to verify human users during authentication. This is essential to prevent abuse.</li>
                     </ul>
                     <p className="mb-4">
