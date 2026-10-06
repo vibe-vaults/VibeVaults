@@ -12,11 +12,27 @@
  * - sendMemberWelcomeNotification: Resend transactional email.
  * - getNotificationPrefs: lazily creates the email_preferences row + returns
  *   the unsubscribe token. Respects the localhost dev opt-out.
+ * - profiles.has_onboarded: reopenOnboardingChecklist() flips it back to false
+ *   so the new member sees their welcome checklist on /dashboard.
  */
 import { createAdminClient } from '@/lib/supabase/admin';
 import { issueWidgetIdentity } from '@/lib/widget-helpers';
 import { sendMemberWelcomeNotification } from '@/lib/notifications';
 import { getNotificationPrefs } from '@/lib/notification-prefs';
+
+/**
+ * Re-shows the /dashboard checklist for someone who just joined a workspace.
+ * `has_onboarded` is one per-user switch, so a user who dismissed the
+ * checklist in their own workspace would otherwise never see the member steps.
+ * Awaited (not fire-and-forget) so the dashboard render that follows sees it.
+ */
+export async function reopenOnboardingChecklist(userId: string): Promise<void> {
+    const { error } = await createAdminClient()
+        .from('profiles')
+        .update({ has_onboarded: false })
+        .eq('id', userId);
+    if (error) console.error('reopenOnboardingChecklist failed', error);
+}
 
 type DispatchArgs = {
     workspaceId: string;

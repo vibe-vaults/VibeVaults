@@ -1,7 +1,7 @@
 /**
  * Main Responsibility: Server Component rendering the primary dashboard overview. Retrieves exact metrics 
  * via Server Side Supabase Queries (e.g. feedback counts per project) and controls the display of the 
- * `<Onboarding>` component if the user profile hasn't fully set up their first project.
+ * `<Onboarding>` checklist while `profiles.has_onboarded` is false (toggled from the Account page).
  * 
  * Sensitive Dependencies: 
  * - @/components/onboarding for handling project creation flows.
@@ -10,7 +10,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import Onboarding from "@/components/onboarding";
-import { OWNER_STEPS, MEMBER_STEPS } from "@/lib/onboarding-steps";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { SETUP_CALL_URL } from "@/lib/contact-links";
@@ -65,10 +64,10 @@ export default async function DashboardPage() {
         .filter(s => s.startsWith(wsPrefix))
         .map(s => s.slice(wsPrefix.length));
 
-    // Per-workspace onboarding completion: check if all role-specific steps are done
-    const requiredStepIds = (isOwner ? OWNER_STEPS : MEMBER_STEPS).map(s => s.id);
-    const hasOnboarded = (profile?.has_onboarded ?? false)
-        || requiredStepIds.every(id => completedSteps.includes(id));
+    // Visibility is the user's own switch, not step completion: a finished
+    // checklist stays until dismissed ("I'll explore on my own") and can be
+    // brought back from the Account page. Step ticks stay per-workspace.
+    const hasOnboarded = profile?.has_onboarded ?? false;
 
     let totalFeedback = 0;
     if (currentProject) {

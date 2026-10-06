@@ -31,3 +31,25 @@ export async function toggleOnboardingStepAction(stepId: string, workspaceId: st
 
     revalidatePath("/dashboard");
 }
+
+/**
+ * Backs both "I'll explore on my own" (hide) and the Account page toggle
+ * (show). `profiles.has_onboarded` is the only switch: the checklist renders
+ * on /dashboard while it is false, in every workspace the user belongs to.
+ */
+export async function setOnboardingVisibleAction(visible: boolean) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+
+    const { error } = await supabase
+        .from("profiles")
+        .update({ has_onboarded: !visible })
+        .eq("id", user.id);
+
+    if (error) throw new Error(error.message);
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/account");
+}
