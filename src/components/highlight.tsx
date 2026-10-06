@@ -5,8 +5,11 @@ import { useEffect, useRef, useState } from 'react';
 /**
  * Main Responsibility: Wraps content with an ID and applies pulsating highlight
  * animation + dark backdrop overlay when navigated to via URL hash.
- * The target element is visually lifted above the overlay using a fixed-position
- * clone so it is never trapped by parent stacking contexts.
+ * The overlay has a cut-out over the target, so the REAL element shows through
+ * and stays interactive: the first click on a highlighted switch or button
+ * acts on it (a cloned copy would swallow it). No z-index lifting is needed,
+ * so parent stacking contexts can't trap it. A pointer-less ring above the
+ * overlay carries the glow; both track the target on scroll and resize.
  *
  * Sensitive Dependencies:
  * - globals.css for .pulse-active, .highlight-persist, and related keyframes.
@@ -42,52 +45,71 @@ export function Highlight({
         return () => window.removeEventListener('hashchange', check);
     }, [id]);
 
-    // Create overlay + floating clone of the target element above it
+    // Overlay with a cut-out over the target + a glow ring above it
     useEffect(() => {
         if (!active || !ref.current) return;
 
         const target = ref.current;
+        const radius = parseFloat(getComputedStyle(target).borderTopLeftRadius) || 0;
 
-        // Create full-screen overlay
         const overlay = document.createElement('div');
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100vw';
-        overlay.style.height = '100vh';
-        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-        overlay.style.backdropFilter = 'blur(2px)';
-        overlay.style.zIndex = '9998';
-        overlay.style.cursor = 'pointer';
-        document.body.appendChild(overlay);
+        Object.assign(overlay.style, {
+            position: 'fixed',
+            inset: '0',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(2px)',
+            zIndex: '9998',
+            cursor: 'pointer',
+        });
 
-        // Create a fixed-position clone of the target that sits above the overlay
-        const clone = target.cloneNode(true) as HTMLElement;
-        const rect = target.getBoundingClientRect();
-        clone.style.position = 'fixed';
-        clone.style.top = `${rect.top}px`;
-        clone.style.left = `${rect.left}px`;
-        clone.style.width = `${rect.width}px`;
-        clone.style.height = `${rect.height}px`;
-        clone.style.zIndex = '9999';
-        clone.style.pointerEvents = 'none';
-        clone.style.margin = '0';
-        clone.classList.add('pulse-active', 'highlight-persist');
-        document.body.appendChild(clone);
+        const ring = document.createElement('div');
+        Object.assign(ring.style, {
+            position: 'fixed',
+            zIndex: '9999',
+            pointerEvents: 'none',
+            borderRadius: `${radius}px`,
+        });
+        ring.classList.add('pulse-active', 'highlight-persist');
 
-        // Hide the original so there's no visual duplication
-        const prevVisibility = target.style.visibility;
-        target.style.visibility = 'hidden';
+        // clip-path also governs hit-testing, so clicks inside the hole fall
+        // through to the real element instead of the overlay.
+        const place = () => {
+            const { left: x, top: y, width: w, height: h } = target.getBoundingClientRect();
+            const r = Math.min(radius, w / 2, h / 2);
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            overlay.style.clipPath = `path(evenodd, "M0 0 H${vw} V${vh} H0 Z `
+                + `M${x + r} ${y} H${x + w - r} A${r} ${r} 0 0 1 ${x + w} ${y + r} `
+                + `V${y + h - r} A${r} ${r} 0 0 1 ${x + w - r} ${y + h} `
+                + `H${x + r} A${r} ${r} 0 0 1 ${x} ${y + h - r} `
+                + `V${y + r} A${r} ${r} 0 0 1 ${x + r} ${y} Z")`;
+            Object.assign(ring.style, { left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px` });
+        };
+        let frame = 0;
+        const schedulePlace = () => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(place);
+        };
 
-        // Clicking the overlay (anywhere outside the clone) dismisses
+        place();
+        document.body.append(overlay, ring);
+        window.addEventListener('scroll', schedulePlace, true);
+        window.addEventListener('resize', schedulePlace);
+
+        // Clicking the overlay dismisses; so does using the highlighted
+        // element itself (the click still lands on it, this only lifts the dim).
         const dismiss = () => setActive(false);
         overlay.addEventListener('click', dismiss);
+        target.addEventListener('click', dismiss);
 
         return () => {
+            cancelAnimationFrame(frame);
+            window.removeEventListener('scroll', schedulePlace, true);
+            window.removeEventListener('resize', schedulePlace);
             overlay.removeEventListener('click', dismiss);
+            target.removeEventListener('click', dismiss);
             overlay.remove();
-            clone.remove();
-            target.style.visibility = prevVisibility;
+            ring.remove();
         };
     }, [active]);
 

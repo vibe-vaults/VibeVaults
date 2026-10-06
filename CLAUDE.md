@@ -126,8 +126,8 @@ tests/              # Playwright E2E tests
 - Role-specific checklist in `src/components/onboarding.tsx`, backed by `profiles.completed_onboarding_steps` (text array) and `has_onboarded`.
 - **Owners see 8 steps**: create project, share or embed project (spotlights the review-link + embed cards together via `#share-or-embed`), invite members, invite clients, create feedback, customize workspace, customize project, share board. **Members see 5 steps** (same minus the workspace-level ones). Step definitions live in `src/lib/onboarding-steps.ts`.
 - **Create Project dialog** (`create-project-dialog.tsx`) doesn't close on create: it shows a success step with the project's shareable review link (copy button) and a pointer to the embed snippet.
-- `has_onboarded = true` only when all items are checked. Steps are tracked manually — the old auto-check feature was removed.
-- Dismissible into a persistent mini-banner (collapsed state in `localStorage`) with a Resume button. "Go" links navigate to anchor-highlighted target cards via the `Highlight` component.
+- **Step ticks are per workspace** (`completed_onboarding_steps` entries are `${workspaceId}:${stepId}`); **visibility is one per-user switch**, `profiles.has_onboarded`. The `/dashboard` checklist renders while it is `false`, finished or not; completing every step does **not** set it. Steps are tracked manually (the old auto-check feature was removed).
+- Two different exits: the **chevron** (top right) only minimizes to the Resume mini-banner (`localStorage`); **"I'll explore on my own"** dismisses (`setOnboardingVisibleAction(false)`) and points at the way back, the **Getting Started** toggle on `/dashboard/account#onboarding` (`onboarding-visibility-card.tsx`). The flag is reset to `false` on first owned workspace (`createWorkspaceAction`) and on joining a workspace as a member (`reopenOnboardingChecklist()` in `member-onboarding.ts`, both invite-accept paths), so a user who dismissed it still gets the new role's checklist. Test fixtures seed `has_onboarded = true` to keep it out of the way. "Go" links navigate to anchor-highlighted target cards via the `Highlight` component.
 - Members who create their first workspace get onboarding reset to show the owner checklist.
 
 ### RLS Security Pattern
@@ -268,7 +268,7 @@ tests/              # Playwright E2E tests
 ## Server Actions
 | Action | Path | Purpose |
 |---|---|---|
-| `completeOnboardingAction` / `toggleOnboardingStepAction` | `src/actions/onboarding.ts` | Complete onboarding / toggle a checklist step |
+| `toggleOnboardingStepAction` / `setOnboardingVisibleAction` | `src/actions/onboarding.ts` | Toggle a checklist step / show or hide the checklist (`has_onboarded`) |
 | `createWorkspaceAction` / `leaveWorkspaceAction` | `src/actions/workspaces.ts` | Create workspace (resets member onboarding) / leave (notifies owner) |
 | `updateFeedbackStatusAction` | `src/actions/feedback.ts` | Update feedback status |
 | `toggleShareAction` | `src/actions/project-sharing.ts` | Enable/disable public board sharing (tier-gated) |

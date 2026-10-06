@@ -1,6 +1,8 @@
 import { DeleteAccountCard } from "@/components/delete-account-card";
 import { NotificationsCard } from "@/components/notifications-card";
 import { BillingCard } from "@/components/billing-card";
+import { OnboardingVisibilityCard } from "@/components/onboarding-visibility-card";
+import { Highlight } from "@/components/highlight";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserTier, countUserWorkspaces, countUserProjects, countWorkspaceMembers, getStorageUsedBytes, formatBytes } from "@/lib/tier-helpers";
@@ -21,7 +23,7 @@ export default async function AccountPage() {
             .single(),
         adminSupabase
             .from('profiles')
-            .select('billing_interval')
+            .select('billing_interval, has_onboarded')
             .eq('id', user.id)
             .single(),
         getUserTier(user.id),
@@ -95,6 +97,9 @@ export default async function AccountPage() {
                         />
                     )}
                     <NotificationsCard initialPreferences={initialPreferences} canUseRealtime={canUseRealtime} />
+                    <Highlight id="onboarding" className="rounded-xl">
+                        <OnboardingVisibilityCard initialVisible={!(profile?.has_onboarded ?? false)} />
+                    </Highlight>
                     <DeleteAccountCard />
                 </div>
             </div>

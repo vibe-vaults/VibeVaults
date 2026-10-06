@@ -12,7 +12,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { dispatchMemberWelcomeBootstrap } from '@/lib/member-onboarding';
+import { dispatchMemberWelcomeBootstrap, reopenOnboardingChecklist } from '@/lib/member-onboarding';
 
 export type AcceptInviteResult =
     | { ok: true; workspaceId: string }
@@ -68,6 +68,9 @@ export async function acceptInvite(token: string): Promise<AcceptInviteResult> {
         console.error('acceptInvite: membership insert failed', insertError);
         return { ok: false, reason: 'internal_error' };
     }
+
+    // Fresh membership only: a duplicate accept must not undo a dismissal.
+    if (!insertError) await reopenOnboardingChecklist(user.id);
 
     await admin
         .from('workspace_invites')

@@ -18,7 +18,7 @@ import { GlobalNotificationProvider } from "@/components/global-notification-pro
 import { DashboardLockProvider } from "@/components/dashboard-lock-context";
 import { getUserTier, isTrialExpired as isTierExpired, getViewerWorkspaceLiveness, isWorkspaceLive } from "@/lib/tier-helpers";
 import { sendWelcomeNotification } from "@/lib/notifications";
-import { dispatchMemberWelcomeBootstrap } from "@/lib/member-onboarding";
+import { dispatchMemberWelcomeBootstrap, reopenOnboardingChecklist } from "@/lib/member-onboarding";
 
 export default async function DashboardLayout({
     children,
@@ -120,6 +120,8 @@ export default async function DashboardLayout({
                     console.error("Failed to accept invite:", insertError);
                     continue; // Don't delete the invite if we couldn't add the member
                 }
+
+                await reopenOnboardingChecklist(user.id);
             }
 
             // Track this workspace ID to auto-select it later

@@ -6,9 +6,10 @@
  *
  * Sensitive Dependencies:
  * - /api/projects POST route which requires a validated `workspaceId` prop.
- * - @/actions/onboarding for toggling steps and finalizing onboarding.
+ * - @/actions/onboarding for toggling steps and for dismissing the checklist
+ *   (`has_onboarded`, the same switch as the Account page toggle).
  * - document.cookie for directly setting `selectedProjectId`.
- * - localStorage for collapsed/expanded UI state.
+ * - localStorage for collapsed/expanded UI state (minimize, not dismiss).
  */
 'use client';
 
@@ -24,11 +25,16 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { CreateProjectDialog } from '@/components/create-project-dialog';
-import { XIcon, ExternalLink, ChevronDown, Star } from 'lucide-react';
+import { ExternalLink, ChevronDown, Star, AlertCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { toggleOnboardingStepAction } from '@/actions/onboarding';
+import { toggleOnboardingStepAction, setOnboardingVisibleAction } from '@/actions/onboarding';
+import { reportClientError } from '@/lib/client-error-logging';
+import { toast } from 'sonner';
 import { OWNER_STEPS, MEMBER_STEPS, type OnboardingStep } from '@/lib/onboarding-steps';
 import Link from 'next/link';
+
+// The Account page anchors its toggle card with this id.
+const ONBOARDING_TOGGLE_HREF = '/dashboard/account#onboarding';
 
 interface OnboardingProps {
     workspaceId?: string;
@@ -45,6 +51,7 @@ export default function Onboarding({
     const [localCompleted, setLocalCompleted] = useState<string[]>(completedSteps);
     const [collapsed, setCollapsed] = useState(false);
     const [showCreateProjectDialog, setShowCreateProjectDialog] = useState(false);
+    const [dismissing, setDismissing] = useState(false);
 
     const steps = isOwner ? OWNER_STEPS : MEMBER_STEPS;
 
@@ -71,6 +78,22 @@ export default function Onboarding({
         localStorage.removeItem('onboarding_collapsed');
     };
 
+    const handleDismiss = async () => {
+        setDismissing(true);
+        try {
+            await setOnboardingVisibleAction(false);
+            toast('Getting Started hidden', {
+                description: 'Turn it back on anytime from your Account page.',
+                action: { label: 'Account', onClick: () => router.push(ONBOARDING_TOGGLE_HREF) },
+            });
+            router.refresh();
+        } catch (error) {
+            const message = reportClientError(error, 'onboarding-dismiss');
+            toast('Error', { description: message, icon: <AlertCircle className="h-4 w-4 text-red-500" /> });
+            setDismissing(false);
+        }
+    };
+
     const handleToggleStep = async (stepId: string) => {
         if (!workspaceId) return;
         const wasCompleted = localCompleted.includes(stepId);
@@ -82,13 +105,6 @@ export default function Onboarding({
 
         try {
             await toggleOnboardingStepAction(stepId, workspaceId);
-
-            const nowAllDone = steps.every(s => newCompleted.includes(s.id));
-
-            if (nowAllDone) {
-                localStorage.removeItem('onboarding_collapsed');
-                router.refresh();
-            }
         } catch {
             setLocalCompleted(wasCompleted
                 ? [...localCompleted]
@@ -145,8 +161,9 @@ export default function Onboarding({
                                     size="icon"
                                     onClick={handleCollapse}
                                     className="text-muted-foreground hover:text-foreground hover:bg-primary/10 cursor-pointer"
+                                    aria-label="Minimize"
                                 >
-                                    <XIcon className="w-5 h-5" />
+                                    <ChevronDown className="w-5 h-5" />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -241,14 +258,22 @@ export default function Onboarding({
                             })}
                         </div>
 
-                        {/* Collapse */}
-                        <div className="mt-6 flex justify-center">
+                        {/* Dismiss (not minimize): hides the checklist until the Account toggle brings it back */}
+                        <div className="mt-6 flex flex-col items-center gap-1.5">
                             <button
-                                onClick={handleCollapse}
-                                className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 cursor-pointer"
+                                onClick={handleDismiss}
+                                disabled={dismissing}
+                                className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 cursor-pointer disabled:opacity-50 disabled:cursor-default"
                             >
                                 {"I'll explore on my own"}
                             </button>
+                            <p className="text-xs text-muted-foreground/80">
+                                You can show this checklist again from your{' '}
+                                <Link href={ONBOARDING_TOGGLE_HREF} className="text-primary hover:underline">
+                                    Account page
+                                </Link>
+                                .
+                            </p>
                         </div>
                     </CardContent>
                 </Card>

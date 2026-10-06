@@ -46,15 +46,41 @@ test.describe('Onboarding flow', () => {
 
         await expect(page.getByRole('dialog')).toBeHidden();
 
-        // Dismiss onboarding
+        // The chevron only minimizes: the checklist shrinks to the Resume banner.
+        await page.getByRole('button', { name: 'Minimize' }).click();
+        await expect(page.getByRole('button', { name: /resume/i })).toBeVisible();
+        await page.getByRole('button', { name: /resume/i }).click();
+
+        // Dismiss onboarding: gone entirely, not minimized
         await expect(page.getByText("I'll explore on my own")).toBeVisible();
         await page.getByText("I'll explore on my own").click();
+        await expect(page.locator('text=Getting Started 🚀')).toBeHidden();
+        await expect(page.getByRole('button', { name: /resume/i })).toHaveCount(0);
 
         // Dashboard renders with the new project
         await expect(page.locator('h1')).toContainText('Overview');
         await expect(page.locator('h1')).toContainText('My Test Project');
         await expect(page.locator('text=Total Feedback')).toBeVisible();
         await expect(page.locator('text=Questions or Problems?')).toBeVisible();
+
+        // Dismissal survives a reload (it's the profile flag, not localStorage)
+        await page.reload();
+        await expect(page.locator('h1')).toContainText('Overview');
+        await expect(page.locator('text=Getting Started 🚀')).toBeHidden();
+
+        // The Account page toggle brings it back
+        // Via the deep link: the Highlight spotlight must not swallow the
+        // first click, so wait for it to be up and toggle straight through it.
+        await page.goto('/dashboard/account#onboarding');
+        await expect(page.locator('.highlight-persist')).toBeVisible();
+        const toggle = page.getByRole('switch', { name: /show checklist on dashboard/i });
+        await expect(toggle).not.toBeChecked();
+        await toggle.click();
+        await expect(toggle).toBeChecked();
+        await expect(page.locator('.highlight-persist')).toHaveCount(0);
+        await expect(page.getByText('Saved')).toBeVisible();
+        await page.goto('/dashboard');
+        await expect(page.locator('text=Getting Started 🚀')).toBeVisible();
     });
 });
 
