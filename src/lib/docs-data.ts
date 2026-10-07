@@ -26,7 +26,7 @@ export const docsPages: DocPage[] = [
     {
         slug: "pinning",
         title: "Pinning feedback",
-        summary: "Drop a pin anywhere on the page, switch between browsing and commenting, and see everyone's pins in context.",
+        summary: "Drop a pin anywhere on the page, add pins to your replies, and see everyone's pins right where they were placed.",
     },
     {
         slug: "widget-access",
