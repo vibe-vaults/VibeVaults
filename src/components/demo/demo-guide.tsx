@@ -366,9 +366,13 @@ export function DemoGuide() {
       initial={reduceMotion ? false : { opacity: 0, y: 48, scale: 0.94 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
-      // Docked beside the widget from lg up. Below that there is no room next
-      // to a 380px panel, so the card sits inline at the top of the page.
-      className="relative z-30 mx-4 mt-4 lg:mx-0 lg:mt-0 lg:fixed lg:bottom-[calc(var(--cookie-banner-height,0px)+1.25rem)] lg:right-[var(--vv-dock-right)] lg:w-[340px] lg:transition-[right,bottom] lg:duration-300 lg:ease-out text-gray-900"
+      // Docked beside the widget from 772px up: the open panel (380px at
+      // right: 20px) + DOCK_GAP + this 340px card + a 16px gutter. Below that
+      // the card sits inline at the top of the page. The breakpoint must stay
+      // tied to that sum, not to `lg`: between 772px and 1024px an inline card
+      // was covered by the open panel, which reaches near the top of the
+      // viewport once the feedback list is showing.
+      className="relative z-30 mx-4 mt-4 min-[772px]:mx-0 min-[772px]:mt-0 min-[772px]:fixed min-[772px]:bottom-[calc(var(--cookie-banner-height,0px)+1.25rem)] min-[772px]:right-[var(--vv-dock-right)] min-[772px]:w-[340px] min-[772px]:transition-[right,bottom] min-[772px]:duration-300 min-[772px]:ease-out text-gray-900"
       style={{ "--vv-dock-right": `${dockRight ?? 116}px` } as React.CSSProperties}
     >
       {/* Soft pulsing halo behind the card until the visitor has pinned. */}
