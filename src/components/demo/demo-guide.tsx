@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Calendar, Check, ChevronDown, RotateCcw, Sparkles } from "lucide-react";
+import { Permanent_Marker } from "next/font/google";
 import { SETUP_CALL_URL } from "@/lib/contact-links";
+
+const handLettering = Permanent_Marker({ weight: "400", subsets: ["latin"] });
 
 /**
  * Main Responsibility: Boots the sandboxed widget on /demo and walks the
@@ -128,13 +131,19 @@ function track(event: string, props?: Record<string, unknown>) {
 
 const DOCK_GAP = 16;
 
+/** Where the widget's launcher sits, for the "start here" arrow. */
+type LauncherSpot = { centerX: number; bottom: number; panelOpen: boolean };
+
 /**
  * Distance (px) from the viewport's right edge to just left of the widget's
  * visible chrome, tracked as its panel opens, closes and resizes. `null` until
  * the widget has rendered, so the caller keeps its CSS fallback until then.
+ * Also reports the launcher's position and whether the panel is open, which
+ * drives the arrow that points first-time visitors at the widget.
  */
 function useWidgetLeftEdge() {
   const [right, setRight] = useState<number | null>(null);
+  const [launcher, setLauncher] = useState<LauncherSpot | null>(null);
 
   useEffect(() => {
     let root: ShadowRoot | null = null;
@@ -153,6 +162,23 @@ function useWidgetLeftEdge() {
         // Nothing visible (widget hidden, or chrome tucked away while a pin
         // is being placed): keep the last position rather than jumping.
         if (left !== Infinity) setRight(Math.round(window.innerWidth - left + DOCK_GAP));
+        const l = root.querySelector(".launcher")?.getBoundingClientRect();
+        const next: LauncherSpot | null =
+          l && l.width > 0
+            ? {
+                centerX: Math.round(l.left + l.width / 2),
+                bottom: Math.round(window.innerHeight - l.top),
+                panelOpen: !!root.querySelector(".popup.open"),
+              }
+            : null;
+        // The widget repaints its pins constantly, and every class change lands
+        // here. Handing React a fresh but identical object would re-render the
+        // arrow each time and restart its bounce, which shows up as a jitter.
+        setLauncher((prev) =>
+          prev && next && prev.centerX === next.centerX && prev.bottom === next.bottom && prev.panelOpen === next.panelOpen
+            ? prev
+            : next
+        );
       });
     };
 
@@ -182,8 +208,92 @@ function useWidgetLeftEdge() {
     };
   }, []);
 
-  return right;
+  return { right, launcher };
 }
+
+/**
+ * Big red cartoon-style "Start here!" arrow, arcing from the middle of the
+ * screen down to the widget's launcher. Visitors kept missing the widget in
+ * the bottom-right corner and browsed the bakery instead, so until they open
+ * it (or pin something) the arrow points straight at it. Drawn in viewport
+ * pixels from the measured launcher position, so it follows resizes; fully
+ * click-through, so it never blocks the page. The label uses a hand-lettered
+ * font (self-hosted by next/font at build time, no runtime request to Google).
+ */
+const LauncherArrow = memo(function LauncherArrow({ spot, reduceMotion }: { spot: LauncherSpot; reduceMotion: boolean | null }) {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const start = { x: w / 2, y: h / 2 };
+  // Tip lands just above the launcher.
+  const tip = { x: spot.centerX, y: h - spot.bottom - 16 };
+  const dx = tip.x - start.x;
+  const dy = tip.y - start.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  // Bulge the curve to the "upper" side of the straight line, like a hand-drawn arc.
+  const px = uy;
+  const py = -ux;
+  const bulge = len * 0.28;
+  const ctrl = { x: (start.x + tip.x) / 2 + px * bulge, y: (start.y + tip.y) / 2 + py * bulge };
+  const curve = `M ${start.x} ${start.y} Q ${ctrl.x} ${ctrl.y} ${tip.x} ${tip.y}`;
+
+  // Open chevron head along the curve's final direction, same stroke width.
+  const ex = tip.x - ctrl.x;
+  const ey = tip.y - ctrl.y;
+  const el = Math.hypot(ex, ey) || 1;
+  const tx = ex / el;
+  const ty = ey / el;
+  const headLen = 38;
+  const spread = Math.PI / 6;
+  const wing = (sign: number) => {
+    const c = Math.cos(sign * spread);
+    const sn = Math.sin(sign * spread);
+    const bx = -(tx * c - ty * sn);
+    const by = -(tx * sn + ty * c);
+    return `${tip.x + bx * headLen} ${tip.y + by * headLen}`;
+  };
+  const head = `M ${wing(1)} L ${tip.x} ${tip.y} L ${wing(-1)}`;
+
+  // Label at the curve's midpoint, lifted above the arc and tilted along it.
+  const mid = {
+    x: 0.25 * start.x + 0.5 * ctrl.x + 0.25 * tip.x,
+    y: 0.25 * start.y + 0.5 * ctrl.y + 0.25 * tip.y,
+  };
+  const label = { x: mid.x + px * 44, y: mid.y + py * 44 };
+  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+  const nudge = 12;
+
+  return (
+    <motion.div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 z-40"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div
+        className="absolute inset-0"
+        animate={reduceMotion ? undefined : { x: [0, tx * nudge, 0], y: [0, ty * nudge, 0] }}
+        transition={reduceMotion ? undefined : { duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <svg width={w} height={h} className="absolute inset-0 drop-shadow-lg">
+          <g className="stroke-red-600" fill="none" strokeWidth={12} strokeLinecap="round" strokeLinejoin="round">
+            <path d={curve} />
+            <path d={head} />
+          </g>
+        </svg>
+        <span
+          className={`${handLettering.className} absolute whitespace-nowrap text-4xl md:text-5xl text-red-600 drop-shadow-md`}
+          style={{ left: label.x, top: label.y, transform: `translate(-50%, -50%) rotate(${angle}deg)` }}
+        >
+          Start here!
+        </span>
+      </motion.div>
+    </motion.div>
+  );
+});
 
 export function DemoGuide() {
   const [stage, setStage] = useState<Stage>(0);
@@ -196,7 +306,7 @@ export function DemoGuide() {
   const [finished, setFinished] = useState(false);
   const barTimer = useRef<number | null>(null);
   const reduceMotion = useReducedMotion();
-  const dockRight = useWidgetLeftEdge();
+  const { right: dockRight, launcher } = useWidgetLeftEdge();
   const router = useRouter();
   // Read through a ref so the mount effect below never re-runs (and tears the
   // widget down) just because the router object changed identity.
@@ -360,7 +470,13 @@ export function DemoGuide() {
     );
   };
 
+  const showArrow = stage === 0 && launcher !== null && !launcher.panelOpen;
+
   return (
+    <>
+    <AnimatePresence>
+      {showArrow && launcher && <LauncherArrow key="launcher-arrow" spot={launcher} reduceMotion={reduceMotion} />}
+    </AnimatePresence>
     <motion.aside
       aria-label="Demo guide"
       initial={reduceMotion ? false : { opacity: 0, y: 48, scale: 0.94 }}
@@ -485,5 +601,6 @@ export function DemoGuide() {
         {minimized && stage === 0 && <div className="pb-4" />}
       </motion.div>
     </motion.aside>
+    </>
   );
 }
