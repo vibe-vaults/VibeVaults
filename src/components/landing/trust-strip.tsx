@@ -5,8 +5,9 @@ import { cn } from "@/lib/utils";
 
 /**
  * Main Responsibility: Slim row of reliability and data-protection facts shown
- * directly above the landing pricing cards, so the page offers some proof
- * before it asks for a signup (there are no customer testimonials yet).
+ * below the pricing cards on the landing page and /framer (closing the pricing
+ * section), so the proof sits at the moment of decision (there are no customer
+ * testimonials yet).
  *
  * Sensitive Dependencies: every chip is a factual claim and goes stale
  * silently, so each one is tied to something checkable:

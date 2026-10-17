@@ -45,7 +45,7 @@ export default function QuickStartDoc() {
                 <pre><code>{`<script src="https://www.vibe-vaults.com/widget.js" data-key="YOUR_PROJECT_KEY" async></script>`}</code></pre>
                 <p>
                     Paste it before the closing <code>&lt;/body&gt;</code> tag of the site. One tag, no build step, no plugin.
-                    It works on WordPress, Webflow, Shopify, React, or plain HTML. The script is loaded asynchronously and does
+                    It works on WordPress, Webflow, Framer, Shopify, React, or plain HTML. The script is loaded asynchronously and does
                     not block your page.
                 </p>
                 <div className="docs-callout">

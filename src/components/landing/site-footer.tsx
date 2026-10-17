@@ -21,6 +21,7 @@ const productLinks = [
     { href: "/#how-it-works", label: "How it works" },
     { href: "/pricing", label: "Pricing" },
     { href: "/compare", label: "Compare" },
+    { href: "/framer", label: "For Framer sites" },
 ];
 
 function FooterColumn({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {

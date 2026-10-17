@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MousePointerClick } from "lucide-react";
 import { allComparisons } from "@/lib/compare-data";
 
 export const metadata: Metadata = {
@@ -40,6 +40,16 @@ export default function CompareHubPage() {
                     </Link>
                 ))}
             </div>
+            <p className="mt-12 text-center text-gray-500">
+                Rather see it for yourself?{" "}
+                <Link
+                    href="/demo"
+                    className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline"
+                >
+                    <MousePointerClick className="w-4 h-4" />
+                    Try the live demo
+                </Link>
+            </p>
         </section>
     );
 }

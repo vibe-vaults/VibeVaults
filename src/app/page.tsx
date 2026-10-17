@@ -52,7 +52,7 @@ export default function Home() {
                 Start free trial
               </Link>
               <Link href="/demo" className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 border-2 border-gray-200 text-gray-700 hover:border-primary hover:text-primary hover:shadow-lg hover:-translate-y-1 active:translate-y-0">
-                Try it live, no signup
+                Try the live demo
               </Link>
             </div>
             <p className="text-sm text-gray-400">
@@ -84,10 +84,9 @@ export default function Home() {
         <section id="pricing" className="py-32 w-full flex flex-col items-center bg-gray-50">
           <div className="max-w-7xl mx-auto px-8 text-center">
             <h2 className="text-5xl font-extrabold mb-6">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-8">
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-14">
               Choose the plan that fits your team. Scale up as you grow.
             </p>
-            <TrustStrip className="mb-14" />
             <PricingCards
               ctaLabel="Start free trial"
               staticCtaHref="/auth/register"
@@ -111,6 +110,7 @@ export default function Home() {
                 Book a 15-min setup call
               </a>
             </p>
+            <TrustStrip className="mt-8" />
           </div>
         </section>
 

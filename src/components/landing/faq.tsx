@@ -31,7 +31,7 @@ const faqs: { question: string; answer: string; link?: { match: string; href: st
     },
     {
         question: "Does VibeVaults work on all websites?",
-        answer: "Yes. VibeVaults works on any website where you can add a single script tag, including WordPress, Webflow, Shopify, React, and plain HTML sites. There are no plugins to maintain and no browser extensions for anyone to install.",
+        answer: "Yes. VibeVaults works on any website where you can add a single script tag, including WordPress, Webflow, Framer, Shopify, React, and plain HTML sites. There are no plugins to maintain and no browser extensions for anyone to install.",
     },
     {
         question: "How easy is it to set up?",

@@ -203,7 +203,7 @@ test.describe('demo page lifecycle', () => {
         // (a client-side navigation): a fresh run with only the seeded pins.
         await page.locator('a[href="/"]').first().click();
         await page.waitForURL((u) => u.pathname === '/');
-        await page.getByRole('link', { name: 'Try it live, no signup' }).click();
+        await page.getByRole('link', { name: 'Try the live demo' }).click();
         await page.waitForURL('**/demo');
         await expect(guide(page)).toContainText('0/2');
         await openWidget(page);
@@ -258,7 +258,7 @@ test.describe('demo page lifecycle', () => {
     test('an in-app back and return starts over, and the old run cannot leak in', async ({ page }) => {
         await recordDemoEvents(page);
         await page.goto('/');
-        await page.getByRole('link', { name: 'Try it live, no signup' }).click();
+        await page.getByRole('link', { name: 'Try the live demo' }).click();
         await page.waitForURL('**/demo');
         await pinAndSubmit(page, 'Before going back');
         await expect(guide(page)).toContainText('1/2');
@@ -267,7 +267,7 @@ test.describe('demo page lifecycle', () => {
         // sandbox (and its scripted-reply timers) would still be around.
         await page.goBack();
         await page.waitForURL((u) => u.pathname === '/');
-        await page.getByRole('link', { name: 'Try it live, no signup' }).click();
+        await page.getByRole('link', { name: 'Try the live demo' }).click();
         await page.waitForURL('**/demo');
         await expect(guide(page)).toContainText('0/2');
 
