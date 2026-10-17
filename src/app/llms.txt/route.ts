@@ -48,7 +48,7 @@ function buildLlmsTxt(baseUrl: string): string {
 - **How feedback is given:** the reviewer drops a pin on the exact spot on the page and types a comment. From that one action a screenshot is captured automatically, along with the page URL, browser, operating system, viewport, recent console logs and failed network requests. Query strings are stripped from captured URLs for privacy.
 - **Pins live on the page:** pins stay visible on the site where they were placed, survive layout and viewport changes, and each one opens its own thread with real-time replies between the team and the client.
 - **Client access:** send one shareable review link (the reviewer enters a name and email, no account), or invite clients individually by email. The widget is invite-only, so ordinary visitors of the site never see it.
-- **Setup:** paste one script tag into the site. Works on Webflow, WordPress, Shopify, React, Next.js, Vue and plain HTML, including single-page apps with client-side routing.
+- **Setup:** paste one script tag into the site. Works on Webflow, Framer (including the free plan), WordPress, Shopify, React, Next.js, Vue and plain HTML, including single-page apps with client-side routing.
 - **Team side:** a shared dashboard with workspaces, projects and roles (owner, member, client), feedback statuses (open, in progress, in review, completed), email notifications, and an optional public read-only board for stakeholders.
 - **Try it without signing up:** an interactive demo on a made-up site at ${url("/demo")}.
 - **Trust and data:** data hosted in the EU, GDPR processor terms (DPA) included in the Terms of Service, daily backups, and public uptime monitoring.
@@ -76,6 +76,7 @@ ${comparisons}
 - [Homepage](${url("/")}): product overview, features, FAQ
 - [Interactive demo](${url("/demo")}): try the widget on a made-up site, no signup
 - [Pricing](${url("/pricing")}): plans and full feature matrix
+- [For Framer sites](${url("/framer")}): client feedback on published Framer sites, setup in three steps
 - [Documentation](${url("/docs")}): setup and how the widget works
 - [Comparisons](${url("/compare")}): VibeVaults compared with other visual feedback tools
 - [Widget access recovery](${url("/access")}): for invited clients and team members who lost their widget access link

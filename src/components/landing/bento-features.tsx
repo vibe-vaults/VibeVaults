@@ -3,7 +3,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 import {
-  Zap,
   Camera,
   MessageSquare,
   ClipboardCheck,
@@ -35,18 +34,9 @@ interface FeatureItem {
 const features: FeatureItem[] = [
   {
     slug: "widget",
-    title: "One-Click Install",
-    description:
-      "Drop a single script tag into WordPress, Webflow, Shopify, React or any site. Your clients don't even need an account.",
-    icon: Zap,
-    iconColor: "text-primary",
-    iconBg: "bg-primary/10",
-  },
-  {
-    slug: "screenshot",
     title: "Point, Pin & Screenshot",
     description:
-      "Clients pin feedback directly on any element. We auto-capture a screenshot plus browser, OS, and screen size metadata.",
+      "Clients pin feedback directly on any element. We auto-capture a screenshot plus browser, OS, and screen size metadata. No account needed.",
     icon: Camera,
     iconColor: "text-orange-600",
     iconBg: "bg-orange-500/10",

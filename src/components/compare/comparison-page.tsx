@@ -10,9 +10,11 @@
  */
 
 import Image from "next/image";
-import Link from "next/link";
-import { Check, X, ChevronDown, Maximize2 } from "lucide-react";
+import { Check, X, Maximize2 } from "lucide-react";
 import { PricingCards } from "@/components/landing/pricing-cards";
+import { DetailsFaq } from "@/components/landing/details-faq";
+import { GradientCta } from "@/components/landing/gradient-cta";
+import { HeroCtas } from "@/components/landing/hero-ctas";
 import { ZoomableImage } from "@/components/zoomable-image";
 import type { ComparisonData, CompareValue } from "@/lib/compare-data";
 
@@ -23,20 +25,8 @@ function Cell({ value }: { value: CompareValue }) {
 }
 
 export function ComparisonPage({ data }: { data: ComparisonData }) {
-    const faqJsonLd = {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: data.faqs.map((faq) => ({
-            "@type": "Question",
-            name: faq.question,
-            acceptedAnswer: { "@type": "Answer", text: faq.answer },
-        })),
-    };
-
     return (
         <>
-            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
-
             {/* Hero */}
             <section className="max-w-4xl mx-auto px-4 md:px-8 pt-20 pb-16 text-center">
                 <span className="inline-block text-sm font-bold uppercase tracking-wider text-primary mb-4">
@@ -48,20 +38,7 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
                 <p className="text-lg md:text-xl text-gray-500 max-w-3xl mx-auto mb-10 leading-relaxed">
                     {data.heroSubtitle}
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Link
-                        href="/auth/register"
-                        className="inline-flex items-center justify-center px-8 py-4 rounded-full font-bold text-base transition-all duration-300 bg-secondary text-white hover:bg-secondary/90 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
-                    >
-                        Start your 14-day trial
-                    </Link>
-                    <Link
-                        href="#compare"
-                        className="inline-flex items-center justify-center px-8 py-4 rounded-full font-bold text-base transition-all duration-300 border-2 border-gray-200 text-gray-700 hover:border-primary hover:text-primary"
-                    >
-                        See the comparison
-                    </Link>
-                </div>
+                <HeroCtas />
             </section>
 
             {/* Which is right for you (honest self-select) */}
@@ -97,8 +74,8 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
                                 <Image
                                     src="/screenshots/feature-widget.png"
                                     alt="The VibeVaults feedback widget open on a live webshop, with a screenshot attached and a feedback message"
-                                    width={994}
-                                    height={680}
+                                    width={1001}
+                                    height={614}
                                     className="block w-full h-auto"
                                 />
                                 <span className="absolute top-3 right-3 flex items-center justify-center w-9 h-9 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 backdrop-blur-sm">
@@ -231,42 +208,12 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
                 <PricingCards ctaLabel="Start your 14-day trial" staticCtaHref="/auth/register" showTrialNote />
             </section>
 
-            {/* FAQ (native details for zero-JS, crawlable SSR) */}
-            <section className="max-w-3xl mx-auto px-4 md:px-8 py-20">
-                <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12">
-                    {data.competitorName} alternative FAQ
-                </h2>
-                <div className="flex flex-col gap-4">
-                    {data.faqs.map((faq) => (
-                        <details
-                            key={faq.question}
-                            className="group rounded-2xl border-2 border-gray-200 bg-white open:border-primary/30 open:shadow-lg open:shadow-primary/5 transition-colors"
-                        >
-                            <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center justify-between gap-4 px-6 py-5 text-base md:text-lg font-bold text-gray-900">
-                                {faq.question}
-                                <ChevronDown className="w-5 h-5 shrink-0 text-gray-400 transition-transform duration-300 group-open:rotate-180 group-open:text-primary" />
-                            </summary>
-                            <p className="px-6 pb-6 text-gray-500 leading-relaxed">{faq.answer}</p>
-                        </details>
-                    ))}
-                </div>
-            </section>
+            <DetailsFaq title={`${data.competitorName} alternative FAQ`} faqs={data.faqs} />
 
-            {/* Final CTA */}
-            <section className="bg-linear-to-r from-primary to-secondary py-20">
-                <div className="max-w-3xl mx-auto px-4 md:px-8 text-center text-white">
-                    <h2 className="text-3xl md:text-4xl font-extrabold mb-4">See if VibeVaults fits your feedback rounds</h2>
-                    <p className="text-lg text-white/90 mb-8">
-                        14-day free trial. No credit card. Unlimited clients on every plan.
-                    </p>
-                    <Link
-                        href="/auth/register"
-                        className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-lg bg-white text-primary hover:-translate-y-1 transition-all duration-300 shadow-2xl"
-                    >
-                        Start your free trial
-                    </Link>
-                </div>
-            </section>
+            <GradientCta
+                title="See if VibeVaults fits your feedback rounds"
+                subtitle="14-day free trial. No credit card. Unlimited clients on every plan."
+            />
         </>
     );
 }

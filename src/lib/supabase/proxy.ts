@@ -87,6 +87,7 @@ export async function updateSession(request: NextRequest) {
         !request.nextUrl.pathname.startsWith('/pricing') &&
         !request.nextUrl.pathname.startsWith('/compare') &&
         !request.nextUrl.pathname.startsWith('/docs') &&
+        !request.nextUrl.pathname.startsWith('/framer') &&
         // Public widget sandbox: the whole point is trying it without an account.
         !request.nextUrl.pathname.startsWith('/demo') &&
         !request.nextUrl.pathname.startsWith('/share') &&
