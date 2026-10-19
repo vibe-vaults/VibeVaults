@@ -1,57 +1,148 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useId } from "react";
 import { motion } from "framer-motion";
 import { TrendingDown, TrendingUp, DollarSign, Clock, FolderOpen } from "lucide-react";
+import { TIER_DISPLAY, TIER_LIMITS } from "@/lib/tier-config";
 
 /**
  * Main Responsibility: Interactive ROI calculator that lets prospects input their
- * hourly rate and active project count, then visualises monthly time & money savings.
+ * hourly rate, active project count and feedback hours per project, then visualises
+ * monthly time & money savings.
  *
- * Sensitive Dependencies: None — pure client-side math, no external data.
+ * Sensitive Dependencies: TIER_DISPLAY / TIER_LIMITS from tier-config.ts (plan price
+ * and which plan fits the project count). Otherwise pure client-side math.
  */
 
-// Industry-backed estimates (HubSpot partner surveys, Marker.io, BugHerd, Usersnap)
-const WITHOUT = {
-  revisionsPerProject: 5,
-  hoursPerRevision: 3,
+// Deliberately conservative model. Only the feedback *logistics* is counted
+// (collecting, clarifying "which button?", chasing screenshots and browser details),
+// never the design/dev rework itself, which a feedback tool does not remove.
+// The 50% cut matches the public vendor claims ("2x faster" on Pastel's site; a
+// Pastel customer reporting "at least 50%"); the strongest single case study
+// (BugHerd/Longhouse, 88%) is deliberately not used. The baseline hours are only a
+// default; the visitor sets their own on the third slider. The reduction is fixed
+// on purpose: letting visitors pick it would make the result look invented.
+const DEFAULT_FEEDBACK_HOURS = 6; // per active project, per month
+// Capped at 20h: beyond that the figure is really design/dev rework, which this
+// model deliberately leaves out.
+const MAX_FEEDBACK_HOURS = 20;
+const TIME_REDUCTION = 0.5;
+
+// Full class strings per accent, because Tailwind only generates classes it can
+// see verbatim in the source.
+const ACCENT_STYLES = {
+  primary: {
+    icon: "text-primary",
+    input:
+      "accent-primary [&::-webkit-slider-thumb]:bg-primary",
+  },
+  secondary: {
+    icon: "text-secondary",
+    input:
+      "accent-secondary [&::-webkit-slider-thumb]:bg-secondary",
+  },
+} as const;
+
+interface RangeFieldProps {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  accent: keyof typeof ACCENT_STYLES;
+  label: string;
+  display: string;
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  onChange: (value: number) => void;
+  minLabel: string;
+  maxLabel: string;
+}
+
+const RangeField = ({
+  icon: Icon,
+  accent,
+  label,
+  display,
+  min,
+  max,
+  step,
+  value,
+  onChange,
+  minLabel,
+  maxLabel,
+}: RangeFieldProps) => {
+  const id = useId();
+  const styles = ACCENT_STYLES[accent];
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-4 mb-3">
+        <label
+          htmlFor={id}
+          className="flex items-center gap-2 text-sm font-semibold text-gray-700"
+        >
+          <Icon size={16} className={`shrink-0 ${styles.icon}`} />
+          {label}
+        </label>
+        <span className="text-2xl font-extrabold text-gray-900">{display}</span>
+      </div>
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className={`w-full h-2 bg-gray-100 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg ${styles.input}`}
+      />
+      <div className="flex justify-between text-xs text-gray-400 mt-1">
+        <span>{minLabel}</span>
+        <span>{maxLabel}</span>
+      </div>
+    </div>
+  );
 };
 
-const WITH = {
-  revisionsPerProject: 2.5,  // ~50% reduction (BugHerd, Usersnap report 30-50%)
-  hoursPerRevision: 1,       // ~67% less logistics time (Marker.io, Pastel report 50-70%)
-};
+// Pro covers up to its project limit; above that the visitor needs Business.
+const planFor = (projects: number) =>
+  TIER_DISPLAY.find(
+    (t) => t.slug === (projects <= TIER_LIMITS.pro.maxProjects ? "pro" : "business")
+  )!;
 
 export const ROICalculator = () => {
   const [hourlyRate, setHourlyRate] = useState(100);
   const [activeProjects, setActiveProjects] = useState(5);
+  const [feedbackHours, setFeedbackHours] = useState(DEFAULT_FEEDBACK_HOURS);
 
   const stats = useMemo(() => {
-    const withoutHours =
-      WITHOUT.revisionsPerProject * WITHOUT.hoursPerRevision * activeProjects;
-    const withHours =
-      WITH.revisionsPerProject * WITH.hoursPerRevision * activeProjects;
+    // Round the two hour totals once and derive everything else from them, so the
+    // displayed hours and dollars always add up.
+    const withoutHours = Math.round(feedbackHours * activeProjects);
+    const withHours = Math.round(withoutHours * (1 - TIME_REDUCTION));
     const savedHours = withoutHours - withHours;
-    const savedMoney = savedHours * hourlyRate;
-    const withoutCost = withoutHours * hourlyRate;
-    const withCost = withHours * hourlyRate;
+    const savedTime = savedHours * hourlyRate;
 
-    // Pro plan at $49/mo — how quickly does the tool pay for itself?
-    const proPrice = 49;
-    const paybackHours = proPrice / hourlyRate;
-    const annualSavings = savedMoney * 12;
+    const plan = planFor(activeProjects);
+    // Rounded UP to 0.1h: rounding down would claim it pays off before it does.
+    const paybackHours = Math.ceil((plan.monthlyPrice / hourlyRate) * 10) / 10;
+
+    // Savings are net of the plan fee, and may be negative for a small setup:
+    // we show that honestly rather than clamping to $0. Annual uses the
+    // yearly-billed price, which is what a one-year commitment actually costs.
+    const withoutCost = withoutHours * hourlyRate;
+    const withCost = withHours * hourlyRate + plan.monthlyPrice;
 
     return {
-      withoutHours: Math.round(withoutHours),
-      withHours: Math.round(withHours),
-      savedHours: Math.round(savedHours),
-      savedMoney: Math.round(savedMoney),
-      withoutCost: Math.round(withoutCost),
-      withCost: Math.round(withCost),
-      paybackHours: paybackHours < 1 ? paybackHours.toFixed(1) : Math.round(paybackHours).toString(),
-      annualSavings: Math.round(annualSavings),
+      withoutHours,
+      withHours,
+      savedHours,
+      netMonthly: withoutCost - withCost,
+      withoutCost,
+      withCost,
+      paybackHours: String(paybackHours),
+      netAnnual: Math.round(savedTime * 12 - plan.yearlyTotal),
+      plan,
     };
-  }, [hourlyRate, activeProjects]);
+  }, [hourlyRate, activeProjects, feedbackHours]);
 
   const formatCurrency = (n: number) =>
     n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -74,68 +165,58 @@ export const ROICalculator = () => {
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
+        <div className="grid lg:grid-cols-2 gap-12 items-stretch">
           {/* Left: Inputs */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="bg-white rounded-3xl border border-gray-200 p-8 md:p-10 shadow-xl"
+            className="bg-white rounded-3xl border border-gray-200 p-8 md:p-10 shadow-xl flex flex-col"
           >
             <h3 className="text-lg font-bold text-gray-900 mb-8">
               Your agency details
             </h3>
 
-            {/* Hourly Rate */}
-            <div className="mb-10">
-              <div className="flex items-center justify-between mb-3">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                  <DollarSign size={16} className="text-primary" />
-                  Hourly rate
-                </label>
-                <span className="text-2xl font-extrabold text-gray-900">
-                  ${hourlyRate}
-                </span>
-              </div>
-              <input
-                type="range"
+            <div className="flex flex-1 flex-col justify-between gap-10">
+              <RangeField
+                icon={DollarSign}
+                accent="primary"
+                label="Hourly rate"
+                display={`$${hourlyRate}`}
                 min={25}
                 max={300}
                 step={5}
                 value={hourlyRate}
-                onChange={(e) => setHourlyRate(Number(e.target.value))}
-                className="w-full h-2 bg-gray-100 rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg"
+                onChange={setHourlyRate}
+                minLabel="$25/hr"
+                maxLabel="$300/hr"
               />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>$25/hr</span>
-                <span>$300/hr</span>
-              </div>
-            </div>
-
-            {/* Active Projects */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                  <FolderOpen size={16} className="text-secondary" />
-                  Active projects per month
-                </label>
-                <span className="text-2xl font-extrabold text-gray-900">
-                  {activeProjects}
-                </span>
-              </div>
-              <input
-                type="range"
+              <RangeField
+                icon={FolderOpen}
+                accent="secondary"
+                label="Active projects per month"
+                display={String(activeProjects)}
                 min={1}
                 max={30}
                 step={1}
                 value={activeProjects}
-                onChange={(e) => setActiveProjects(Number(e.target.value))}
-                className="w-full h-2 bg-gray-100 rounded-full appearance-none cursor-pointer accent-secondary [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-secondary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:shadow-lg"
+                onChange={setActiveProjects}
+                minLabel="1 project"
+                maxLabel="30 projects"
               />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>1 project</span>
-                <span>30 projects</span>
-              </div>
+              <RangeField
+                icon={Clock}
+                accent="primary"
+                label="Hours on feedback per project / month"
+                display={`${feedbackHours}h`}
+                min={1}
+                max={MAX_FEEDBACK_HOURS}
+                step={1}
+                value={feedbackHours}
+                onChange={setFeedbackHours}
+                minLabel="1h"
+                maxLabel={`${MAX_FEEDBACK_HOURS}h`}
+              />
             </div>
           </motion.div>
 
@@ -155,21 +236,29 @@ export const ROICalculator = () => {
                 Your estimated monthly savings
               </p>
               <motion.p
-                key={stats.savedMoney}
+                key={stats.netMonthly}
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="text-5xl md:text-6xl font-black tracking-tight relative z-10"
               >
-                {formatCurrency(stats.savedMoney)}
+                {formatCurrency(stats.netMonthly)}
               </motion.p>
               <p className="text-white/60 text-sm mt-2 relative z-10">
-                That&apos;s{" "}
+                {stats.netMonthly > 0 ? (
+                  <>
+                    That&apos;s{" "}
+                    <span className="text-white font-bold">
+                      {stats.savedHours} hours
+                    </span>{" "}
+                    saved every month, after the{" "}
+                  </>
+                ) : (
+                  <>Doesn&apos;t pay off yet at this size, against the </>
+                )}
                 <span className="text-white font-bold">
-                  {stats.savedHours} hours
+                  ${stats.plan.monthlyPrice}/mo
                 </span>{" "}
-                saved every month — for just{" "}
-                <span className="text-white font-bold">$49/mo</span> on the Pro
-                plan
+                {stats.plan.name} plan
               </p>
             </div>
 
@@ -188,7 +277,7 @@ export const ROICalculator = () => {
                   {formatCurrency(stats.withoutCost)}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {stats.withoutHours}h / month on revisions
+                  {stats.withoutHours}h / month on feedback
                 </p>
               </div>
 
@@ -205,7 +294,7 @@ export const ROICalculator = () => {
                   {formatCurrency(stats.withCost)}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {stats.withHours}h / month on revisions
+                  {stats.withHours}h / month on feedback + plan
                 </p>
               </div>
             </div>
@@ -240,15 +329,16 @@ export const ROICalculator = () => {
                   </span>
                 </div>
                 <motion.p
-                  key={stats.annualSavings}
+                  key={stats.netAnnual}
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="text-2xl font-extrabold text-green-600"
+                  className={`text-2xl font-extrabold ${stats.netAnnual > 0 ? "text-green-600" : "text-gray-500"}`}
                 >
-                  {formatCurrency(stats.annualSavings)}
+                  {formatCurrency(stats.netAnnual)}
                 </motion.p>
                 <p className="text-xs text-gray-400 mt-1">
-                  vs. {formatCurrency(49 * 12)}/yr for Pro plan
+                  after {formatCurrency(stats.plan.yearlyTotal)}/yr for{" "}
+                  {stats.plan.name}, billed yearly
                 </p>
               </div>
             </div>
@@ -257,12 +347,10 @@ export const ROICalculator = () => {
 
         {/* Methodology note */}
         <p className="text-center text-xs text-gray-400 mt-12 max-w-xl mx-auto">
-          Estimates based on industry surveys and reports from agencies using
-          structured visual feedback tools. Baseline:{" "}
-          {WITHOUT.revisionsPerProject} revision rounds at{" "}
-          {WITHOUT.hoursPerRevision}h each; with VibeVaults:{" "}
-          {WITH.revisionsPerProject} rounds at {WITH.hoursPerRevision}h.
-          Your actual savings may vary.
+          Hours on feedback means collecting, clarifying and chasing client
+          feedback, cut by {Math.round(TIME_REDUCTION * 100)}% in line with what
+          visual feedback tools publicly report. Design and development rework
+          is not counted. Your actual savings may vary.
         </p>
       </div>
     </section>
