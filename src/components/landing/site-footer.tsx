@@ -117,9 +117,12 @@ export function SiteFooter() {
                             rel="noopener noreferrer"
                             className="inline-flex items-center hover:opacity-80 transition-opacity"
                         >
+                            {/* Self-hosted copy of uneed.best/EMBED1B.png: the hotlinked
+                                original was intermittently refused (403, NotSameOrigin) by
+                                Uneed's edge, leaving a console error on every public page. */}
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                                src="https://www.uneed.best/EMBED1B.png"
+                                src="/badges/uneed-featured.png"
                                 alt="VibeVaults is featured on Uneed"
                                 className="h-10 w-auto"
                             />
