@@ -20,6 +20,7 @@ import { test, expect } from '@playwright/test';
 import { supabaseAdmin } from './utils/supabase-admin';
 import { getSeedResult } from './utils/seed-result';
 import { AUTH_FILES } from './fixtures/test-data';
+import { TIER_LIMITS } from '../src/lib/tier-config';
 
 // Tier mutations are workspace-wide — can't parallelise safely.
 test.describe.configure({ mode: 'serial' });
@@ -83,13 +84,14 @@ test.describe('Starter tier: project cap', () => {
         snap = await snapshotProfile(seed.ownerId);
         await setTier(seed.ownerId, 'starter');
 
-        // Top the workspace up to exactly 3 projects (the Starter cap).
+        // Top the workspace up to exactly the Starter cap (read from the config
+        // so a pricing change can't silently turn this into a no-op test).
         const { count: existing } = await supabaseAdmin
             .from('projects')
             .select('*', { count: 'exact', head: true })
             .eq('workspace_id', seed.workspaceId);
 
-        const need = 3 - (existing ?? 0);
+        const need = TIER_LIMITS.starter.maxProjects - (existing ?? 0);
         for (let i = 0; i < need; i++) {
             const { data } = await supabaseAdmin
                 .from('projects')

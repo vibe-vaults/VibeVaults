@@ -102,11 +102,11 @@ const RangeField = ({
   );
 };
 
-// Pro covers up to its project limit; above that the visitor needs Business.
+// The cheapest plan whose project limit covers the visitor's active projects
+// (TIER_DISPLAY is ordered cheapest first; Business is the unlimited fallback).
 const planFor = (projects: number) =>
-  TIER_DISPLAY.find(
-    (t) => t.slug === (projects <= TIER_LIMITS.pro.maxProjects ? "pro" : "business")
-  )!;
+  TIER_DISPLAY.find((t) => projects <= TIER_LIMITS[t.slug].maxProjects) ??
+  TIER_DISPLAY[TIER_DISPLAY.length - 1];
 
 export const ROICalculator = () => {
   const [hourlyRate, setHourlyRate] = useState(100);
