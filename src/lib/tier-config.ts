@@ -42,7 +42,7 @@ const GB = 1024 * MB;
 export const TIER_LIMITS: Record<TierSlug, TierLimits> = {
     starter: {
         maxWorkspaces: 1,
-        maxProjects: 3,
+        maxProjects: 10,
         maxTeamMembers: 2,
         storageBytes: 500 * MB,
         emailFrequencies: ['digest'],
@@ -52,7 +52,7 @@ export const TIER_LIMITS: Record<TierSlug, TierLimits> = {
     },
     pro: {
         maxWorkspaces: 3,
-        maxProjects: 10,
+        maxProjects: Infinity,
         maxTeamMembers: 10,
         storageBytes: 5 * GB,
         emailFrequencies: ['digest', 'realtime'],
@@ -147,6 +147,19 @@ export interface TierDisplay {
     features: string[];            // bullet points for cards
 }
 
+/**
+ * Display text for a numeric limit, derived from TIER_LIMITS so the plan cards
+ * and the comparison table can never disagree with what tier-helpers enforces.
+ */
+function limitValue(n: number): string {
+    return n === Infinity ? 'Unlimited' : String(n);
+}
+
+function limitLabel(n: number, singular: string, plural: string): string {
+    if (n === Infinity) return `Unlimited ${plural}`;
+    return `${n} ${n === 1 ? singular : plural}`;
+}
+
 export const TIER_DISPLAY: TierDisplay[] = [
     {
         slug: 'starter',
@@ -157,9 +170,9 @@ export const TIER_DISPLAY: TierDisplay[] = [
         yearlyTotal: parseFloat((29 * 12 * (1 - YEARLY_DISCOUNT)).toFixed(2)),
         highlighted: false,
         features: [
-            '1 workspace',
-            '3 projects',
-            '2 team members',
+            limitLabel(TIER_LIMITS.starter.maxWorkspaces, 'workspace', 'workspaces'),
+            limitLabel(TIER_LIMITS.starter.maxProjects, 'project', 'projects'),
+            limitLabel(TIER_LIMITS.starter.maxTeamMembers, 'team member', 'team members'),
             'Unlimited feedback & clients',
             'Real-time chat',
             'VibeVaults branding on widget',
@@ -174,9 +187,9 @@ export const TIER_DISPLAY: TierDisplay[] = [
         yearlyTotal: parseFloat((49 * 12 * (1 - YEARLY_DISCOUNT)).toFixed(2)),
         highlighted: true,
         features: [
-            '3 workspaces',
-            '10 projects',
-            '10 team members',
+            limitLabel(TIER_LIMITS.pro.maxWorkspaces, 'workspace', 'workspaces'),
+            limitLabel(TIER_LIMITS.pro.maxProjects, 'project', 'projects'),
+            limitLabel(TIER_LIMITS.pro.maxTeamMembers, 'team member', 'team members'),
             'Unlimited feedback & clients',
             'Real-time chat',
             'Team collaboration & role-based access',
@@ -194,9 +207,8 @@ export const TIER_DISPLAY: TierDisplay[] = [
         highlighted: false,
         features: [
             'Everything in Pro',
-            'Unlimited workspaces',
-            'Unlimited projects',
-            'Unlimited team members',
+            limitLabel(TIER_LIMITS.business.maxWorkspaces, 'workspace', 'workspaces'),
+            limitLabel(TIER_LIMITS.business.maxTeamMembers, 'team member', 'team members'),
             'Priority support',
         ],
     },
@@ -207,9 +219,12 @@ export const TIER_DISPLAY: TierDisplay[] = [
  * `true`/`false` render as check/cross icons; strings render as text.
  */
 export const FEATURE_COMPARISON: TierFeature[] = [
-    { label: 'Workspaces', starter: '1', pro: '3', business: 'Unlimited' },
-    { label: 'Projects', starter: '3', pro: '10', business: 'Unlimited' },
-    { label: 'Team members', starter: '2', pro: '10', business: 'Unlimited' },
+    ...(['maxWorkspaces', 'maxProjects', 'maxTeamMembers'] as const).map((key) => ({
+        label: { maxWorkspaces: 'Workspaces', maxProjects: 'Projects', maxTeamMembers: 'Team members' }[key],
+        starter: limitValue(TIER_LIMITS.starter[key]),
+        pro: limitValue(TIER_LIMITS.pro[key]),
+        business: limitValue(TIER_LIMITS.business[key]),
+    })),
     { label: 'Feedback & clients', starter: 'Unlimited', pro: 'Unlimited', business: 'Unlimited' },
     { label: 'Real-time chat', starter: true, pro: true, business: true },
     { label: 'Role-based access', starter: true, pro: true, business: true },
