@@ -20,6 +20,10 @@ import { getDocPage } from "@/lib/docs-data";
 
 const page = getDocPage("ai-agents")!;
 
+// Derived, not typed: the OAuth metadata advertises NEXT_PUBLIC_APP_URL as the resource, and a
+// client may refuse a server address whose host differs from it (apex vs www).
+const MCP_URL = `${(process.env.NEXT_PUBLIC_APP_URL ?? "https://www.vibe-vaults.com").replace(/\/+$/, "")}/api/mcp`;
+
 export const metadata: Metadata = {
     title: page.title,
     description:
@@ -48,11 +52,11 @@ export default function AiAgentsDoc() {
 
                 <h2 id="connect">Connect a tool</h2>
                 <p>
-                    The server address is <code>https://vibe-vaults.com/api/mcp</code>. You never create or paste a key: the tool opens
+                    The server address is <code>{MCP_URL}</code>. You never create or paste a key: the tool opens
                     a VibeVaults page, you sign in if needed, choose what the connection may do, and approve.
                 </p>
                 <h3 id="claude-code">Claude Code</h3>
-                <pre><code>claude mcp add --scope user --transport http vibevaults https://vibe-vaults.com/api/mcp</code></pre>
+                <pre><code>{`claude mcp add --scope user --transport http vibevaults ${MCP_URL}`}</code></pre>
                 <p>Then run <code>/mcp</code> inside Claude Code and choose <strong>vibevaults</strong> to sign in.</p>
                 <h3 id="claude-desktop">Claude Desktop</h3>
                 <p>
@@ -60,7 +64,7 @@ export default function AiAgentsDoc() {
                 </p>
                 <h3 id="cursor">Cursor</h3>
                 <p>Add this to your <code>mcp.json</code>:</p>
-                <pre><code>{`{ "mcpServers": { "vibevaults": { "url": "https://vibe-vaults.com/api/mcp" } } }`}</code></pre>
+                <pre><code>{`{ "mcpServers": { "vibevaults": { "url": "${MCP_URL}" } } }`}</code></pre>
                 <p>
                     The same snippets, with copy buttons, are on your <Link href="/dashboard/account#ai-agents">Account page</Link>.
                 </p>
