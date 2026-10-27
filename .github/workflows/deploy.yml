@@ -43,6 +43,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Generate local JWT signing key
+        # config.toml points at a git-ignored private key the CLI insists on reading; see the script.
+        run: node scripts/gen-signing-key.mjs
+
       - uses: supabase/setup-cli@v1
         with:
           version: 2.101.0
