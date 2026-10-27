@@ -12,7 +12,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { FeedbackStatusSelect } from "./feedback-status-select"
 import { cn } from "@/lib/utils"
-import { Trash2, Globe, Monitor, Terminal, ChevronRight, Activity, Cpu, MousePointer2, Paperclip, FileText, Image as ImageIcon, AlertCircle, Maximize2 } from "lucide-react"
+import { Trash2, Globe, Monitor, Terminal, ChevronRight, Activity, Cpu, MousePointer2, Paperclip, FileText, Image as ImageIcon, AlertCircle, Maximize2, Sparkles } from "lucide-react"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -45,7 +45,7 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
-import { type FeedbackData, type ReplyPinMetadata, getStatusStyles, parseUA, isImageFile } from "@/lib/feedback-utils"
+import { type FeedbackData, type ReplyPinMetadata, type ReplyOriginMetadata, getStatusStyles, parseUA, isImageFile } from "@/lib/feedback-utils"
 import { PinnedOnTile } from "./pinned-on-tile"
 
 interface Attachment {
@@ -65,7 +65,7 @@ interface Reply {
     created_at: string;
     attachments?: Attachment[];
     /** Present when the reply was pinned to a spot on the page from the widget. */
-    metadata?: ReplyPinMetadata | null;
+    metadata?: (ReplyPinMetadata & ReplyOriginMetadata) | null;
 }
 
 interface FeedbackDetailProps {
@@ -612,6 +612,12 @@ export function FeedbackDetail({ feedback, mode, senderAvatarUrl }: FeedbackDeta
                                                     <span className="text-[10px] text-gray-400" suppressHydrationWarning>
                                                         {new Date(reply.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
+                                                    {reply.metadata?.ai_assisted && (
+                                                        <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
+                                                            <Sparkles className="w-3 h-3" />
+                                                            AI-assisted
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 {reply.metadata?.anchor && (
                                                     <PinnedOnTile

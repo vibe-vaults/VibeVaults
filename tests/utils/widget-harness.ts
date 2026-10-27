@@ -43,7 +43,7 @@ export interface StubReply {
     content: string;
     author_name?: string;
     created_at: string;
-    metadata?: { anchor: unknown; page_key: string } | null;
+    metadata?: { anchor: unknown; page_key: string } | { via?: string; ai_assisted?: boolean } | null;
 }
 
 /** Builds the anchor shape `public/widget.js` writes into feedback metadata. */

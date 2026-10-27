@@ -82,6 +82,7 @@ enabled = true
 
 [auth]
 jwt_secret = "super-secret-jwt-key-with-at-least-32-characters-long"
+signing_keys_path = "./signing_keys.json"
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
@@ -101,6 +102,11 @@ enable_signup = true
 enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
+
+[auth.oauth_server]
+enabled = true
+authorization_url_path = "/oauth/consent"
+allow_dynamic_registration = true
 
 [auth.email]
 # Allow/disallow new user signups via email to your project.

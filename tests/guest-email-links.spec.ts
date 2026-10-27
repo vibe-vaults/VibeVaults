@@ -22,27 +22,7 @@ import {
     sendReplyNotification,
     sendReplyDigestEmail,
 } from '../src/lib/notifications';
-
-// Resend is stubbed during Playwright runs (see src/lib/resend.ts), so these
-// calls render the template without sending anything; swapping the send fn
-// captures the HTML the template actually built.
-
-/** Renders one email and returns its HTML body. */
-async function render(fn: () => Promise<unknown>): Promise<string> {
-    const mod = await import('../src/lib/resend');
-    const original = mod.resend.emails.send;
-    let html = '';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (mod.resend.emails as any).send = async (payload: any) => {
-        html = payload.html ?? '';
-        return { data: null, error: null };
-    };
-    try { await fn(); } finally {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (mod.resend.emails as any).send = original;
-    }
-    return html;
-}
+import { renderEmail as render } from './utils/email-capture';
 
 const SITE = 'https://client-site.example.com';
 

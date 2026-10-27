@@ -49,6 +49,11 @@ export const docsPages: DocPage[] = [
         summary: "Owners, members and clients, how workspaces and projects nest, and public feedback boards.",
     },
     {
+        slug: "ai-agents",
+        title: "AI agents (MCP)",
+        summary: "Connect Claude, Cursor or another AI tool so it can read pinned feedback and, if you allow it, reply and change status.",
+    },
+    {
         slug: "troubleshooting",
         title: "Troubleshooting",
         summary: "The widget is not appearing, feedback is missing, notifications are quiet, and other common fixes.",

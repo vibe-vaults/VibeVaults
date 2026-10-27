@@ -72,6 +72,7 @@ export const bugherdComparison: ComparisonData = {
         { label: "Team members included", vibevaults: "10 on Pro ($49/mo)", competitor: "10 on Studio ($80/mo)" },
         { label: "Clients / reviewers", vibevaults: "Unlimited on every plan", competitor: "Unlimited on every plan" },
         { label: "Starting price", vibevaults: "$29/mo", competitor: "$50/mo" },
+        { label: "AI agent access (MCP)", vibevaults: true, competitor: true },
         { label: "Free trial", vibevaults: "14 days, no card", competitor: "7 days, no card" },
     ],
     competitorWins: [
@@ -155,6 +156,7 @@ export const markerComparison: ComparisonData = {
         { label: "Team members included", vibevaults: "10 on Pro ($49/mo)", competitor: "15 on Team ($149/mo)" },
         { label: "Clients / reviewers", vibevaults: "Unlimited on every plan", competitor: "Unlimited reporters; guests capped 10-50" },
         { label: "Starting price", vibevaults: "$29/mo", competitor: "$59/mo" },
+        { label: "AI agent access (MCP)", vibevaults: true, competitor: true },
         { label: "Free trial", vibevaults: "14 days, no card", competitor: "15 days, no card" },
     ],
     competitorWins: [
@@ -237,6 +239,7 @@ export const userbackComparison: ComparisonData = {
         { label: "Team members included", vibevaults: "10 on Pro ($49/mo)", competitor: "5 on Team ($39/mo); unlimited on Business" },
         { label: "Clients / reviewers", vibevaults: "Unlimited on every plan", competitor: "Unlimited on every plan" },
         { label: "Starting price", vibevaults: "$29/mo", competitor: "$39/mo (free tier exists)" },
+        { label: "AI agent access (MCP)", vibevaults: true, competitor: true },
         { label: "Free trial", vibevaults: "14 days, no card", competitor: "Free tier + 14-day trial" },
     ],
     competitorWins: [
@@ -316,6 +319,7 @@ export const usersnapComparison: ComparisonData = {
         { label: "Team members included", vibevaults: "10 on Pro ($49/mo)", competitor: "5 to 50 seats by tier" },
         { label: "Clients / reviewers", vibevaults: "Unlimited on every plan", competitor: "Unlimited on every plan" },
         { label: "Starting price", vibevaults: "$29/mo", competitor: "€49/mo" },
+        { label: "AI agent access (MCP)", vibevaults: true, competitor: true },
         { label: "Free trial", vibevaults: "14 days, no card", competitor: "Trial: 20 feedback items" },
     ],
     competitorWins: [

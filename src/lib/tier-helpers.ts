@@ -236,6 +236,22 @@ export async function checkWorkspaceActive(
     return workspacePausedMessage(access.ownerId === userId, access.ownerEmail);
 }
 
+/**
+ * Guard for AI-agent (MCP) access to a workspace: the workspace must be live
+ * AND its owner's tier must include `mcpAccess`. Resolves through the OWNER,
+ * never the connecting user, so a member of a Starter owner is judged by that
+ * owner's plan. Returns `null` to proceed, or a context-aware message.
+ */
+export async function checkMcpAccess(workspaceId: string, userId: string): Promise<string | null> {
+    const access = await getWorkspaceAccess(workspaceId);
+    if (!access.ok) return workspacePausedMessage(access.ownerId === userId, access.ownerEmail);
+    // A null tier means an active trial, which is treated as Pro everywhere.
+    if (getTierLimits(access.ownerTier).mcpAccess) return null;
+    return access.ownerId === userId
+        ? 'AI agent access is not included in your plan. Upgrade to connect AI agents.'
+        : 'AI agent access is not included in this workspace\'s plan. Ask the workspace owner to upgrade.';
+}
+
 /** Same guard, addressed by project. */
 export async function checkProjectWorkspaceActive(
     projectId: string,

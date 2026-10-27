@@ -30,7 +30,7 @@ jobs:
 
     - name: Cache Playwright browsers
       id: playwright-cache
-      uses: actions/cache@v4
+      uses: actions/cache/restore@v4
       with:
         path: ~/.cache/ms-playwright
         key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
@@ -39,6 +39,17 @@ jobs:
       # CI only runs the chromium project (see playwright.config.ts).
       if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps chromium
+
+    - name: Save Playwright browsers
+      # Saved right after the install rather than by the cache action's own
+      # post step, which only runs when the whole job succeeds: a later failure
+      # (a registry rate limit on `supabase start`) would otherwise throw the
+      # download away and make every re-run pay for it again.
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ steps.playwright-cache.outputs.cache-primary-key }}
 
     - name: Install Playwright system deps (cache hit)
       # System libs (libnss3 etc.) live in /usr/lib, not in the cached path,
@@ -51,8 +62,31 @@ jobs:
       with:
         version: 2.101.0
 
+    # supabase/signing_keys.json is git-ignored (it is a private key), but
+    # config.toml points at it and `supabase start` aborts without it. The MCP
+    # OAuth server needs an asymmetric signing key, so mint a throwaway ES256
+    # one per run. Plain node crypto, so it does not depend on the CLI version.
+    - name: Generate local JWT signing key
+      run: |
+        node -e "
+        const { generateKeyPairSync, randomUUID } = require('crypto');
+        const jwk = generateKeyPairSync('ec', { namedCurve: 'P-256' }).privateKey.export({ format: 'jwk' });
+        const key = { ...jwk, kid: randomUUID(), use: 'sig', key_ops: ['sign', 'verify'], alg: 'ES256', ext: true };
+        require('fs').writeFileSync('supabase/signing_keys.json', JSON.stringify([key]));
+        "
+
     - name: Start Supabase
-      run: supabase start
+      # ghcr.io intermittently answers `toomanyrequests` while pulling the
+      # Postgres image's many layers. Layers already pulled are kept, so each
+      # retry only fetches what is missing.
+      run: |
+        for attempt in 1 2 3 4 5; do
+          supabase start && exit 0
+          echo "supabase start failed (attempt $attempt), retrying in $((attempt * 20))s"
+          supabase stop --no-backup || true
+          sleep $((attempt * 20))
+        done
+        exit 1
 
     - name: Get Supabase Local Keys
       id: supabase_keys

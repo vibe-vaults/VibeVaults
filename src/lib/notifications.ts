@@ -445,6 +445,13 @@ function replyText(content: string) {
     return content.trim() || '(attached image)';
 }
 
+/** Label under a reply that an AI tool sent on the agency's behalf (MCP, marker setting on). */
+function aiAssistedNote(aiAssisted?: boolean) {
+    return aiAssisted
+        ? '<p style="margin: 10px 0 0; font-size: 12px; color: #6d28d9; font-weight: 600;">&#10024; Written with AI assistance</p>'
+        : '';
+}
+
 interface SendReplyEmailParams {
     to: string;
     projectName: string;
@@ -454,6 +461,7 @@ interface SendReplyEmailParams {
     unsubscribeToken?: string;
     recipientKind?: RecipientKind;
     siteUrl?: string;
+    aiAssisted?: boolean;
 }
 
 export async function sendReplyNotification({
@@ -464,7 +472,8 @@ export async function sendReplyNotification({
     sender,
     unsubscribeToken,
     recipientKind = 'member',
-    siteUrl
+    siteUrl,
+    aiAssisted
 }: SendReplyEmailParams) {
     try {
         const { data, error } = await resend.emails.send({
@@ -485,6 +494,7 @@ export async function sendReplyNotification({
                         <div style="background-color: #f0f9ff; padding: 24px; border-radius: 12px; margin-bottom: 32px; border: 1px solid #e0f2fe;">
                             <p style="margin: 0; font-weight: 600; color: #0369a1; font-size: 14px; margin-bottom: 8px;">Says:</p>
                             <p style="margin: 0; color: #0369a1; line-height: 1.6;">"${esc(replyText(replyContent))}"</p>
+                            ${aiAssistedNote(aiAssisted)}
                         </div>
 
                         <p style="font-size: 14px; color: #718096; margin-bottom: 8px;">Your original feedback:</p>
@@ -527,7 +537,8 @@ export async function sendAgencyReplyNotification({
     feedbackId,
     recipientKind = 'member',
     siteUrl,
-}: { to: string, projectName: string, replyContent: string, sender: string, unsubscribeToken?: string, workspaceId?: string, projectId?: string, feedbackId?: string, recipientKind?: RecipientKind, siteUrl?: string }) {
+    aiAssisted,
+}: { to: string, projectName: string, replyContent: string, sender: string, unsubscribeToken?: string, workspaceId?: string, projectId?: string, feedbackId?: string, recipientKind?: RecipientKind, siteUrl?: string, aiAssisted?: boolean }) {
     try {
         const { data, error } = await resend.emails.send({
             from: 'VibeVaults <notifications@mail.vibe-vaults.com>',
@@ -547,6 +558,7 @@ export async function sendAgencyReplyNotification({
                         <div style="background-color: #f0f9ff; padding: 24px; border-radius: 12px; margin-bottom: 32px; border: 1px solid #e0f2fe;">
                             <p style="margin: 0; font-weight: 600; color: #0369a1; font-size: 14px; margin-bottom: 8px;">${esc(sender)} Says:</p>
                             <p style="margin: 0; color: #0369a1; line-height: 1.6;">"${esc(replyText(replyContent))}"</p>
+                            ${aiAssistedNote(aiAssisted)}
                         </div>
 
                         <div style="margin-top: 32px;">
@@ -1081,6 +1093,7 @@ interface DigestReplyItem {
     workspaceId?: string;
     projectId?: string;
     feedbackId?: string;
+    aiAssisted?: boolean;
 }
 
 export async function sendReplyDigestEmail({
@@ -1096,6 +1109,7 @@ export async function sendReplyDigestEmail({
         <div style="padding: 12px 16px; border-left: 3px solid #0369a1; margin-bottom: 12px; background: #f0f9ff; border-radius: 0 8px 8px 0;">
             <p style="margin: 0 0 4px; font-size: 13px; color: #718096;">${esc(item.projectName)} &mdash; ${esc(item.sender)}</p>
             <p style="margin: 0; font-size: 15px; color: #0369a1; line-height: 1.5;">"${esc(replyText(item.replyContent).slice(0, 200))}${item.replyContent.trim().length > 200 ? '…' : ''}"</p>
+            ${aiAssistedNote(item.aiAssisted)}
             ${item.feedbackContentPreview ? `<p style="margin: 6px 0 0; font-size: 13px; color: #718096; font-style: italic;">Re: "${esc(item.feedbackContentPreview.slice(0, 100))}${item.feedbackContentPreview.length > 100 ? '…' : ''}"</p>` : ''}
             ${item.feedbackId && recipientKind === 'member' ? `<a href="${emailRedirectUrl({ page: 'feedback', workspaceId: item.workspaceId, projectId: item.projectId, feedbackId: item.feedbackId })}" style="display: inline-block; margin-top: 8px; font-size: 13px; color: #0369a1; text-decoration: none; font-weight: 600;">View &rarr;</a>` : ''}
         </div>

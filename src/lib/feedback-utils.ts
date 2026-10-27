@@ -52,6 +52,16 @@ export interface ReplyPinMetadata {
     page_key?: string
 }
 
+/**
+ * Where a reply came from, when not typed by a person in the dashboard or widget. Written by the
+ * MCP `reply_to_feedback` tool (`via: 'mcp'`); `ai_assisted` is the connection's marker setting
+ * and is what clients are shown as "AI-assisted".
+ */
+export interface ReplyOriginMetadata {
+    via?: 'mcp'
+    ai_assisted?: boolean
+}
+
 export interface FeedbackData {
     id: string
     content: string

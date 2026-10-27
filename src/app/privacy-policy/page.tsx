@@ -24,7 +24,7 @@ import { SiteFooter } from "@/components/landing/site-footer";
 import { OPERATOR } from "@/lib/legal-entity";
 
 
-const LAST_UPDATED = "September 27, 2026";
+const LAST_UPDATED = "October 25, 2026";
 
 export default function PrivacyPolicy() {
     return (
@@ -98,6 +98,7 @@ export default function PrivacyPolicy() {
                         <li>Authentication data (handled via Supabase, stored securely; includes Google OAuth profile data such as name and avatar if you sign in with Google)</li>
                         <li>Workspace and project details you enter, such as names, website addresses, logos, and the email addresses of people you invite</li>
                         <li>Content you create in the dashboard, including feedback entries, replies, and uploaded attachments</li>
+                        <li>If you connect an AI tool to your account: the name the tool gave itself, the permissions you granted it (read only or read and write, which workspaces, whether replies are marked as AI-assisted), and when it was last used</li>
                         <li>Subscription and billing status (handled by Stripe)</li>
                         <li>Correspondence you send us by email</li>
                     </ul>
@@ -164,6 +165,10 @@ export default function PrivacyPolicy() {
                     </ul>
                     <p className="mb-4">
                         Customers are responsible for informing their end users about data collection and usage, and for having a lawful basis for it.
+                    </p>
+                    <p className="mb-4">
+                        If you connect an AI tool to your account, that tool reads and writes your data on your instructions, using your access. What it reads is sent to the tool and to the AI provider behind it by you, not by us. That provider acts for you, is not our sub-processor, and is outside our control; choosing it, and informing your end users where it matters, is your responsibility as controller. See{" "}
+                        <Link href="/docs/ai-agents" className="underline">docs/ai-agents</Link>.
                     </p>
                     <p className="mb-6">
                         The processor terms in our <Link href="/terms-of-service" className="underline">Terms of Service</Link>, together with this policy and the sub-processor list in section 7, form the data processing agreement between us and our customers. We engage the sub-processors listed in section 7 and remain responsible for their performance. We will give customers notice of a new sub-processor before it starts processing their data, so they have an opportunity to object.
@@ -259,6 +264,7 @@ export default function PrivacyPolicy() {
                         <li><strong>Feedback and conversation data</strong> is kept until the customer deletes it or deletes the project it belongs to. Customers can delete it at any time from the dashboard.</li>
                         <li><strong>Accounting and invoicing records</strong> are kept for 8 years, as required by Hungarian accounting law. This retention overrides a deletion request for those specific records.</li>
                         <li><strong>IP addresses</strong> collected for rate limiting and abuse prevention are retained for up to 30 days, then purged or anonymized.</li>
+                        <li><strong>AI-tool connection records</strong> are kept while the account exists and deleted when you delete the account. Disconnecting a tool ends its access immediately.</li>
                         <li><strong>Widget access tokens</strong> that are never used are deleted automatically 30 days after they are issued.</li>
                         <li><strong>Analytics data</strong> is retained for 1 year.</li>
                         <li><strong>Prospect contact data</strong> is deleted on objection, and contacts who never engaged are removed periodically. An opt-out record is kept indefinitely, because that is what stops us contacting you again.</li>

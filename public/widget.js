@@ -771,6 +771,10 @@
     @media (prefers-reduced-motion: reduce) {
       .pin-marker.pulsing { animation: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 0 5px rgba(var(--vv-pulse), 0.45); }
     }
+    .msg-ai {
+      display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 999px;
+      background: #f5f3ff; color: #6d28d9; font-size: 9px; font-weight: 700; letter-spacing: 0.2px; text-transform: none;
+    }
     .msg-pin {
       display: inline-flex; align-items: center; margin: 0 0 4px; padding: 2px 8px; border-radius: 999px;
       background: #eef2ff; color: #3730a3; font-size: 10px; font-weight: 700; letter-spacing: 0.2px;
@@ -1537,6 +1541,7 @@
         <span style="font-weight:700; text-transform:uppercase; letter-spacing:-0.5px;">${escapeHtml(r.author_name || 'Unknown')}</span>
         <span style="color:#d1d5db;">•</span>
         <span>${new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        ${r.metadata && r.metadata.ai_assisted ? '<span class="msg-ai">\u2728 AI-assisted</span>' : ''}
       </div>
       ${renderReplyPinTag(r)}
       ${r.content ? `<div class="message ${side}">${escapeHtml(r.content)}</div>` : ''}

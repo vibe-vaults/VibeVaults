@@ -204,8 +204,19 @@ tests/              # Playwright E2E tests
   - **Self-notification prevention**: reply emails never sent to the person who wrote the reply
   - Resend batch API used for multi-recipient digest sends
 
+### MCP server (AI agents)
+- **What**: `vibe-vaults.com/api/mcp` lets an owner's or member's AI tool (Claude Code/Desktop, Cursor) read feedback and, when allowed, reply and set status. Five tools in `src/lib/mcp/tools.ts`: `list_projects`, `list_feedback`, `get_feedback` (up to 3 inline screenshots, fetched only from our own bucket), `reply_to_feedback`, `update_feedback_status` (agents may set `completed`). Included on **every plan and the trial** (`mcpAccess` in `tier-config.ts`, plus a `FEATURE_COMPARISON` row). Clients and guests cannot connect: they have no auth account.
+- **Auth**: Supabase Auth's OAuth 2.1 server (BETA; `[auth.oauth_server]` in `supabase/config.toml`, dynamic client registration on, needs asymmetric JWT signing keys; locally `supabase/signing_keys.json`, git-ignored). The access token IS the user's Supabase JWT with a `client_id` claim, so tools run through a user-scoped client **under RLS**. `verifyMcpToken()` (`src/lib/mcp/auth.ts`) verifies with `getClaims()` (JWKS), requires `client_id` (an ordinary dashboard session token is rejected) and a live `mcp_connections` row. Custom scopes are not supported, so read/write is our own `mcp_connections.write_enabled`; instant revocation is `revoked_at`, because the JWT stays valid until it expires.
+- **Consent screen** (`src/app/oauth/consent/page.tsx` + `/api/oauth/decision`): a plain server-rendered form posting to a route handler, no client submit handler (same click-before-hydration rule as the review gate; pinned with JavaScript disabled). The client name is **self-declared** and shown as unverified. New connections are read-only, AI marker ON, all workspaces. The route writes the `mcp_connections` row BEFORE approving; a token without a row is rejected. The client id/name come from Supabase, never the form.
+- **Order of checks on every call**: per-user rate limit (60/min/tool, in-memory, bypassed during Playwright via `.playwright-running`) → connection read-only switch (writes) → connection workspace scope → RLS → owner-derived gate `checkMcpAccess()` (workspace live AND owner tier `mcpAccess`). **Never gate on the viewer's plan** (same bug class as `workspace-paused`): a lapsed owner locks their own agent and every member's agent, reads included. Disconnect is never gated.
+- **Prompt injection**: client-authored text is fenced in `<client_feedback>` / `<client_page_log>` tags with an untrusted-content notice, closing tags inside content are escaped. `feedbacks.metadata` is NOT whitelisted on insert (`/api/widget`), so `get_feedback` projects known keys only (`src/lib/mcp/format.ts`).
+- **AI-assisted marker**: a per-connection setting, ON by default; replies sent through MCP carry `feedback_replies.metadata = { via: 'mcp', ai_assisted }`. We cannot enforce that a human approved each write, so the marker is the mitigation; ToS section 8 makes the customer responsible for connected tools. A draft-then-human-send gate is the v2 option. **Rendering of the marker (client email, widget thread, dashboard bubble) is a widget-API addition: additive only, and the `/demo` backend's reply shape must follow.**
+- **Refactor behind it**: `src/lib/feedback-service.ts` holds the status/reply logic (`updateFeedbackStatusCore`, `sendAgencyReplyCore`) shared by the server actions and MCP; no `revalidatePath` in it.
+- **Specs**: `mcp-discovery`, `mcp-tools`, `mcp-access` (billing columns saved/restored), `mcp-consent`; the OAuth helper `tests/utils/mcp-oauth.ts` does registration + PKCE through the real consent screen. Local runs need the app on `127.0.0.1` (the local auth issuer host).
+- **Docs**: `/docs/ai-agents` mirrors the behaviour above (hand-written coupling); `/docs/widget-data#ai-agents`, `/llms.txt`, Privacy Policy 3.1/4/10 and ToS 8 mention it. It is not a new sub-processor: the AI provider acts for the customer, which the policies say explicitly. Compare pages carry a parity row (every listed competitor offers MCP).
+
 ### Public Documentation (`/docs`)
-- Customer-facing docs at `/docs`: `quick-start`, `pinning`, `widget-access`, `screenshots`, `widget-data`, `roles-and-sharing`, `troubleshooting`.
+- Customer-facing docs at `/docs`: `quick-start`, `pinning`, `widget-access`, `screenshots`, `widget-data`, `roles-and-sharing`, `ai-agents`, `troubleshooting`.
 - **`src/lib/docs-data.ts` is the single source of truth** for the page list, titles, and order. It drives the docs index, the sidebar nav (`components/docs/docs-nav.tsx`), the "next page" card (`docs-page-footer.tsx`), the footer's Docs column, and `sitemap.ts`. Adding a page = add a slug there + create `src/app/docs/<slug>/page.tsx`. A slug with no matching directory ships a 404 into the nav and the sitemap — there is no runtime check.
 - Shared chrome lives in `src/app/docs/layout.tsx` (SiteHeader + sticky sidebar + SiteFooter); prose styling is the `.docs-prose` class in `globals.css`, so pages stay semantic HTML with no repeated Tailwind strings.
 - Pages assert real product behaviour and go stale silently, so anything derivable is derived: `roles-and-sharing` **reads** `TIER_DISPLAY`/`TIER_LIMITS`/`YEARLY_DISCOUNT` from `tier-config.ts` and never restates a price or limit in prose. The remaining hand-written couplings: `screenshots` mirrors the Firefox foreignObject bug entry; `widget-data` mirrors what `getMetadata()` captures; `quick-start` mirrors the embed snippet from `embed-widget-card.tsx`.
@@ -255,6 +266,7 @@ tests/              # Playwright E2E tests
 | `embed-widget-card` | `src/components/embed-widget-card.tsx` | Widget embed snippet + `ActivateWidgetButton` |
 | `activate-widget-button` | `src/components/activate-widget-button.tsx` | Shared "Activate widget" control (synchronous `window.open`, disabled until hydrated) |
 | `share-project-card` | `src/components/share-project-card.tsx` | Public board sharing with token management |
+| `mcp-connections-card` | `src/components/mcp-connections-card.tsx` | "AI agents (MCP)" card on `/dashboard/account`: server URL + setup snippets, per-connection read/write, AI-marker and workspace scope, Disconnect. Refreshes when the tab becomes visible, since connections are approved in another tab |
 | `review-link-card` | `src/components/review-link-card.tsx` | Permanent shareable review link (`?vv_review=`) + pause toggle |
 | `pinned-on-tile` | `src/components/pinned-on-tile.tsx` | "Where on the page" tile shared by the feedback header and anchored reply bubbles |
 | `switch-workspace-button` | `src/components/switch-workspace-button.tsx` | Escape hatch off `/dashboard/workspace-paused`; sets the cookie + hard-navigates so the proxy re-evaluates |
@@ -279,6 +291,7 @@ tests/              # Playwright E2E tests
 | `acceptInvite` | `src/actions/invites.ts` | Email-gated invite acceptance via admin client; rejects `role='client'`; fires `dispatchMemberWelcomeBootstrap` |
 | `issueSelfWidgetLink` | `src/actions/widget-access.ts` | Mints a `widget_identities` row for an owner/member, returns `?vv_token=` activation URL |
 | `requestWidgetAccessRecovery` | `src/actions/widget-access.ts` | Public, rate-limited action backing `/access`; anti-enumeration (always returns `ok=true`) |
+| `updateMcpConnection` / `disconnectMcpConnection` | `src/actions/mcp-connections.ts` | Change a connection's settings (user-scoped, RLS + column grants) / disconnect it (sets `revoked_at` via admin, then `revokeGrant`). Never billing-gated: Disconnect is an exit |
 | `setReviewFeedbackPaused` | `src/actions/review-link.ts` | Pause/resume review-link feedback (user-scoped update, RLS-enforced) |
 
 > Every workspace-scoped **mutation** (feedback status/delete/reply/manual-add, project delete, sharing toggle, review pause, `issueSelfWidgetLink`, `POST /api/projects`, `POST /api/workspaces/invites`, `/api/dashboard/upload` + `/confirm`) runs the owner-billing guard from `tier-helpers.ts` before writing. RLS only knows membership, never the owner's plan, and a dimmed sidebar does nothing for a tab that was already open when the lock landed. Both halves of the presigned-upload flow are gated: the PUT goes straight to Storage, so blocking only the presign would still let a confirm turn a stale URL into a row.
@@ -298,6 +311,7 @@ tests/              # Playwright E2E tests
 | `email_digest_queue` | `id`, `recipient_email`, `notification_type`, `project_id`, `feedback_id`, `payload`, `sent_at`, `created_at` |
 | `feedback_attachments` | `id`, `feedback_id`, `reply_id`, `project_id`, `file_name`, `file_url`, `file_size`, `mime_type`, `uploaded_by` |
 | `widget_errors` | `id`, `api_key`, `error_message`, `error_stack`, `url`, `user_agent`, `metadata`, `created_at` |
+| `mcp_connections` | `user_id`, `client_id` (PK together), `client_name` (self-declared by the AI tool), `write_enabled` (default false), `ai_marker` (default true), `workspace_ids` (null = all), `created_at`, `last_used_at`, `revoked_at` — one row per AI tool a user approved. Users may UPDATE only the three setting columns; inserts, `last_used_at` and `revoked_at` go through the admin client |
 | `widget_identities` | `id`, `project_id`, `invite_id` (nullable), `user_id` (nullable), `email`, `token_hash`, `via_review`, `display_name`, `created_at`, `last_used_at` — per-device widget auth tokens |
 
 ## API Routes
@@ -325,6 +339,9 @@ tests/              # Playwright E2E tests
 | `/api/widget/heartbeat` | POST | Unauthenticated beacon from widget.js on every page load; stamps `projects.widget_last_seen_at` so the dashboard can detect a freshly embedded snippet. Carries only the (public) API key |
 | `/api/widget/errors` | POST | Receives widget-side error reports, writes to `widget_errors` (rate-limited) |
 | `/api/widget/capture-info` | POST | Receives screenshot-capture telemetry → PostHog `widget_screenshot_capture` event (browser, GPU, DPR, viewport, duration) |
+| `/api/mcp` | GET/POST | MCP server (Streamable HTTP, `mcp-handler`). Bearer = a Supabase OAuth access token; see "MCP server" |
+| `/api/oauth/decision` | POST | Form target of the consent screen: writes `mcp_connections`, then approves/denies and 303s to the tool's redirect URI |
+| `/.well-known/oauth-protected-resource/api/mcp` | GET | RFC 9728 metadata pointing AI tools at Supabase's authorization server |
 | `/api/admin-alerts/auth-confirm-error` | POST | Beacon from `/auth/confirm` error branch → instant Resend email to `ADMIN_EMAIL`. Rate-limited per IP. Used to diagnose rare "Verification Failed" flashes we can't reproduce locally. |
 
 ## Proxy Redirects (`src/lib/supabase/proxy.ts`)
@@ -340,3 +357,4 @@ tests/              # Playwright E2E tests
 - `/api/admin-alerts/*` excluded from auth checks (beacons fire from pre-auth pages)
 - `/unsubscribe` and `/api/unsubscribe` excluded from auth checks — **do not re-gate**: the opt-out link is in every notification email, and guests/invited clients have no account, so a login wall makes it impossible for them to unsubscribe (a compliance problem, not just UX). The `unsubscribe_token` is the credential. Pinned by `tests/unsubscribe-access.spec.ts`
 - `/review/*` and `/api/review/*` excluded from auth checks (public guest entry point for shareable review links)
+- `/api/mcp` and `/.well-known/*` excluded from auth checks (and from the `src/proxy.ts` matcher). A bare 401 without `WWW-Authenticate: Bearer resource_metadata=` breaks every AI tool's discovery, so the MCP route answers its own 401s. `/oauth/consent` and `/api/oauth/*` stay behind login; a logged-out visit to the consent page is sent to `/auth/login?next=<consent path + query>` so `?authorization_id=` survives sign-in
