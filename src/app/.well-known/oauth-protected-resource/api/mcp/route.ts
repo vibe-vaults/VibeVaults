@@ -6,6 +6,4 @@ const handler = protectedResourceHandler({
 
 export { handler as GET }
 
-export function OPTIONS() {
-    return metadataCorsOptionsRequestHandler()
-}
+export const OPTIONS = metadataCorsOptionsRequestHandler()
