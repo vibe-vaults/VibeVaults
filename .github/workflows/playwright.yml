@@ -62,18 +62,10 @@ jobs:
       with:
         version: 2.101.0
 
-    # supabase/signing_keys.json is git-ignored (it is a private key), but
-    # config.toml points at it and `supabase start` aborts without it. The MCP
-    # OAuth server needs an asymmetric signing key, so mint a throwaway ES256
-    # one per run. Plain node crypto, so it does not depend on the CLI version.
+    # config.toml points at a git-ignored private key that `supabase start` aborts
+    # without; mint a throwaway one (see the script for why).
     - name: Generate local JWT signing key
-      run: |
-        node -e "
-        const { generateKeyPairSync, randomUUID } = require('crypto');
-        const jwk = generateKeyPairSync('ec', { namedCurve: 'P-256' }).privateKey.export({ format: 'jwk' });
-        const key = { ...jwk, kid: randomUUID(), use: 'sig', key_ops: ['sign', 'verify'], alg: 'ES256', ext: true };
-        require('fs').writeFileSync('supabase/signing_keys.json', JSON.stringify([key]));
-        "
+      run: node scripts/gen-signing-key.mjs
 
     - name: Start Supabase
       # ghcr.io intermittently answers `toomanyrequests` while pulling the

@@ -44,6 +44,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Generate local JWT signing key
+        run: node scripts/gen-signing-key.mjs
+
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
