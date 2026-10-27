@@ -50,3 +50,6 @@ node_modules/
 /tests/.auth/
 /tests/widget-test.html
 /.playwright-running
+
+# Local Supabase JWT signing key (private)
+supabase/signing_keys.json

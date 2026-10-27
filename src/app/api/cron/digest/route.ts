@@ -150,6 +150,7 @@ export async function GET() {
                             workspaceId: item.payload.workspaceId as string,
                             projectId: item.payload.projectId as string,
                             feedbackId: item.feedback_id || (item.payload.feedbackId as string),
+                            aiAssisted: item.payload.aiAssisted === true,
                         })),
                         unsubscribeToken: prefs.unsubscribeToken,
                     });

@@ -22,6 +22,7 @@ export interface TierLimits {
     emailFrequencies: ('digest' | 'realtime')[];
     showBranding: boolean;
     publicDashboard: boolean;
+    mcpAccess: boolean;          // AI agents (MCP) may connect to workspaces this tier owns
     prioritySupport: boolean;
 }
 
@@ -48,6 +49,7 @@ export const TIER_LIMITS: Record<TierSlug, TierLimits> = {
         emailFrequencies: ['digest'],
         showBranding: true,
         publicDashboard: false,
+        mcpAccess: true,
         prioritySupport: false,
     },
     pro: {
@@ -58,6 +60,7 @@ export const TIER_LIMITS: Record<TierSlug, TierLimits> = {
         emailFrequencies: ['digest', 'realtime'],
         showBranding: false,
         publicDashboard: true,
+        mcpAccess: true,
         prioritySupport: false,
     },
     business: {
@@ -68,6 +71,7 @@ export const TIER_LIMITS: Record<TierSlug, TierLimits> = {
         emailFrequencies: ['digest', 'realtime'],
         showBranding: false,
         publicDashboard: true,
+        mcpAccess: true,
         prioritySupport: true,
     },
 };
@@ -232,6 +236,7 @@ export const FEATURE_COMPARISON: TierFeature[] = [
     { label: 'Email notifications (realtime)', starter: false, pro: true, business: true },
     { label: 'Widget branding removal', starter: false, pro: true, business: true },
     { label: 'Public dashboard sharing', starter: false, pro: true, business: true },
+    { label: 'AI agent access (MCP)', starter: TIER_LIMITS.starter.mcpAccess, pro: TIER_LIMITS.pro.mcpAccess, business: TIER_LIMITS.business.mcpAccess },
     { label: 'File storage', starter: '500 MB', pro: '5 GB', business: '50 GB' },
     { label: 'Priority support', starter: false, pro: false, business: true },
 ];

@@ -20,7 +20,7 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { OPERATOR } from "@/lib/legal-entity";
 
-const LAST_UPDATED = "September 27, 2026";
+const LAST_UPDATED = "October 25, 2026";
 
 export default function TermsOfService() {
     return (
@@ -163,6 +163,9 @@ export default function TermsOfService() {
                         <li>delete or return your personal data at the end of the contract, except where storage is required by law</li>
                         <li>make available the information reasonably necessary to demonstrate compliance with this section</li>
                     </ul>
+                    <p className="mb-4">
+                        <strong>AI tools you connect.</strong> If you connect an AI tool to your account, it acts on your instructions and with your access, and you are responsible for it: for the tool and its provider, for the data you let it read, and for anything it writes or sends in your name, including replies to your clients. We do not review what a connected tool sends. The provider of a connected tool is your service provider, not our sub-processor. You are responsible for any disclosure that your own legal obligations require about replies produced with AI help; the service offers a marker for this, which you can switch off for a connection at your own responsibility.
+                    </p>
                     <p className="mb-6">
                         The subject matter, duration, nature, and purpose of the processing, the types of personal data, and the categories of data subjects are described in our Privacy Policy.
                     </p>

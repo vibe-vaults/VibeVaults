@@ -141,6 +141,15 @@ export default function WidgetDataDoc() {
                     <li><strong>The widget&apos;s own calls</strong> to VibeVaults, filtered out so our traffic never clutters your reports</li>
                 </ul>
 
+                <h2 id="ai-agents">If you connect an AI tool</h2>
+                <p>
+                    Everything described on this page is visible to an AI tool that you connect to your account, including the pin,
+                    the browser details, the console logs, and the failed requests. It reads them as you, only for the workspaces
+                    you allow, and the content is sent on to that tool&apos;s provider at your instruction. Because query strings
+                    are removed in the browser, they are not among it. See <Link href="/docs/ai-agents">AI agents (MCP)</Link> for
+                    what a connection can do and how to limit it.
+                </p>
+
                 <h2 id="your-obligations">Your obligations as the site owner</h2>
                 <p>
                     The widget only appears for people you have invited, and it collects this context at the moment someone

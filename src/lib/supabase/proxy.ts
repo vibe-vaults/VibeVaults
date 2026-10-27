@@ -80,6 +80,8 @@ export async function updateSession(request: NextRequest) {
         !request.nextUrl.pathname.startsWith("/api/stripe") &&
         !request.nextUrl.pathname.startsWith("/api/email-redirect") &&
         !request.nextUrl.pathname.startsWith("/api/admin-alerts") &&
+        !request.nextUrl.pathname.startsWith("/api/mcp") &&
+        !request.nextUrl.pathname.startsWith("/.well-known") &&
         !request.nextUrl.pathname.includes('widget.js') &&
         !request.nextUrl.pathname.includes('manifest') &&
         !request.nextUrl.pathname.startsWith('/privacy-policy') &&
@@ -113,7 +115,13 @@ export async function updateSession(request: NextRequest) {
         // We exclude "/" as it's the landing page.
         if (request.nextUrl.pathname !== "/") {
             const url = request.nextUrl.clone();
+            // The OAuth consent screen must survive the login detour: Supabase sends the
+            // user there with ?authorization_id=, and the login flow honours ?next=.
+            const next = request.nextUrl.pathname.startsWith("/oauth/consent")
+                ? request.nextUrl.pathname + request.nextUrl.search
+                : null;
             url.pathname = "/auth/login";
+            url.search = next ? `?next=${encodeURIComponent(next)}` : url.search;
             // Use 303 (See Other) to force the browser to use GET on the destination.
             return NextResponse.redirect(url, 303);
         }

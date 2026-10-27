@@ -262,6 +262,27 @@
     margin: 2.5rem 0;
 }
 
+.docs-prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    font-size: 0.9375rem;
+}
+
+.docs-prose th,
+.docs-prose td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.docs-prose th {
+    font-weight: 600;
+    color: #111827;
+    border-bottom-color: #e5e7eb;
+}
+
 .docs-prose .docs-callout {
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     border: 1px solid #e2e8f0;

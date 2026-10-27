@@ -2,6 +2,7 @@ import { DeleteAccountCard } from "@/components/delete-account-card";
 import { NotificationsCard } from "@/components/notifications-card";
 import { BillingCard } from "@/components/billing-card";
 import { OnboardingVisibilityCard } from "@/components/onboarding-visibility-card";
+import { McpConnectionsCard } from "@/components/mcp-connections-card";
 import { Highlight } from "@/components/highlight";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -51,6 +52,16 @@ export default async function AccountPage() {
         getStorageUsedBytes(user.id),
     ]);
 
+    // User-scoped on purpose: RLS returns only this user's connections and workspaces.
+    const [{ data: mcpConnections }, { data: mcpWorkspaces }] = await Promise.all([
+        supabase
+            .from('mcp_connections')
+            .select('client_id, client_name, write_enabled, ai_marker, workspace_ids, last_used_at')
+            .is('revoked_at', null)
+            .order('created_at', { ascending: false }),
+        supabase.from('workspaces').select('id, name').order('name'),
+    ]);
+
     const billingInterval = (profile?.billing_interval as 'monthly' | 'yearly' | null) ?? null;
 
     const initialPreferences = {
@@ -97,6 +108,11 @@ export default async function AccountPage() {
                         />
                     )}
                     <NotificationsCard initialPreferences={initialPreferences} canUseRealtime={canUseRealtime} />
+                    <McpConnectionsCard
+                        serverUrl={`${process.env.NEXT_PUBLIC_APP_URL}/api/mcp`}
+                        connections={mcpConnections ?? []}
+                        workspaces={mcpWorkspaces ?? []}
+                    />
                     <Highlight id="onboarding" className="rounded-xl">
                         <OnboardingVisibilityCard initialVisible={!(profile?.has_onboarded ?? false)} />
                     </Highlight>

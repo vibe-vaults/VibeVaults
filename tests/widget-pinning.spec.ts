@@ -706,6 +706,29 @@ test.describe('reply pins', () => {
         await expect.poll(() => widget.markers().then((m) => m.length)).toBe(1);
     });
 
+    test('a reply an AI tool sent is labelled AI-assisted, and a person\'s reply is not', async ({ page }) => {
+        const widget = await mountWidget(page, { body: LAYOUT, feedback: THREAD, replies: [
+            { id: 'a1', content: 'Fixed in the latest deploy.', author_name: 'agency@example.com', created_at: '2026-08-27T10:03:00Z', metadata: { via: 'mcp', ai_assisted: true } },
+            { id: 'a2', content: 'Checked it myself.', author_name: 'agency@example.com', created_at: '2026-08-27T10:04:00Z', metadata: { via: 'mcp', ai_assisted: false } },
+            { id: 'a3', content: 'Typed by hand.', author_name: 'agency@example.com', created_at: '2026-08-27T10:05:00Z', metadata: null },
+        ] });
+        await openWidget(page);
+        await expect.poll(() => widget.markers().then((m) => m.length)).toBe(1);
+        await openThread(page);
+
+        await expect.poll(() => page.evaluate(() => {
+            const r = document.querySelector('#vibe-vaults-widget-host')!.shadowRoot!;
+            return Array.from(r.querySelectorAll('.msg-wrapper')).map((w) => ({
+                id: w.getAttribute('data-reply-id'),
+                label: (w.querySelector('.msg-ai')?.textContent || '').trim(),
+            }));
+        })).toEqual([
+            { id: 'a1', label: '\u2728 AI-assisted' },
+            { id: 'a2', label: '' },
+            { id: 'a3', label: '' },
+        ]);
+    });
+
     test('saved reply pins render under their parent\'s number, on another page too', async ({ page }) => {
         // f0 is pinned elsewhere but one of its replies was pinned here, so this
         // page shows '1a' alone; f3's two reply pins read '2a' and '2b'.
