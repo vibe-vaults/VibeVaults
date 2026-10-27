@@ -30,7 +30,7 @@ jobs:
 
     - name: Cache Playwright browsers
       id: playwright-cache
-      uses: actions/cache@v4
+      uses: actions/cache/restore@v4
       with:
         path: ~/.cache/ms-playwright
         key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
@@ -39,6 +39,17 @@ jobs:
       # CI only runs the chromium project (see playwright.config.ts).
       if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps chromium
+
+    - name: Save Playwright browsers
+      # Saved right after the install rather than by the cache action's own
+      # post step, which only runs when the whole job succeeds: a later failure
+      # (a registry rate limit on `supabase start`) would otherwise throw the
+      # download away and make every re-run pay for it again.
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ steps.playwright-cache.outputs.cache-primary-key }}
 
     - name: Install Playwright system deps (cache hit)
       # System libs (libnss3 etc.) live in /usr/lib, not in the cached path,
@@ -65,7 +76,17 @@ jobs:
         "
 
     - name: Start Supabase
-      run: supabase start
+      # ghcr.io intermittently answers `toomanyrequests` while pulling the
+      # Postgres image's many layers. Layers already pulled are kept, so each
+      # retry only fetches what is missing.
+      run: |
+        for attempt in 1 2 3 4 5; do
+          supabase start && exit 0
+          echo "supabase start failed (attempt $attempt), retrying in $((attempt * 20))s"
+          supabase stop --no-backup || true
+          sleep $((attempt * 20))
+        done
+        exit 1
 
     - name: Get Supabase Local Keys
       id: supabase_keys
