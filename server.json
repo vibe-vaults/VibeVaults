@@ -1,0 +1,14 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.vibe-vaults/vibevaults",
+  "title": "VibeVaults",
+  "description": "Read clients' pinned website feedback and, if allowed, reply and set status from your AI tool.",
+  "version": "1.0.0",
+  "websiteUrl": "https://www.vibe-vaults.com/docs/ai-agents",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://www.vibe-vaults.com/api/mcp"
+    }
+  ]
+}
