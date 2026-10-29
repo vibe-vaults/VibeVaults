@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/landing/site-footer";
 import { ProductDemo } from "@/components/landing/product-demo";
 import { ROICalculator } from "@/components/landing/roi-calculator";
 import { BentoFeatures } from "@/components/landing/bento-features";
+import { McpAgents } from "@/components/landing/mcp-agents";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { FounderNote } from "@/components/landing/founder-note";
 import { PricingCards } from "@/components/landing/pricing-cards";
@@ -45,7 +46,7 @@ export default function Home() {
               Ship client sites faster without the <span className="text-primary font-black italic">feedback chaos.</span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-500 max-w-3xl mb-12 leading-relaxed mx-auto">
-              VibeVaults is a visual feedback widget for web agencies and design studios. Clients comment right on the site you&apos;re building. No logins, no browser extensions, and you never pay per client. Send a link, they start marking up, you ship faster.
+              VibeVaults is a visual feedback widget for web agencies and design studios. Clients comment right on the site you&apos;re building. No logins, no browser extensions, and you never pay per client. Send a link, they start marking up, and your AI agent can pick up every report and fix it.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-5">
               <Link href="/auth/register" className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 bg-secondary text-white hover:bg-secondary/90 hover:shadow-2xl hover:-translate-y-1 active:translate-y-0">
@@ -67,6 +68,9 @@ export default function Home() {
             videoUrl="https://www.youtube-nocookie.com/embed/Zeaf79Idd-U?rel=0&modestbranding=1&autoplay=1&mute=1&playsinline=1&loop=1&playlist=Zeaf79Idd-U"
           />
         </div>
+
+        {/* AI agents (MCP): the lever that gets feedback resolved, not just collected */}
+        <McpAgents />
 
         {/* Bento Feature Grid */}
         <BentoFeatures />

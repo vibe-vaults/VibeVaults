@@ -51,6 +51,11 @@ const faqs: { question: string; answer: string; link?: { match: string; href: st
         link: { match: "vibe-vaults.com/docs/widget-data", href: "/docs/widget-data" },
     },
     {
+        question: "Can my AI coding tool read and fix the feedback?",
+        answer: "Yes. VibeVaults runs an MCP server, so Claude Code, Claude, Cursor and other MCP-ready tools can read your clients' reports, including the pin location, the page, console logs, failed requests and screenshots. Every connection starts read-only; you decide per connection whether it may also reply and change status. It is included on every plan and the trial, and setup is described at vibe-vaults.com/docs/ai-agents.",
+        link: { match: "vibe-vaults.com/docs/ai-agents", href: "/docs/ai-agents" },
+    },
+    {
         question: "Can I integrate VibeVaults with my project management tools?",
         answer: "Not yet. Today, all feedback lives in the VibeVaults dashboard, where your whole team can view, discuss, and resolve it. Direct integrations with project management tools are on our roadmap. As an early customer you can tell us which integration to build first.",
     },

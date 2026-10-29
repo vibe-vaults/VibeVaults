@@ -42,7 +42,7 @@ export default function AiAgentsDoc() {
                 <h2 id="what-it-is">What this is</h2>
                 <p>
                     MCP (Model Context Protocol) is the standard way AI tools connect to other products. VibeVaults runs an MCP
-                    server, so a tool such as Claude Code, Claude Desktop or Cursor can look up a report, see where on the page it was
+                    server, so a tool such as Claude Code, Claude or Cursor can look up a report, see where on the page it was
                     pinned, read the thread, and start fixing the site, without you copying anything out of the dashboard.
                 </p>
                 <p>
@@ -65,6 +65,12 @@ export default function AiAgentsDoc() {
                 <h3 id="cursor">Cursor</h3>
                 <p>Add this to your <code>mcp.json</code>:</p>
                 <pre><code>{`{ "mcpServers": { "vibevaults": { "url": "${MCP_URL}" } } }`}</code></pre>
+                <h3 id="other-clients">Other MCP clients</h3>
+                <p>
+                    You are not limited to the tools above. Any client that supports remote MCP servers over streamable HTTP with
+                    OAuth sign-in can connect. In most of them you only enter the server address, or add the same config as for
+                    Cursor, and the client finds the sign-in step by itself.
+                </p>
                 <p>
                     The same snippets, with copy buttons, are on your <Link href="/dashboard/account#ai-agents">Account page</Link>.
                 </p>
