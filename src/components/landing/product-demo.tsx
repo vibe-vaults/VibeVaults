@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -9,6 +9,9 @@ import { motion } from "framer-motion";
  *
  * Sensitive Dependencies:
  * - videoUrl must be a valid embed URL (YouTube, Loom, etc.).
+ * - The iframe is mounted only once the section nears the viewport. An eager
+ *   autoplay embed pulls ~1.3 MB of player JS + video on load and pushed the
+ *   landing page's mobile LCP past 3.5s by keeping the main thread busy.
  */
 
 interface ProductDemoProps {
@@ -16,6 +19,25 @@ interface ProductDemoProps {
 }
 
 export const ProductDemo = ({ videoUrl }: ProductDemoProps) => {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [loadVideo, setLoadVideo] = useState(false);
+
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setLoadVideo(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section className="py-24 w-full flex flex-col items-center bg-white">
       <div className="max-w-6xl mx-auto px-4 md:px-8 w-full">
@@ -35,19 +57,22 @@ export const ProductDemo = ({ videoUrl }: ProductDemoProps) => {
         </motion.div>
 
         <motion.div
+          ref={frameRef}
           initial={{ opacity: 0, y: 30, scale: 0.97 }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
           className="relative w-full aspect-video rounded-3xl overflow-hidden border border-gray-200 shadow-2xl bg-gray-900"
         >
-          <iframe
-            src={videoUrl}
-            title="VibeVaults product demo"
-            className="w-full h-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          {loadVideo && (
+            <iframe
+              src={videoUrl}
+              title="VibeVaults product demo"
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          )}
         </motion.div>
 
         <p className="mt-8 text-center text-gray-500">
