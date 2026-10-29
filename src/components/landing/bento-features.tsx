@@ -9,7 +9,6 @@ import {
   Share2,
   Users,
   Maximize2,
-  Bot,
 } from "lucide-react";
 import Image from "next/image";
 import { ZoomableImage } from "@/components/zoomable-image";
@@ -68,15 +67,6 @@ const features: FeatureItem[] = [
     icon: Share2,
     iconColor: "text-secondary",
     iconBg: "bg-secondary/10",
-  },
-  {
-    slug: "mcp",
-    title: "Your Agent Fixes It",
-    description:
-      "Connect Claude, Cursor or any MCP-ready tool. It reads the pin, the page, the console and the screenshot, then fixes the site and replies. Read-only until you say otherwise.",
-    icon: Bot,
-    iconColor: "text-violet-600",
-    iconBg: "bg-violet-500/10",
   },
   {
     slug: "team",

@@ -275,7 +275,7 @@ tests/              # Playwright E2E tests
 | `dashboard-lock-context` | `src/components/dashboard-lock-context.tsx` | Forwards the layout's server-resolved lock state to client components (no state of its own, so no second source of truth) |
 | `billing-card` | `src/components/billing-card.tsx` | Account billing card → Stripe Customer Portal |
 | `docs/*` | `src/components/docs/` | `docs-nav` (sidebar, active state), `docs-page-header`, `docs-page-footer` (next-page card) |
-| `landing/*` | `src/components/landing/` | `bento-features`, `founder-note`, `product-demo`, `roi-calculator`, `pricing-cards`, `faq`, `how-it-works`, `site-header`, `site-footer` |
+| `landing/*` | `src/components/landing/` | `bento-features`, `mcp-agents` (dark MCP section right after the demo), `founder-note`, `product-demo`, `roi-calculator`, `pricing-cards`, `faq`, `how-it-works`, `site-header`, `site-footer` |
 
 > Components are **kebab-case** filenames. A few legacy files remain PascalCase (`PostHogProvider.tsx`, `CookieConsent.tsx`, `GoogleSignInButton.tsx`, `CookiePreferencesLink.tsx`).
 
