@@ -32,7 +32,7 @@ const items: TrustItem[] = [
 ];
 
 const chipClass =
-    "inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm";
+    "inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-gray-600";
 
 export function TrustStrip({ className }: { className?: string }) {
     return (
@@ -40,7 +40,7 @@ export function TrustStrip({ className }: { className?: string }) {
             {items.map(({ icon: Icon, label, href, external }) => {
                 const content = (
                     <>
-                        <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                        <Icon className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                         {label}
                     </>
                 );

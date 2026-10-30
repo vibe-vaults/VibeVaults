@@ -1,17 +1,31 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
-import { ProductDemo } from "@/components/landing/product-demo";
-import { ROICalculator } from "@/components/landing/roi-calculator";
-import { BentoFeatures } from "@/components/landing/bento-features";
+import { Hero } from "@/components/landing/hero";
+import { StatsStrip } from "@/components/landing/stats-strip";
 import { McpAgents } from "@/components/landing/mcp-agents";
+import { FeatureRows } from "@/components/landing/feature-rows";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { ROICalculator } from "@/components/landing/roi-calculator";
 import { FounderNote } from "@/components/landing/founder-note";
 import { PricingCards } from "@/components/landing/pricing-cards";
 import { Faq } from "@/components/landing/faq";
 import { TrustStrip } from "@/components/landing/trust-strip";
+import { ClosingCta } from "@/components/landing/closing-cta";
+import { Accent, SectionHeading } from "@/components/landing/section-heading";
 import { SETUP_CALL_URL } from "@/lib/contact-links";
 
+/**
+ * Main Responsibility: The landing page. Sections alternate between light and
+ * dark navy bands as the page scrolls: light hero and facts, dark AI
+ * agents (MCP), light capabilities and setup, dark founder note, the ROI card
+ * (light inputs, navy results), light pricing and FAQ, dark closing CTA.
+ *
+ * Sensitive Dependencies:
+ * - Anchors #features, #how-it-works, #pricing and #faq are linked from
+ *   SiteHeader and SiteFooter.
+ * - The SoftwareApplication JSON-LD prices must match tier-config.ts.
+ */
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
@@ -39,87 +53,69 @@ export default function Home() {
           }}
         />
 
-        {/* Hero */}
-        <section className="flex flex-col items-center justify-center py-20 px-4 text-center max-w-7xl mx-auto">
-          <div className="max-w-4xl">
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-none mb-8 text-gray-900">
-              Ship client sites faster without the <span className="text-primary font-black italic">feedback chaos.</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-500 max-w-3xl mb-12 leading-relaxed mx-auto">
-              VibeVaults is a visual feedback widget for web agencies and design studios. Clients comment right on the site you&apos;re building. No logins, no browser extensions, and you never pay per client. Send a link, they start marking up, and your AI agent can pick up every report and fix it.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-5">
-              <Link href="/auth/register" className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 bg-secondary text-white hover:bg-secondary/90 hover:shadow-2xl hover:-translate-y-1 active:translate-y-0">
-                Start free trial
-              </Link>
-              <Link href="/demo" className="inline-flex items-center justify-center px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 border-2 border-gray-200 text-gray-700 hover:border-primary hover:text-primary hover:shadow-lg hover:-translate-y-1 active:translate-y-0">
-                Try the live demo
-              </Link>
-            </div>
-            <p className="text-sm text-gray-400">
-              14-day free trial &middot; No credit card required
-            </p>
-          </div>
-        </section>
+        <Hero />
+        <StatsStrip />
 
-        {/* Product Demo (video + screenshots) */}
-        <div id="demo">
-          <ProductDemo
-            videoUrl="https://www.youtube-nocookie.com/embed/Zeaf79Idd-U?rel=0&modestbranding=1&autoplay=1&mute=1&playsinline=1&loop=1&playlist=Zeaf79Idd-U"
-          />
+        {/* Product demo video: hidden temporarily (Oct 30, 2026) until the outdated
+            recording is replaced. Bring it back by restoring this block:
+        <div id="demo" className="w-full">
+          <ProductDemo videoUrl="https://www.youtube-nocookie.com/embed/<NEW_ID>?rel=0&modestbranding=1&autoplay=1&mute=1&playsinline=1&loop=1&playlist=<NEW_ID>" />
         </div>
+        */}
 
         {/* AI agents (MCP): the lever that gets feedback resolved, not just collected */}
         <McpAgents />
 
-        {/* Bento Feature Grid */}
-        <BentoFeatures />
-
-        {/* How It Works */}
+        <FeatureRows />
         <HowItWorks />
 
-        {/* Founder Note & Social Proof */}
         <FounderNote />
 
-        {/* ROI Calculator — right before pricing for final justification */}
+        {/* ROI Calculator: right before pricing for final justification */}
         <ROICalculator />
 
         {/* Pricing */}
-        <section id="pricing" className="py-32 w-full flex flex-col items-center bg-gray-50">
-          <div className="max-w-7xl mx-auto px-8 text-center">
-            <h2 className="text-5xl font-extrabold mb-6">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-14">
-              Choose the plan that fits your team. Scale up as you grow.
-            </p>
+        <section id="pricing" className="py-24 md:py-32 w-full scroll-mt-20">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <SectionHeading className="mb-12" kicker="Unlimited clients and feedback on every plan. Scale up as you grow.">
+              <Accent>Simple</Accent> pricing
+            </SectionHeading>
             <PricingCards
               ctaLabel="Start free trial"
               staticCtaHref="/auth/register"
               showTrialNote={true}
             />
-            <Link
-              href="/pricing#comparison"
-              className="inline-flex items-center gap-1.5 mt-8 text-sm font-semibold text-gray-500 hover:text-primary transition-colors"
-            >
-              Compare all features
-              <span aria-hidden="true">&rarr;</span>
-            </Link>
-            <p className="mt-4 text-sm text-gray-500">
-              Not sure which plan fits?{" "}
-              <a
-                href={SETUP_CALL_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-primary hover:underline"
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-x-8 gap-y-3 text-sm">
+              <Link
+                href="/pricing#comparison"
+                className="inline-flex items-center gap-1.5 font-semibold text-gray-500 hover:text-primary transition-colors"
               >
-                Book a 15-min setup call
-              </a>
-            </p>
+                Compare all features
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+              <p className="text-gray-500">
+                Not sure which plan fits?{" "}
+                <a
+                  href={SETUP_CALL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-primary hover:underline"
+                >
+                  Book a 15-min setup call
+                </a>
+              </p>
+            </div>
             <TrustStrip className="mt-8" />
           </div>
         </section>
 
-        {/* FAQ */}
         <Faq />
+
+        <ClosingCta
+          title="Start your next feedback round"
+          accent="today."
+          subtitle="Every pin, screenshot and reply in one place. 14-day free trial, no credit card required."
+        />
       </main>
 
       <SiteFooter />

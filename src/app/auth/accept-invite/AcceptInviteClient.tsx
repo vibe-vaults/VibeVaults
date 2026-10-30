@@ -14,6 +14,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { SimpleHeader } from '@/components/landing/wordmark';
 import { createClient } from '@/lib/supabase/client';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -106,13 +107,7 @@ export function AcceptInviteClient({ token, inviteEmail, workspaceName, inviterN
 
     return (
         <div className="min-h-screen flex flex-col">
-            <header className="bg-white/80 backdrop-blur-md border-b border-gray-100">
-                <div className="px-8 py-4 max-w-7xl mx-auto w-full">
-                    <Link href="/" className="font-bold text-2xl tracking-tight text-primary hover:opacity-90 transition-opacity">
-                        VibeVaults
-                    </Link>
-                </div>
-            </header>
+            <SimpleHeader />
 
             <main className="flex-1 flex items-center justify-center bg-gray-50 p-4">
                 {submitted ? (

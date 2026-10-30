@@ -1,14 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { DM_Serif_Display, Manrope } from "next/font/google";
 import { headers } from "next/headers";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import { CookieConsent } from "@/components/CookieConsent";
 import { requiresConsent } from "@/lib/consent";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin", "latin-ext"],
+});
+
+// Display face for headlines only (italic accents on marketing pages, page
+// titles in the dashboard). Ships a single weight, so keep it to large sizes.
+const dmSerif = DM_Serif_Display({
+  variable: "--font-dm-serif",
+  weight: "400",
+  style: ["normal", "italic"],
+  subsets: ["latin", "latin-ext"],
 });
 
 const defaultUrl = process.env.NEXT_PUBLIC_APP_URL!;
@@ -81,8 +90,8 @@ export default async function RootLayout({
   const requireConsent = requiresConsent(country);
 
   return (
-    <html lang="en" className={`${geistSans.variable} font-sans`} suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+    <html lang="en" className={`${manrope.variable} ${dmSerif.variable} font-sans`} suppressHydrationWarning>
+      <body className={`${manrope.className} antialiased`}>
         <PostHogProvider>
           {children}
         </PostHogProvider>

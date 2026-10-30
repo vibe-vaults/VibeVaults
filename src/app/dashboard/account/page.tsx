@@ -92,7 +92,7 @@ export default async function AccountPage() {
     return (
         <div>
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-semibold text-gray-900 flex items-center flex-wrap gap-2">
+                <h1 className="font-serif text-4xl md:text-[44px] leading-[1.1] tracking-tight text-gray-900 flex items-baseline flex-wrap gap-x-3 gap-y-1">
                     Account
                 </h1>
             </div>

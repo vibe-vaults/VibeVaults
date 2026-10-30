@@ -34,7 +34,7 @@ export function BakeryHeader() {
           <span className="grid h-10 w-10 place-items-center rounded-full bg-[#6b3f1d] text-[#fffaf3]">
             <Croissant className="h-5 w-5" aria-hidden />
           </span>
-          <span className="hidden sm:inline font-[family-name:var(--font-bakery)] text-2xl font-semibold tracking-tight">Crumb &amp; Co.</span>
+          <span className="hidden sm:inline font-serif text-2xl tracking-tight">Crumb &amp; Co.</span>
         </Link>
         <nav className="flex gap-5 md:gap-8 text-sm font-medium">
           {NAV.map(({ href, label }) => {

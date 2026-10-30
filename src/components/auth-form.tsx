@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { SimpleHeader } from '@/components/landing/wordmark';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -133,13 +134,7 @@ export function AuthForm({ mode, socialProviders }: AuthFormProps) {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <header className="bg-white/80 backdrop-blur-md border-b border-gray-100">
-                <div className="px-8 py-4 max-w-7xl mx-auto w-full">
-                    <Link href="/" className="font-bold text-2xl tracking-tight text-primary hover:opacity-90 transition-opacity">
-                        VibeVaults
-                    </Link>
-                </div>
-            </header>
+            <SimpleHeader />
 
             <main className="flex-1 flex items-center justify-center bg-gray-50 p-4">
                 {submitted ? (
@@ -151,7 +146,7 @@ export function AuthForm({ mode, socialProviders }: AuthFormProps) {
                                 </svg>
                             </div>
                         </div>
-                        <h1 className="text-2xl font-bold mb-2 text-gray-900">Check your inbox</h1>
+                        <h1 className="font-serif text-4xl leading-[1.1] tracking-tight mb-2 text-gray-900">Check your inbox</h1>
                         <p className="text-gray-500 mb-6">
                             {"We've sent a magic link to "}<span className="font-semibold text-gray-900">{email}</span>.
                             <br />Click the link in the email to complete your {config.submittedText}.
@@ -172,7 +167,7 @@ export function AuthForm({ mode, socialProviders }: AuthFormProps) {
                 ) : (
                     <div className="w-full max-w-[400px] bg-white border border-gray-200 rounded-lg shadow-sm p-6">
                         <div className="text-center mb-6">
-                            <h1 className="text-2xl font-bold mb-2 text-gray-900">{config.title}</h1>
+                            <h1 className="font-serif text-4xl leading-[1.1] tracking-tight mb-2 text-gray-900">{config.title}</h1>
                             <p className="text-gray-500 text-sm">{config.subtitle}</p>
                         </div>
 

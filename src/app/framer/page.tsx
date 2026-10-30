@@ -33,8 +33,9 @@ import { SiteFooter } from "@/components/landing/site-footer";
 import { PricingCards } from "@/components/landing/pricing-cards";
 import { TrustStrip } from "@/components/landing/trust-strip";
 import { DetailsFaq, type FaqItem } from "@/components/landing/details-faq";
-import { GradientCta } from "@/components/landing/gradient-cta";
+import { ClosingCta } from "@/components/landing/closing-cta";
 import { HeroCtas } from "@/components/landing/hero-ctas";
+import { Accent, SectionHeading } from "@/components/landing/section-heading";
 
 const TITLE = "Client Feedback for Framer Sites | VibeVaults";
 const DESCRIPTION =
@@ -143,31 +144,64 @@ const faqs: FaqItem[] = [
     },
 ];
 
+/**
+ * Numbered hairline grid (the landing page's "( 01 )" device) for the gap and
+ * install lists, on light or navy.
+ */
+function NumberedGrid({ items, tone = "light" }: { items: { title: string; body: string }[]; tone?: "light" | "dark" }) {
+    const dark = tone === "dark";
+    return (
+        <ol className={`grid md:grid-cols-3 border-t ${dark ? "border-white/15" : "border-gray-200"}`}>
+            {items.map((item, i) => (
+                <li
+                    key={item.title}
+                    className={`flex flex-col gap-3 py-8 md:pr-8 border-b md:border-b-0 md:[&:not(:last-child)]:border-r md:[&:not(:first-child)]:pl-8 ${
+                        dark ? "border-white/15" : "border-gray-200"
+                    }`}
+                >
+                    <span className={`text-xs tracking-[0.1em] tabular-nums ${dark ? "text-white/50" : "text-gray-500"}`}>
+                        ( {String(i + 1).padStart(2, "0")} )
+                    </span>
+                    <h3 className={`text-2xl font-semibold tracking-tight ${dark ? "text-white" : "text-gray-900"}`}>{item.title}</h3>
+                    <p className={`leading-relaxed ${dark ? "text-white/60" : "text-gray-500"}`}>{item.body}</p>
+                </li>
+            ))}
+        </ol>
+    );
+}
+
 export default function FramerPage() {
     return (
-        <div className="min-h-screen flex flex-col bg-white">
+        <div className="min-h-screen flex flex-col">
             <SiteHeader />
 
-            <main className="flex-1">
+            <main className="flex-1 hero-glow-top">
                 {/* Hero */}
-                <section className="max-w-4xl mx-auto px-4 md:px-8 pt-20 pb-16 text-center">
-                    <span className="inline-block text-sm font-bold uppercase tracking-wider text-primary mb-4">
-                        For Framer agencies and freelancers
-                    </span>
-                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight mb-6 text-gray-900">
-                        Client feedback on your live Framer site, not on the canvas
-                    </h1>
-                    <p className="text-lg md:text-xl text-gray-500 max-w-3xl mx-auto mb-10 leading-relaxed">
-                        Your clients pin comments straight onto the published page, and every report arrives with a
-                        screenshot and the technical details you need. No Framer seat, no account, no extension.
-                    </p>
-                    <HeroCtas />
+                <section className="max-w-7xl mx-auto px-4 md:px-8 grid lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] gap-12 pt-14 md:pt-24 pb-14 items-start">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#0B6FB3] mb-6">
+                            For Framer agencies and freelancers
+                        </p>
+                        <h1 className="text-[clamp(40px,5.6vw,84px)] leading-[1.04] tracking-[-0.03em] font-semibold text-gray-900 text-balance">
+                            Client feedback on your live Framer site,{" "}
+                            <Accent className="text-[#0B6FB3]">not on the canvas</Accent>
+                        </h1>
+                    </div>
+                    <div className="flex flex-col gap-6 max-w-md lg:pt-12">
+                        <p className="text-[15.5px] leading-relaxed text-gray-500">
+                            Your clients pin comments straight onto the published page, and every report arrives with a
+                            screenshot and the technical details you need. <b className="text-gray-900">No Framer seat</b>,{" "}
+                            <b className="text-gray-900">no account</b>, <b className="text-gray-900">no extension</b>.
+                        </p>
+                        <HeroCtas align="start" />
+                        <p className="text-xs text-gray-500">14-day free trial &middot; No credit card required</p>
+                    </div>
                 </section>
 
                 {/* Product shot */}
-                <section className="max-w-5xl mx-auto px-4 md:px-8 pb-20">
+                <section className="max-w-7xl mx-auto px-4 md:px-8 pb-24">
                     <figure>
-                        <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-2xl shadow-primary/10">
+                        <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-[0_30px_60px_-30px_rgba(15,27,42,0.35)]">
                             <Image
                                 src="/screenshots/feature-widget.png"
                                 alt="The VibeVaults feedback widget open on a live website, with a screenshot attached to a client's feedback message"
@@ -177,85 +211,62 @@ export default function FramerPage() {
                                 className="block w-full h-auto"
                             />
                         </div>
-                        <figcaption className="mt-4 text-center text-sm text-gray-500">
+                        <figcaption className="mt-4 text-sm text-gray-500">
                             What your client sees on the published site. The same widget runs on any Framer site.
                         </figcaption>
                     </figure>
                 </section>
 
                 {/* The gap */}
-                <section className="bg-gray-50 py-20">
-                    <div className="max-w-6xl mx-auto px-4 md:px-8">
-                        <div className="text-center mb-12">
-                            <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">
-                                Framer is built for designing, not for client reviews
-                            </h2>
-                            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-                                Framer collaboration is great inside your team. Once the client gets involved, feedback
-                                scatters across email, Slack and calls.
-                            </p>
-                        </div>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            {gaps.map((gap) => (
-                                <div key={gap.title} className="rounded-2xl border-2 border-gray-200 bg-white p-8">
-                                    <h3 className="text-lg font-bold text-gray-900 mb-2">{gap.title}</h3>
-                                    <p className="text-gray-500 leading-relaxed">{gap.body}</p>
-                                </div>
-                            ))}
-                        </div>
+                <section className="relative w-full bg-navy text-white py-24 md:py-28 overflow-hidden">
+                    <div
+                        aria-hidden="true"
+                        className="absolute inset-0 bg-[radial-gradient(60%_70%_at_100%_0%,rgba(32,156,238,0.22),transparent_70%)]"
+                    />
+                    <div className="relative max-w-7xl mx-auto px-4 md:px-8">
+                        <SectionHeading
+                            size="lg"
+                            tone="dark"
+                            className="mb-12"
+                            kicker="Framer collaboration is great inside your team. Once the client gets involved, feedback scatters across email, Slack and calls."
+                        >
+                            Framer is built for <Accent className="text-primary">designing</Accent>, not for client reviews
+                        </SectionHeading>
+                        <NumberedGrid items={gaps} tone="dark" />
                     </div>
                 </section>
 
                 {/* Install */}
-                <section id="install" className="max-w-5xl mx-auto px-4 md:px-8 py-20 scroll-mt-24">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">
-                            Live on your Framer site in three steps
-                        </h2>
-                        <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-                            One script tag. Nothing to install in Framer, nothing for your client to install.
-                        </p>
-                    </div>
-                    <ol className="grid md:grid-cols-3 gap-6 mb-10">
-                        {steps.map((step, i) => (
-                            <li
-                                key={step.title}
-                                className="rounded-2xl border-2 border-gray-200 bg-white p-8 hover:border-primary/30 hover:shadow-lg transition-all duration-300"
-                            >
-                                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-extrabold mb-4">
-                                    {i + 1}
-                                </span>
-                                <h3 className="text-lg font-bold text-gray-900 mb-2">{step.title}</h3>
-                                <p className="text-gray-500 leading-relaxed">{step.body}</p>
-                            </li>
-                        ))}
-                    </ol>
-                    <div className="rounded-2xl bg-gray-900 p-6 shadow-xl">
-                        <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
+                <section id="install" className="max-w-7xl mx-auto px-4 md:px-8 py-24 md:py-28 scroll-mt-24">
+                    <SectionHeading
+                        size="lg"
+                        className="mb-12"
+                        kicker="One script tag. Nothing to install in Framer, nothing for your client to install."
+                    >
+                        Live on your Framer site in <Accent>three steps</Accent>
+                    </SectionHeading>
+                    <NumberedGrid items={steps} />
+                    <div className="mt-10 rounded-2xl bg-gray-900 p-6">
+                        <div className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400 mb-3">
                             The snippet (your project key is filled in for you in the dashboard)
                         </div>
-                        <pre className="overflow-x-auto text-sm text-green-300">
+                        <pre className="overflow-x-auto text-sm text-[#9ECE6A]">
                             <code>{SNIPPET}</code>
                         </pre>
                     </div>
                 </section>
 
                 {/* Features */}
-                <section className="bg-gray-50 py-20">
-                    <div className="max-w-6xl mx-auto px-4 md:px-8">
-                        <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12 text-gray-900">
-                            Everything a feedback round needs
-                        </h2>
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <section className="w-full bg-gray-50 border-y border-gray-200 py-24 md:py-28">
+                    <div className="max-w-7xl mx-auto px-4 md:px-8">
+                        <SectionHeading size="lg" className="mb-12">
+                            Everything a feedback round <Accent>needs</Accent>
+                        </SectionHeading>
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 border-t border-l border-gray-200 bg-white">
                             {features.map(({ icon: Icon, title, body }) => (
-                                <div
-                                    key={title}
-                                    className="rounded-2xl border-2 border-gray-200 bg-white p-8 hover:border-primary/30 hover:shadow-lg transition-all duration-300"
-                                >
-                                    <span className="flex items-center justify-center w-11 h-11 rounded-xl bg-primary/10 text-primary mb-4">
-                                        <Icon className="w-5 h-5" />
-                                    </span>
-                                    <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+                                <div key={title} className="flex flex-col gap-3 p-8 border-r border-b border-gray-200">
+                                    <Icon className="w-6 h-6 text-primary" strokeWidth={1.5} aria-hidden="true" />
+                                    <h3 className="text-xl font-semibold tracking-tight text-gray-900">{title}</h3>
                                     <p className="text-gray-500 leading-relaxed">{body}</p>
                                 </div>
                             ))}
@@ -264,23 +275,27 @@ export default function FramerPage() {
                 </section>
 
                 {/* Pricing */}
-                <section className="max-w-7xl mx-auto px-4 md:px-8 py-20">
-                    <div className="text-center mb-14">
-                        <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900">
-                            Pay per plan, never per reviewer
-                        </h2>
-                        <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-                            Invite as many client reviewers as each project needs, at no extra cost. Plans differ in how many projects and team members they include.
-                        </p>
-                    </div>
+                <section className="max-w-7xl mx-auto px-4 md:px-8 py-24 md:py-28">
+                    <SectionHeading
+                        size="lg"
+                        className="mb-12"
+                        kicker="Invite as many client reviewers as each project needs, at no extra cost. Plans differ in how many projects and team members they include."
+                    >
+                        Pay per plan, <Accent>never per reviewer</Accent>
+                    </SectionHeading>
                     <PricingCards ctaLabel="Start your 14-day trial" staticCtaHref="/auth/register" showTrialNote />
                     <TrustStrip className="mt-6" />
                 </section>
 
-                <DetailsFaq title="VibeVaults for Framer FAQ" faqs={faqs} />
+                <DetailsFaq
+                    title={<>VibeVaults for Framer <Accent>FAQ</Accent></>}
+                    kicker="What Framer agencies ask before their first feedback round."
+                    faqs={faqs}
+                />
 
-                <GradientCta
-                    title="Run your next Framer feedback round on the live site"
+                <ClosingCta
+                    title="Run your next Framer feedback round"
+                    accent="on the live site."
                     subtitle="14-day free trial. No credit card. Works on Framer's free plan."
                 />
             </main>

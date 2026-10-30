@@ -19,7 +19,7 @@ export default function DocsIndex() {
         <>
             <header className="mb-10">
                 <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-3">Documentation</p>
-                <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-4">VibeVaults documentation</h1>
+                <h1 className="text-4xl font-semibold text-gray-900 tracking-tight mb-4">VibeVaults documentation</h1>
                 <p className="text-lg text-gray-500 leading-relaxed">
                     Everything about running client feedback rounds with VibeVaults: getting the widget on a site, giving
                     the right people access, and understanding what gets captured along the way.

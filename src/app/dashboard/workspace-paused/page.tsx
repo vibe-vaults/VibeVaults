@@ -67,7 +67,7 @@ export default async function WorkspacePausedPage() {
                         <Lock className="w-6 h-6" />
                     </div>
 
-                    <h1 className="text-2xl font-bold text-gray-900 text-center mb-3">
+                    <h1 className="font-serif text-4xl md:text-[44px] leading-[1.1] tracking-tight text-gray-900 text-center mb-3">
                         {paused.name} is paused
                     </h1>
 
