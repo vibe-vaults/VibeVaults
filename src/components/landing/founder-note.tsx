@@ -1,102 +1,52 @@
-"use client";
-
-import React from "react";
-import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 /**
- * Main Responsibility: Social proof section with a personal founder note
- * and the founding-cohort ask (no discount: price was never the objection
- * in outreach, and a permanent public discount undercut every other offer).
+ * Main Responsibility: Founder note on a dark navy band: a round portrait and
+ * the short pull quote, plus the founding-cohort ask (no discount: price was
+ * never the objection in outreach, and a permanent public discount undercut
+ * every other offer).
  *
  * Sensitive Dependencies:
  * - Founder avatar at /avatar.jpg in public folder.
  */
-
-export const FounderNote = () => {
-  return (
-    <section className="py-24 md:py-32 w-full bg-white">
-      <div className="max-w-5xl mx-auto px-4 md:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative rounded-3xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-8 md:p-12 shadow-xl overflow-hidden"
-        >
-          {/* Decorative accent */}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-primary" />
-
-          <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
-            {/* Avatar + name */}
-            <div className="flex flex-col items-center text-center shrink-0">
-              <a
-                href="https://www.linkedin.com/in/jozseftar/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="József's LinkedIn profile"
-                className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-white shadow-xl mb-3 transition-transform hover:scale-105"
-              >
-                <Image
-                  src="/avatar.jpg"
-                  alt="József — Founder of VibeVaults"
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-cover"
-                />
-              </a>
-              <p className="font-bold text-gray-900 text-sm">József</p>
-              <p className="text-xs text-gray-500">Founder, VibeVaults</p>
+export function FounderNote() {
+    return (
+        <section className="w-full bg-navy text-white py-24 md:py-32 relative overflow-hidden">
+            <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-[radial-gradient(60%_80%_at_0%_50%,rgba(32,156,238,0.18),transparent_70%)]"
+            />
+            <div className="relative max-w-6xl mx-auto px-4 md:px-8 grid md:grid-cols-[auto_minmax(0,1fr)] gap-12 md:gap-20 items-center">
+                <a
+                    href="https://www.linkedin.com/in/jozseftar/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="József's LinkedIn profile"
+                    className="block w-56 md:w-72 rounded-full p-2 ring-1 ring-white/15 transition-transform hover:scale-[1.02]"
+                >
+                    <Image
+                        src="/avatar.jpg"
+                        alt="József, founder of VibeVaults"
+                        width={288}
+                        height={288}
+                        className="w-full h-auto aspect-square rounded-full object-cover"
+                    />
+                </a>
+                <div>
+                    <blockquote className="font-serif italic text-3xl md:text-[44px] leading-[1.2] max-w-[24ch] text-balance">
+                        &ldquo;I spent years decoding feedback from email threads and cropped screenshots. VibeVaults is
+                        the tool I wanted on every one of those projects.&rdquo;
+                    </blockquote>
+                    <p className="mt-7 flex items-center gap-3 text-[15px] text-white/60">
+                        <span className="h-px w-8 bg-secondary" aria-hidden="true" />
+                        <b className="text-white">József</b> &middot; Founder, VibeVaults
+                    </p>
+                    <p className="mt-6 max-w-[52ch] text-white/70 leading-relaxed">
+                        I&apos;m working with a small group of founding agencies. You get a direct line to the person
+                        building it and a say in what ships next.
+                    </p>
+                </div>
             </div>
-
-            {/* Letter */}
-            <div className="flex-1">
-              <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4">
-                A note from the founder
-              </h3>
-              <div className="space-y-4 text-gray-600 leading-relaxed">
-                <p>
-                  I built VibeVaults because I lived the problem. After years of
-                  running feedback rounds for agencies and dev studios — chasing clients through
-                  email threads, decoding vague screenshots, and losing hours to
-                  miscommunication — I knew there had to be a better way.
-                </p>
-                <p>
-                  VibeVaults is that better way. Your clients click directly on
-                  the site, leave visual feedback, and you see it instantly in
-                  your dashboard. No more &quot;can you scroll down a bit and
-                  check the third section?&quot; emails.
-                </p>
-                <p className="font-semibold text-gray-900">
-                  I&apos;m looking for a small group of founding agencies and dev studios to
-                  shape this product with me. In return, you get a direct line
-                  to the person building it, and a say in what ships next.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <div className="mt-10 pt-8 border-t border-gray-200">
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <Link
-                href="/auth/register"
-                className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-bold text-lg bg-secondary text-white hover:bg-secondary/90 hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 transition-all duration-300 w-full sm:w-auto"
-              >
-                Start your free trial
-                <ArrowRight
-                  size={18}
-                  className="group-hover:translate-x-1 transition-transform"
-                />
-              </Link>
-              <p className="text-sm text-gray-400">
-                14-day free trial &middot; No credit card required
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-};
+        </section>
+    );
+}

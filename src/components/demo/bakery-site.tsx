@@ -42,7 +42,7 @@ export function BakeryHome() {
             <span className="inline-flex items-center gap-2 rounded-full bg-[#fdebd3] px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#9a5b25]">
               Since 1987 &middot; Maple Street
             </span>
-            <h1 className="mt-6 font-[family-name:var(--font-bakery)] text-5xl md:text-6xl font-semibold leading-[1.05] tracking-tight">
+            <h1 className="mt-6 font-serif text-5xl md:text-6xl leading-[1.05] tracking-tight">
               Freshly baked, evrey morning.
             </h1>
             <p className="mt-6 text-lg text-[#7a5a40] leading-relaxed max-w-md">
@@ -69,7 +69,7 @@ export function BakeryHome() {
                 <Coffee className="h-10 w-10" aria-hidden />
               </div>
               <Croissant className="mx-auto h-40 w-40 text-[#fffaf3] drop-shadow-xl" strokeWidth={1.25} aria-hidden />
-              <p className="font-[family-name:var(--font-bakery)] text-2xl text-[#fffaf3] leading-snug">
+              <p className="font-serif text-2xl text-[#fffaf3] leading-snug">
                 &ldquo;Today&apos;s bake: cardamom knots.&rdquo;
               </p>
             </div>
@@ -86,7 +86,7 @@ export function BakeryHome() {
       {/* Menu */}
       <section className="bg-white/60 border-y border-[#ecdcc6]">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-20">
-          <h2 className="font-[family-name:var(--font-bakery)] text-4xl font-semibold tracking-tight">Fresh from the oven</h2>
+          <h2 className="font-serif text-4xl tracking-tight">Fresh from the oven</h2>
           <p className="mt-3 text-[#7a5a40]">Out of the oven by 7. Usually gone by noon.</p>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {MENU.map(({ icon: Icon, name, note, price, offbeat }) => (
@@ -107,7 +107,7 @@ export function BakeryHome() {
       {/* Visit */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-20 grid gap-10 md:grid-cols-2">
         <div>
-          <h2 className="font-[family-name:var(--font-bakery)] text-4xl font-semibold tracking-tight">Come say hello</h2>
+          <h2 className="font-serif text-4xl tracking-tight">Come say hello</h2>
           <p className="mt-4 text-[#7a5a40] leading-relaxed max-w-md">
             Grab a window seat, or order ahead and skip the Saturday queue. Dogs welcome, and they get a biscuit.
           </p>

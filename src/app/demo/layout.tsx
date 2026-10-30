@@ -1,4 +1,3 @@
-import { Fraunces } from "next/font/google";
 import { DemoSandboxBar } from "@/components/demo/demo-sandbox-bar";
 import { BakeryHeader } from "@/components/demo/bakery-header";
 import { BakeryFooter } from "@/components/demo/bakery-site";
@@ -28,11 +27,9 @@ import { DemoGuide } from "@/components/demo/demo-guide";
  *   never outlive the demo inside the SPA.
  */
 
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-bakery", display: "swap" });
-
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`${fraunces.variable} min-h-screen flex flex-col bg-[#fffaf3]`}>
+    <div className="min-h-screen flex flex-col bg-[#fffaf3]">
       <DemoSandboxBar />
       <DemoGuide />
       <BakeryHeader />

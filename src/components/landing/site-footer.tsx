@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { Activity } from "lucide-react";
 import { LinkedinIcon } from "@/components/icons/linkedin-icon";
 import { CookiePreferencesLink } from "@/components/CookiePreferencesLink";
 import { allComparisons } from "@/lib/compare-data";
 import { docsPages } from "@/lib/docs-data";
 import { OPERATOR } from "@/lib/legal-entity";
 import { STATUS_PAGE_URL } from "@/lib/contact-links";
+import { Wordmark } from "@/components/landing/wordmark";
 
 /**
  * Main Responsibility: Shared site footer used by the landing page, the
@@ -30,12 +32,12 @@ function FooterColumn({ title, href, children }: { title: string; href?: string;
             {href ? (
                 <Link
                     href={href}
-                    className="inline-block text-xs font-bold uppercase tracking-wider text-gray-400 hover:text-primary transition-colors mb-4"
+                    className="inline-block text-xs font-bold uppercase tracking-[0.14em] text-gray-500 hover:text-primary transition-colors mb-4"
                 >
                     {title}
                 </Link>
             ) : (
-                <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">{title}</div>
+                <div className="text-xs font-bold uppercase tracking-[0.14em] text-gray-500 mb-4">{title}</div>
             )}
             <ul className="flex flex-col gap-2.5">{children}</ul>
         </div>
@@ -54,10 +56,26 @@ function FooterLink({ href, label }: { href: string; label: string }) {
 
 export function SiteFooter() {
     return (
-        <footer className="pt-12 pb-8 w-full border-t border-gray-100 bg-white">
-            <div className="max-w-7xl mx-auto px-8">
-                {/* Link columns */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 pb-10 mb-8 border-b border-gray-100">
+        <footer className="pt-16 pb-8 w-full border-t border-gray-200 bg-white">
+            <div className="max-w-7xl mx-auto px-4 md:px-8">
+                {/* Brand + link columns */}
+                <div className="grid grid-cols-2 lg:grid-cols-[1.4fr_repeat(4,minmax(0,1fr))] gap-8 md:gap-12 pb-12 mb-8 border-b border-gray-200">
+                    <div className="col-span-2 lg:col-span-1">
+                        <Wordmark className="text-2xl" />
+                        <p className="mt-4 max-w-xs text-sm text-gray-500 leading-relaxed">
+                            A visual feedback widget for web agencies and design studios. Data hosted in the EU.
+                        </p>
+                        <a
+                            href={STATUS_PAGE_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary transition-colors"
+                        >
+                            <Activity className="h-4 w-4" aria-hidden="true" />
+                            System status
+                        </a>
+                    </div>
+
                     <FooterColumn title="Product">
                         {productLinks.map((l) => (
                             <FooterLink key={l.href} href={l.href} label={l.label} />
@@ -91,26 +109,19 @@ export function SiteFooter() {
                 </div>
 
                 {/* Brand / social row */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex flex-col items-center md:items-start gap-1 text-sm text-gray-500">
-                        <div>&copy; {new Date().getFullYear()} VibeVaults. All rights reserved.</div>
-                        <div>
-                            Contact:{" "}
-                            <a href={`mailto:${OPERATOR.email}`} className="hover:text-primary transition-colors">
-                                {OPERATOR.email}
-                            </a>
-                            <span className="mx-2 text-gray-300" aria-hidden="true">&middot;</span>
-                            <a
-                                href={STATUS_PAGE_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-primary transition-colors"
-                            >
-                                System status
-                            </a>
-                        </div>
+                {/* Three columns from md, so the contact line sits truly centred
+                    regardless of how wide the two outer groups are. */}
+                <div className="flex flex-col md:grid md:grid-cols-[1fr_auto_1fr] items-center gap-4 text-sm text-gray-500">
+                    <div className="md:justify-self-start">
+                        &copy; {new Date().getFullYear()} VibeVaults. All rights reserved.
                     </div>
-                    <div className="flex items-center gap-5">
+                    <div>
+                        Contact:{" "}
+                        <a href={`mailto:${OPERATOR.email}`} className="hover:text-primary transition-colors">
+                            {OPERATOR.email}
+                        </a>
+                    </div>
+                    <div className="flex items-center gap-5 md:justify-self-end">
                         <a
                             href="https://www.uneed.best/tool/vibevaults"
                             target="_blank"

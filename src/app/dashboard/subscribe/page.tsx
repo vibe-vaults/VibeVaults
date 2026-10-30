@@ -102,7 +102,7 @@ export default async function SubscribePage() {
 
             {/* Header */}
             <div className="text-center mb-10">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">{heading}</h1>
+                <h1 className="font-serif text-4xl md:text-[44px] leading-[1.1] tracking-tight text-gray-900 mb-3">{heading}</h1>
                 <p className="text-muted-foreground max-w-md mx-auto">
                     {description}
                 </p>

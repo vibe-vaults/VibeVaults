@@ -43,7 +43,7 @@ export default async function UserSettingsPage() {
     if (!selectedWorkspaceId) {
         return (
             <div className="p-8">
-                <h1 className="text-2xl font-semibold mb-4">Users</h1>
+                <h1 className="font-serif text-4xl md:text-[44px] leading-[1.1] tracking-tight text-gray-900 mb-4">Users</h1>
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-12 text-center">
                     <p className="text-gray-500">No workspace selected.</p>
                 </div>
@@ -104,10 +104,10 @@ export default async function UserSettingsPage() {
             <PaywallLockSync locked={workspacePaused} />
 
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-semibold text-gray-900 flex items-center flex-wrap gap-2">
+                <h1 className="font-serif text-4xl md:text-[44px] leading-[1.1] tracking-tight text-gray-900 flex items-baseline flex-wrap gap-x-3 gap-y-1">
                     Users {workspace && (
                         <>
-                            <span className="text-gray-400 font-normal">/ {workspace.name}</span>
+                            <span className="font-sans text-xl text-gray-400 font-normal">/ {workspace.name}</span>
                         </>
                     )}
                 </h1>

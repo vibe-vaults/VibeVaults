@@ -4,7 +4,27 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-    --font-sans: var(--font-geist-sans);
+    --font-sans: var(--font-manrope), "Helvetica Neue", Arial, sans-serif;
+    --font-serif: var(--font-dm-serif), Georgia, "Times New Roman", serif;
+
+    /* Neutrals tinted toward the brand blue, so every existing gray-* utility
+       across the app picks up the same cool cast instead of flat grey. */
+    --color-gray-50: #F6F8FB;
+    --color-gray-100: #EEF2F6;
+    --color-gray-200: #E3E8EE;
+    --color-gray-300: #CBD3DC;
+    --color-gray-400: #9AA5B1;
+    --color-gray-500: #637080;
+    --color-gray-600: #4B5767;
+    --color-gray-700: #364252;
+    --color-gray-800: #1F2B3A;
+    --color-gray-900: #0F1B2A;
+    --color-gray-950: #08111C;
+
+    /* Dark sections on the marketing pages (founder note, product grid, CTA). */
+    --color-navy: #0B1A2E;
+    --color-navy-soft: #12263F;
+    --color-navy-line: #1F3550;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
@@ -47,38 +67,38 @@
 }
 
 :root {
-    --radius: 0.625rem;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
+    --radius: 0.75rem;
+    --background: #FFFFFF;
+    --foreground: #0F1B2A;
+    --card: #FFFFFF;
+    --card-foreground: #0F1B2A;
+    --popover: #FFFFFF;
+    --popover-foreground: #0F1B2A;
     --primary: #209CEE;
-    --primary-foreground: oklch(0.985 0 0);
+    --primary-foreground: #FFFFFF;
     --secondary: #EE7220;
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --secondary-foreground: #FFFFFF;
+    --muted: #F5F8FB;
+    --muted-foreground: #637080;
+    --accent: #EAF4FD;
+    --accent-foreground: #0F1B2A;
     --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --border: #E3E8EE;
+    --input: #D5DCE4;
+    --ring: #209CEE;
+    --chart-1: #209CEE;
+    --chart-2: #EE7220;
+    --chart-3: #0B6FB3;
+    --chart-4: #F4A261;
+    --chart-5: #12263F;
+    --sidebar: #F7F9FB;
+    --sidebar-foreground: #0F1B2A;
+    --sidebar-primary: #209CEE;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #EAF4FD;
+    --sidebar-accent-foreground: #0F1B2A;
+    --sidebar-border: #E3E8EE;
+    --sidebar-ring: #209CEE;
 }
 
 .dark {
@@ -157,7 +177,7 @@
    semantic HTML instead of repeating the same Tailwind class strings on every
    heading and paragraph. */
 .docs-prose {
-    color: var(--color-gray-600, #4b5563);
+    color: var(--color-gray-600, #4B5767);
     line-height: 1.75;
 }
 
@@ -165,7 +185,7 @@
     font-size: 1.5rem;
     line-height: 2rem;
     font-weight: 700;
-    color: #111827;
+    color: #0F1B2A;
     margin-top: 3rem;
     margin-bottom: 1rem;
     scroll-margin-top: 6rem;
@@ -178,7 +198,7 @@
 .docs-prose h3 {
     font-size: 1.125rem;
     font-weight: 700;
-    color: #1f2937;
+    color: #1F2B3A;
     margin-top: 2rem;
     margin-bottom: 0.75rem;
     scroll-margin-top: 6rem;
@@ -206,11 +226,11 @@
 }
 
 .docs-prose li::marker {
-    color: #9ca3af;
+    color: #9AA5B1;
 }
 
 .docs-prose strong {
-    color: #111827;
+    color: #0F1B2A;
     font-weight: 600;
 }
 
@@ -228,11 +248,11 @@
 .docs-prose code {
     font-family: var(--font-mono);
     font-size: 0.8125rem;
-    background: #f3f4f6;
-    color: #1f2937;
+    background: #EEF2F6;
+    color: #1F2B3A;
     padding: 0.125rem 0.375rem;
     border-radius: 0.375rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #E3E8EE;
 }
 
 .docs-prose pre {
@@ -258,7 +278,7 @@
 
 .docs-prose hr {
     border: 0;
-    border-top: 1px solid #f3f4f6;
+    border-top: 1px solid #EEF2F6;
     margin: 2.5rem 0;
 }
 
@@ -274,18 +294,18 @@
     text-align: left;
     vertical-align: top;
     padding: 0.625rem 0.75rem;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid #EEF2F6;
 }
 
 .docs-prose th {
     font-weight: 600;
-    color: #111827;
-    border-bottom-color: #e5e7eb;
+    color: #0F1B2A;
+    border-bottom-color: #E3E8EE;
 }
 
 .docs-prose .docs-callout {
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 1px solid #e2e8f0;
+    background: linear-gradient(180deg, #F6F8FB 0%, #EEF2F6 100%);
+    border: 1px solid #E3E8EE;
     border-left: 3px solid var(--primary);
     border-radius: 0.75rem;
     padding: 1.125rem 1.25rem;
@@ -294,4 +314,39 @@
 
 .docs-prose .docs-callout p:last-child {
     margin-bottom: 0;
+}
+
+/* Landing page platform strip: the track holds the list twice, so sliding by
+   half its width loops without a seam. */
+@theme {
+    --animate-marquee: marquee 36s linear infinite;
+
+    @keyframes marquee {
+        to {
+            transform: translateX(-50%);
+        }
+    }
+}
+
+/* Soft brand-blue glow from the top-left corner, used behind marketing heroes.
+   Pair with `-mt-[76px] pt-[76px]` so it also sits under the transparent header. */
+@utility bg-hero-glow {
+    background: radial-gradient(120% 90% at 0% 0%, rgba(32, 156, 238, 0.26) 0%, rgba(32, 156, 238, 0.08) 40%, transparent 70%);
+}
+
+/* Same glow for pages whose hero is not its own full-width section: put it on
+   <main>. The pseudo-element reaches up under the 76px sticky header. */
+@utility hero-glow-top {
+    position: relative;
+    isolation: isolate;
+
+    &::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        inset: -76px 0 auto 0;
+        height: 820px;
+        pointer-events: none;
+        background: radial-gradient(120% 90% at 0% 0%, rgba(32, 156, 238, 0.24) 0%, rgba(32, 156, 238, 0.07) 40%, transparent 70%);
+    }
 }

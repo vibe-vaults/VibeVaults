@@ -185,6 +185,9 @@ test.describe('demo sandbox', () => {
 // a visitor who leaves and comes back starts over, a refresh resumes.
 test.describe('demo page lifecycle', () => {
     const guide = (page: Page) => page.locator('aside[aria-label="Demo guide"]');
+    // The landing page links to /demo twice (hero and the closing CTA band);
+    // the hero one is the entry point these runs model.
+    const demoLink = (page: Page) => page.getByRole('link', { name: 'Try the live demo' }).first();
     // The widget's own list, not on-page markers: a pin below the fold is
     // not painted, so a marker count depends on the viewport.
     const listed = async (page: Page) => {
@@ -203,7 +206,7 @@ test.describe('demo page lifecycle', () => {
         // (a client-side navigation): a fresh run with only the seeded pins.
         await page.locator('a[href="/"]').first().click();
         await page.waitForURL((u) => u.pathname === '/');
-        await page.getByRole('link', { name: 'Try the live demo' }).click();
+        await demoLink(page).click();
         await page.waitForURL('**/demo');
         await expect(guide(page)).toContainText('0/2');
         await openWidget(page);
@@ -258,7 +261,7 @@ test.describe('demo page lifecycle', () => {
     test('an in-app back and return starts over, and the old run cannot leak in', async ({ page }) => {
         await recordDemoEvents(page);
         await page.goto('/');
-        await page.getByRole('link', { name: 'Try the live demo' }).click();
+        await demoLink(page).click();
         await page.waitForURL('**/demo');
         await pinAndSubmit(page, 'Before going back');
         await expect(guide(page)).toContainText('1/2');
@@ -267,7 +270,7 @@ test.describe('demo page lifecycle', () => {
         // sandbox (and its scripted-reply timers) would still be around.
         await page.goBack();
         await page.waitForURL((u) => u.pathname === '/');
-        await page.getByRole('link', { name: 'Try the live demo' }).click();
+        await demoLink(page).click();
         await page.waitForURL('**/demo');
         await expect(guide(page)).toContainText('0/2');
 

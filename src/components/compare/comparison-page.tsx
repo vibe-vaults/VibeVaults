@@ -13,7 +13,7 @@ import Image from "next/image";
 import { Check, X, Maximize2 } from "lucide-react";
 import { PricingCards } from "@/components/landing/pricing-cards";
 import { DetailsFaq } from "@/components/landing/details-faq";
-import { GradientCta } from "@/components/landing/gradient-cta";
+import { ClosingCta } from "@/components/landing/closing-cta";
 import { HeroCtas } from "@/components/landing/hero-ctas";
 import { ZoomableImage } from "@/components/zoomable-image";
 import type { ComparisonData, CompareValue } from "@/lib/compare-data";
@@ -32,7 +32,7 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
                 <span className="inline-block text-sm font-bold uppercase tracking-wider text-primary mb-4">
                     {data.heroKicker}
                 </span>
-                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight mb-6 text-gray-900">
+                <h1 className="text-4xl md:text-6xl font-semibold tracking-tight leading-tight mb-6 text-gray-900">
                     {data.heroTitle}
                 </h1>
                 <p className="text-lg md:text-xl text-gray-500 max-w-3xl mx-auto mb-10 leading-relaxed">
@@ -59,7 +59,7 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
             <section id="proof" className="bg-gray-50 py-20 mt-8">
                 <div className="max-w-7xl mx-auto px-4 md:px-8">
                     <div className="text-center mb-14">
-                        <h2 className="text-3xl md:text-4xl font-extrabold mb-4">See it, don&apos;t take our word for it</h2>
+                        <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">See it, don&apos;t take our word for it</h2>
                         <p className="text-lg text-gray-500 max-w-2xl mx-auto">
                             The whole pitch is simplicity, so here is exactly what your clients and your team see.
                         </p>
@@ -116,7 +116,7 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
             {/* Comparison table */}
             <section id="compare" className="max-w-5xl mx-auto px-4 md:px-8 py-20 scroll-mt-24">
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl md:text-4xl font-extrabold mb-4">VibeVaults vs {data.competitorName}</h2>
+                    <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">VibeVaults vs {data.competitorName}</h2>
                     <p className="text-gray-500 max-w-2xl mx-auto">
                         An honest, feature-by-feature comparison. Competitor pricing and features verified August 2026.
                     </p>
@@ -150,7 +150,7 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
             {/* Where the competitor wins (honest concession) */}
             <section className="bg-gray-50 py-20">
                 <div className="max-w-3xl mx-auto px-4 md:px-8">
-                    <h2 className="text-2xl md:text-3xl font-extrabold mb-3">
+                    <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-3">
                         Where {data.competitorName} is the better choice
                     </h2>
                     <p className="text-gray-500 mb-8 leading-relaxed">
@@ -170,7 +170,7 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
 
             {/* Where VibeVaults wins */}
             <section className="max-w-6xl mx-auto px-4 md:px-8 py-20">
-                <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-12">Where VibeVaults wins</h2>
+                <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-center mb-12">Where VibeVaults wins</h2>
                 <div className="grid md:grid-cols-2 gap-6">
                     {data.vibevaultsWins.map((win) => (
                         <div
@@ -200,7 +200,7 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
             {/* Pricing */}
             <section className="max-w-7xl mx-auto px-4 md:px-8 py-20">
                 <div className="text-center mb-14">
-                    <h2 className="text-3xl md:text-4xl font-extrabold mb-4">Simple pricing, unlimited clients</h2>
+                    <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Simple pricing, unlimited clients</h2>
                     <p className="text-lg text-gray-500 max-w-2xl mx-auto">
                         Every plan includes unlimited clients and unlimited feedback. No per-seat client fees, ever.
                     </p>
@@ -210,7 +210,7 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
 
             <DetailsFaq title={`${data.competitorName} alternative FAQ`} faqs={data.faqs} />
 
-            <GradientCta
+            <ClosingCta
                 title="See if VibeVaults fits your feedback rounds"
                 subtitle="14-day free trial. No credit card. Unlimited clients on every plan."
             />

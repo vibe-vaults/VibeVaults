@@ -23,7 +23,7 @@ function PageIntro({ eyebrow, title, lede }: { eyebrow: string; title: string; l
         <span className="inline-flex items-center rounded-full bg-[#fdebd3] px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#9a5b25]">
           {eyebrow}
         </span>
-        <h1 className="mt-5 font-[family-name:var(--font-bakery)] text-4xl md:text-5xl font-semibold leading-[1.08] tracking-tight max-w-2xl">
+        <h1 className="mt-5 font-serif text-4xl md:text-5xl leading-[1.08] tracking-tight max-w-2xl">
           {title}
         </h1>
         <p className="mt-5 text-lg text-[#7a5a40] leading-relaxed max-w-xl">{lede}</p>
@@ -85,7 +85,7 @@ export function BakeryMenuPage() {
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#fdebd3] text-[#9a5b25]">
                 <Icon className="h-5 w-5" aria-hidden />
               </span>
-              <h2 className="font-[family-name:var(--font-bakery)] text-2xl font-semibold">{title}</h2>
+              <h2 className="font-serif text-2xl">{title}</h2>
             </div>
             <ul className="mt-6 space-y-5">
               {items.map(({ name, note, price }) => (
@@ -176,7 +176,7 @@ export function BakeryCateringPage() {
       </section>
       <section className="bg-white/60 border-y border-[#ecdcc6]">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-16">
-          <h2 className="font-[family-name:var(--font-bakery)] text-3xl font-semibold tracking-tight">How it works</h2>
+          <h2 className="font-serif text-3xl tracking-tight">How it works</h2>
           <ol className="mt-8 grid gap-6 md:grid-cols-3">
             {CATERING_STEPS.map(({ icon: Icon, title, body }, i) => (
               <li key={title} className="flex gap-4">
@@ -226,14 +226,14 @@ export function BakeryStoryPage() {
           {TIMELINE.map(({ year, text }, i) => (
             <li key={i} className="relative">
               <span aria-hidden className="absolute -left-[2.6rem] top-1 h-4 w-4 rounded-full bg-[#e5a563] ring-4 ring-[#fffaf3]" />
-              <p className="font-[family-name:var(--font-bakery)] text-2xl font-semibold text-[#9a5b25]">{year}</p>
+              <p className="font-serif text-2xl text-[#9a5b25]">{year}</p>
               <p className="mt-1 text-[#7a5a40] leading-relaxed">{text}</p>
             </li>
           ))}
         </ol>
         <figure className="self-start rounded-[2rem] bg-gradient-to-br from-[#3f6b4a] to-[#2f523a] p-8 text-[#f4f1e8] shadow-xl shadow-[#3f6b4a]/25">
           <Wheat className="h-8 w-8 text-[#cfe3c4]" aria-hidden />
-          <blockquote className="mt-5 font-[family-name:var(--font-bakery)] text-2xl leading-snug">
+          <blockquote className="mt-5 font-serif text-2xl leading-snug">
             &ldquo;Good bread takes time. We never found a shortcut worth taking.&rdquo;
           </blockquote>
           <figcaption className="mt-5 text-sm text-[#cfe3c4]">Theo Brandt, owner</figcaption>
@@ -241,11 +241,11 @@ export function BakeryStoryPage() {
       </section>
       <section className="bg-white/60 border-y border-[#ecdcc6]">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-16">
-          <h2 className="font-[family-name:var(--font-bakery)] text-3xl font-semibold tracking-tight">The people behind the counter</h2>
+          <h2 className="font-serif text-3xl tracking-tight">The people behind the counter</h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {TEAM.map(({ initials, name, role }) => (
               <div key={name} className="flex items-center gap-4 rounded-3xl bg-[#fffaf3] p-5 ring-1 ring-[#ecdcc6]">
-                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#fdebd3] font-[family-name:var(--font-bakery)] text-xl font-semibold text-[#9a5b25]">
+                <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#fdebd3] font-serif text-xl text-[#9a5b25]">
                   {initials}
                 </span>
                 <div>

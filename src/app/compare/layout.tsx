@@ -5,7 +5,7 @@ export default function CompareLayout({ children }: { children: React.ReactNode 
     return (
         <div className="min-h-screen flex flex-col">
             <SiteHeader />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 hero-glow-top">{children}</main>
             <SiteFooter />
         </div>
     );

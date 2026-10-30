@@ -17,7 +17,7 @@ export default function CompareHubPage() {
                 <span className="inline-block text-sm font-bold uppercase tracking-wider text-primary mb-4">
                     Comparisons
                 </span>
-                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight mb-6 text-gray-900">
+                <h1 className="text-4xl md:text-6xl font-semibold tracking-tight leading-tight mb-6 text-gray-900">
                     How VibeVaults compares
                 </h1>
                 <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">

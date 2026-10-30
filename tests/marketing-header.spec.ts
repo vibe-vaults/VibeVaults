@@ -30,7 +30,7 @@ test.describe('signed in', () => {
         test(`${path} shows Dashboard instead of the signup CTAs`, async ({ page }) => {
             await page.goto(path);
             await expect(header(page).getByRole('link', { name: 'Dashboard' })).toBeVisible();
-            await expect(header(page).getByRole('link', { name: 'Get Started' })).toHaveCount(0);
+            await expect(header(page).getByRole('link', { name: 'Start free trial' })).toHaveCount(0);
             await expect(header(page).getByRole('link', { name: 'Sign In' })).toHaveCount(0);
         });
     }
@@ -41,7 +41,7 @@ test.describe('signed in', () => {
         const html = await res!.text();
         const markup = html.slice(0, html.indexOf('</header>'));
         expect(markup).toContain('>Dashboard<');
-        expect(markup).not.toContain('>Get Started<');
+        expect(markup).not.toContain('>Start free trial<');
     });
 
     test('the dashboard support card links out to the docs', async ({ page }) => {
@@ -59,7 +59,7 @@ test.describe('signed out', () => {
     for (const path of CHROME_PAGES) {
         test(`${path} keeps both conversion CTAs`, async ({ page }) => {
             await page.goto(path);
-            await expect(header(page).getByRole('link', { name: 'Get Started' })).toBeVisible();
+            await expect(header(page).getByRole('link', { name: 'Start free trial' })).toBeVisible();
             await expect(header(page).getByRole('link', { name: 'Sign In' })).toBeVisible();
             await expect(header(page).getByRole('link', { name: 'Dashboard' })).toHaveCount(0);
         });
@@ -75,7 +75,7 @@ test.describe('/access uses the minimal header', () => {
         await page.goto('/access');
         await expect(header(page).getByRole('link', { name: 'VibeVaults' })).toBeVisible();
         await expect(header(page).getByRole('link', { name: 'Sign In' })).toHaveCount(0);
-        await expect(header(page).getByRole('link', { name: 'Get Started' })).toHaveCount(0);
+        await expect(header(page).getByRole('link', { name: 'Start free trial' })).toHaveCount(0);
         await expect(header(page).getByRole('link', { name: 'Pricing' })).toHaveCount(0);
         await ctx.close();
     });

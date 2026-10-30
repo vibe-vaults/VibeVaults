@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { Wordmark } from "@/components/landing/wordmark"
 import WorkspaceSwitcher from "@/components/workspace-switcher"
 import ProjectSwitcher from "@/components/project-switcher"
 import {
@@ -139,17 +140,12 @@ export function AppSidebar({
 
     return (
         <Sidebar>
-            <SidebarHeader className="bg-white border-b border-gray-100 p-4">
+            <SidebarHeader className="bg-white border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between px-2">
-                    <span className={`font-bold text-xl text-primary ${lockSidebar ? "opacity-50" : ""}`}>
-                        {lockSidebar ? (
-                            "VibeVaults"
-                        ) : (
-                            <Link href="/dashboard" className="cursor-pointer block">
-                                VibeVaults
-                            </Link>
-                        )}
-                    </span>
+                    <Wordmark
+                        href={lockSidebar ? null : "/dashboard"}
+                        className={`text-xl ${lockSidebar ? "opacity-50" : ""}`}
+                    />
                     {!lockSidebar && <NotificationBell userId={user.id} />}
                 </div>
             </SidebarHeader>

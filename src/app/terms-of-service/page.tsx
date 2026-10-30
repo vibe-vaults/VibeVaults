@@ -28,7 +28,7 @@ export default function TermsOfService() {
             <SiteHeader />
 
             <main className="max-w-3xl mx-auto px-8 py-12">
-                <h1 className="text-4xl font-extrabold mb-4 text-gray-900">Terms of Service</h1>
+                <h1 className="text-4xl font-semibold tracking-tight mb-4 text-gray-900">Terms of Service</h1>
                 <p className="text-gray-500 mb-8">
                     <strong>Last updated:</strong> {LAST_UPDATED}
                 </p>

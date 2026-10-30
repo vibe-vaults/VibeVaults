@@ -8,6 +8,7 @@
  * - @/lib/supabase/server for sensitive data interactions and RLS enforcement.
  * - GlobalNotificationProvider for real-time app-wide notifications.
  */
+import { Wordmark } from "@/components/landing/wordmark";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
@@ -257,7 +258,7 @@ export default async function DashboardLayout({
                 <main className="flex-1 overflow-y-auto bg-gray-50 flex flex-col">
                     <div className="p-4 bg-white border-b border-gray-200 md:hidden flex items-center gap-2">
                         <SidebarTrigger />
-                        <span className="font-bold text-lg text-primary">VibeVaults</span>
+                        <Wordmark href="/dashboard" className="text-lg" />
                     </div>
                     {/* On desktop we might want the trigger or just rely on the sidebar state? 
                         Usually the sidebar remains open on desktop. 

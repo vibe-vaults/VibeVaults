@@ -39,20 +39,20 @@ export const ProductDemo = ({ videoUrl }: ProductDemoProps) => {
   }, []);
 
   return (
-    <section className="py-24 w-full flex flex-col items-center bg-white">
+    <section className="py-20 md:py-24 w-full flex flex-col items-center">
       <div className="max-w-6xl mx-auto px-4 md:px-8 w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="mb-12 grid md:grid-cols-2 gap-6 items-end"
         >
-          <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
-            See the visual feedback tool in action
+          <h2 className="text-5xl md:text-6xl tracking-tight leading-[1.05]">
+            See the visual feedback tool <span className="font-serif italic text-[#0B6FB3]">in action</span>
           </h2>
-          <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-500 max-w-md md:justify-self-end">
             Watch how agencies and dev studios collect, manage, and resolve client feedback in
-            minutes — not days.
+            minutes, not days.
           </p>
         </motion.div>
 
@@ -62,7 +62,7 @@ export const ProductDemo = ({ videoUrl }: ProductDemoProps) => {
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative w-full aspect-video rounded-3xl overflow-hidden border border-gray-200 shadow-2xl bg-gray-900"
+          className="relative w-full aspect-video rounded-2xl overflow-hidden ring-1 ring-gray-200 shadow-[0_30px_60px_-30px_rgba(15,27,42,0.35)] bg-gray-900"
         >
           {loadVideo && (
             <iframe
@@ -75,9 +75,9 @@ export const ProductDemo = ({ videoUrl }: ProductDemoProps) => {
           )}
         </motion.div>
 
-        <p className="mt-8 text-center text-gray-500">
+        <p className="mt-8 text-gray-500">
           Rather click than watch?{" "}
-          <Link href="/demo" className="font-semibold text-primary hover:underline underline-offset-4">
+          <Link href="/demo" className="font-semibold text-gray-900 underline decoration-secondary decoration-2 underline-offset-4 hover:text-primary">
             Try the widget live on a sample site, no signup &rarr;
           </Link>
         </p>

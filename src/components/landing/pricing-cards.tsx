@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { TIER_DISPLAY, type TierSlug, type BillingInterval } from '@/lib/tier-config';
 
@@ -40,114 +39,94 @@ export function PricingCards({
     return (
         <div className="w-full">
             {/* Billing toggle */}
-            <div className="flex items-center justify-center gap-3 mb-12">
-                <button
-                    onClick={() => setInterval('monthly')}
-                    className={`cursor-pointer px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-                        interval === 'monthly'
-                            ? 'bg-gray-900 text-white shadow-md'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                >
-                    Monthly
-                </button>
-                <button
-                    onClick={() => setInterval('yearly')}
-                    className={`cursor-pointer px-5 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
-                        interval === 'yearly'
-                            ? 'bg-gray-900 text-white shadow-md'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                >
-                    Yearly
-                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">
-                        Save 20%
-                    </span>
-                </button>
+            <div className="flex items-center justify-center gap-2 mb-10" role="group" aria-label="Billing period">
+                {(['monthly', 'yearly'] as const).map((value) => (
+                    <button
+                        key={value}
+                        type="button"
+                        onClick={() => setInterval(value)}
+                        aria-pressed={interval === value}
+                        className={`cursor-pointer px-5 py-2 rounded-full text-sm font-semibold transition-colors border flex items-center gap-2 ${
+                            interval === value
+                                ? 'bg-gray-900 border-gray-900 text-white'
+                                : 'bg-white border-gray-300 text-gray-500 hover:text-gray-900'
+                        }`}
+                    >
+                        {value === 'monthly' ? 'Monthly' : 'Yearly'}
+                        {value === 'yearly' && (
+                            <span className="text-xs font-bold text-secondary">
+                                Save 20%
+                            </span>
+                        )}
+                    </button>
+                ))}
             </div>
 
-            {/* Tier cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Tier columns: one ruled block, the recommended tier tinted */}
+            <div className="grid grid-cols-1 md:grid-cols-3 max-w-6xl mx-auto rounded-2xl border border-gray-200 bg-white overflow-hidden text-left">
                 {TIER_DISPLAY.map((tier) => {
                     const isHighlighted = tier.highlighted;
                     const isCurrent = currentTier === tier.slug;
                     const price = interval === 'monthly' ? tier.monthlyPrice : tier.yearlyPricePerMonth;
 
                     return (
-                        <motion.div
+                        <div
                             key={tier.slug}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.4, delay: tier.slug === 'starter' ? 0 : tier.slug === 'pro' ? 0.1 : 0.2 }}
-                            className={`relative p-8 rounded-2xl border-2 transition-all duration-300 ${
-                                isHighlighted
-                                    ? 'border-[#209CEE] shadow-xl bg-white scale-[1.02]'
-                                    : 'border-gray-200 shadow-sm bg-white hover:shadow-lg hover:border-gray-300'
+                            className={`flex flex-col gap-6 p-8 border-b md:border-b-0 md:border-r border-gray-200 last:border-0 ${
+                                isHighlighted ? 'bg-linear-to-b from-accent to-white' : ''
                             }`}
                         >
-                            {/* Badge */}
-                            {isHighlighted && !isCurrent && (
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#209CEE] text-white px-5 py-1 rounded-full text-xs font-bold tracking-wider uppercase shadow-lg">
-                                    Recommended
-                                </div>
-                            )}
-                            {isCurrent && (
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-5 py-1 rounded-full text-xs font-bold tracking-wider uppercase shadow-lg">
-                                    Current Plan
-                                </div>
-                            )}
-
-                            {/* Tier name & tagline */}
-                            <h3 className="text-xl font-bold text-gray-900 text-left">{tier.name}</h3>
-                            <p className="text-sm text-gray-500 mt-1 text-left">{tier.tagline}</p>
-
-                            {/* Price */}
-                            <div className="mt-6 mb-8 text-left">
-                                <span className="text-4xl font-extrabold text-gray-900">${price}</span>
-                                <span className="text-gray-400 text-base font-normal">/mo</span>
-                                {interval === 'yearly' && (
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        ${tier.yearlyTotal}/yr billed annually
-                                    </p>
-                                )}
+                            <div className="flex items-center justify-between gap-3 text-[13px] font-semibold uppercase tracking-[0.14em] text-gray-500">
+                                <h3>{tier.name}</h3>
+                                {isCurrent ? (
+                                    <span className="text-[11px] font-bold text-green-600">Current Plan</span>
+                                ) : isHighlighted ? (
+                                    <span className="text-[11px] font-bold text-secondary">Recommended</span>
+                                ) : null}
                             </div>
 
-                            {/* Features */}
-                            <ul className="space-y-3 mb-8 text-left">
+                            <div>
+                                <span className="text-6xl font-semibold tracking-[-0.04em] tabular-nums text-gray-900">${price}</span>
+                                <span className="text-sm text-gray-500"> /mo</span>
+                                {interval === 'yearly' && (
+                                    <p className="text-xs text-gray-500 mt-2">${tier.yearlyTotal}/yr billed annually</p>
+                                )}
+                                <p className="text-sm text-gray-500 mt-3">{tier.tagline}</p>
+                            </div>
+
+                            <ul className="flex-1 border-t border-gray-200">
                                 {tier.features.map((feature, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                                        <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                                    <li key={i} className="flex items-start gap-2.5 py-2.5 border-b border-gray-200 text-sm text-gray-700">
+                                        <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                                         <span>{feature}</span>
                                     </li>
                                 ))}
                             </ul>
 
-                            {/* CTA */}
                             {isCurrent ? (
-                                <div className="w-full py-3 px-6 rounded-xl bg-gray-100 text-gray-500 font-semibold text-center text-sm">
+                                <div className="w-full py-3 px-6 rounded-full border border-gray-200 bg-gray-50 text-gray-500 font-semibold text-center text-sm">
                                     Current Plan
                                 </div>
                             ) : (
                                 <a
                                     href={getHref(tier.slug, interval)}
-                                    className={`block w-full py-3 px-6 rounded-xl font-semibold text-center text-sm transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 ${
+                                    className={`block w-full py-3 px-6 rounded-full font-bold text-center text-sm transition-colors ${
                                         isHighlighted
-                                            ? 'bg-[#209CEE] text-white hover:bg-[#209CEE]/90'
-                                            : 'bg-gray-900 text-white hover:bg-gray-800'
+                                            ? 'bg-secondary text-white hover:bg-[#D35F12]'
+                                            : 'border border-gray-300 text-gray-900 hover:border-primary hover:text-primary'
                                     }`}
                                 >
                                     {ctaLabel}
                                 </a>
                             )}
-                        </motion.div>
+                        </div>
                     );
                 })}
             </div>
 
             {/* Trial note */}
             {showTrialNote && (
-                <p className="text-center text-xs text-gray-400 mt-8 uppercase tracking-wide font-semibold">
+                <p className="text-center text-xs text-gray-500 mt-8 uppercase tracking-[0.14em] font-semibold">
                     14-day free trial &middot; No credit card required
                 </p>
             )}
