@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, Coffee, Croissant, MapPin, Star, Wheat, Cake } from "lucide-react";
+import { Clock, Croissant, MapPin, Wheat, Cake } from "lucide-react";
 
 /**
  * Main Responsibility: The home page of the pretend client website that /demo
@@ -12,7 +12,7 @@ import { Clock, Coffee, Croissant, MapPin, Star, Wheat, Cake } from "lucide-reac
  *
  * Sensitive Dependencies:
  * - `#demo-hours` and `#demo-order-btn` are anchor targets for the seeded
- *   pins in `public/widget-demo-backend.js`, which files them under `/demo`.
+ *   pins in `public/widget-demo-backend.js`, which files them under `/demo/site`.
  *   Keep the ids, and keep both elements on this page.
  * - Pure markup, no client JS: the widget anchors pins to these elements, and
  *   a re-render that swaps nodes would push pins onto their fallback position.
@@ -55,7 +55,7 @@ export function BakeryHome() {
               >
                 Order for pickup
               </span>
-              <Link href="/demo/menu" className="inline-flex items-center justify-center rounded-full border-2 border-[#d9c2a5] px-7 py-3.5 font-semibold text-[#6b3f1d] hover:bg-[#fdebd3] transition-colors">
+              <Link href="/demo/site/menu" className="inline-flex items-center justify-center rounded-full border-2 border-[#d9c2a5] px-7 py-3.5 font-semibold text-[#6b3f1d] hover:bg-[#fdebd3] transition-colors">
                 See the menu
               </Link>
             </div>
@@ -64,20 +64,10 @@ export function BakeryHome() {
           {/* Illustrated "photo" card */}
           <div className="relative mx-auto w-full max-w-md">
             <div className="aspect-[4/5] rounded-[2.5rem] bg-gradient-to-br from-[#f3c58a] via-[#e5a563] to-[#b8733a] p-8 shadow-2xl shadow-[#b8733a]/30 flex flex-col justify-between">
-              <div className="flex justify-between text-[#fffaf3]/90">
-                <Wheat className="h-10 w-10" aria-hidden />
-                <Coffee className="h-10 w-10" aria-hidden />
-              </div>
-              <Croissant className="mx-auto h-40 w-40 text-[#fffaf3] drop-shadow-xl" strokeWidth={1.25} aria-hidden />
+              <Croissant className="mx-auto my-auto h-40 w-40 text-[#fffaf3] drop-shadow-xl" strokeWidth={1.25} aria-hidden />
               <p className="font-serif text-2xl text-[#fffaf3] leading-snug">
                 &ldquo;Today&apos;s bake: cardamom knots.&rdquo;
               </p>
-            </div>
-            <div className="absolute -bottom-6 -left-6 rounded-2xl bg-white px-5 py-4 shadow-xl ring-1 ring-[#ecdcc6]">
-              <div className="flex gap-0.5 text-[#e5a563]">
-                {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-current" aria-hidden />)}
-              </div>
-              <p className="mt-1 text-sm font-semibold">4.9 from 812 neighbours</p>
             </div>
           </div>
         </div>

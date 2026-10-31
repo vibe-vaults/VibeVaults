@@ -5,6 +5,7 @@ import { BakeryStoryPage } from "@/components/demo/bakery-pages";
 export const metadata: Metadata = {
   title: "Our story | Live Demo | VibeVaults",
   alternates: { canonical: "/demo" },
+  robots: { index: false },
 };
 
 export default function DemoStoryPage() {

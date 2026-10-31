@@ -9,8 +9,8 @@ import type { LucideIcon } from "lucide-react";
  * catering, and a year repeated in the story timeline.
  *
  * Sensitive Dependencies:
- * - Rendered by `src/app/demo/{menu,catering,story}/page.tsx` inside the
- *   shared demo layout (header, footer, sandbox widget).
+ * - Rendered by `src/app/demo/site/{menu,catering,story}/page.tsx` inside the
+ *   bakery layout (header, footer, sandbox widget) in the /demo iframe.
  * - Pure markup, no client JS, for the same reason as `bakery-site.tsx`: pins
  *   anchor to these elements and must not lose them to a re-render.
  */

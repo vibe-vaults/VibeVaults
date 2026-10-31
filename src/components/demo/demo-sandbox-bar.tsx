@@ -1,23 +1,22 @@
 import { FlaskConical } from "lucide-react";
 
 /**
- * Main Responsibility: The VibeVaults strip above the fake client site on
- * /demo. Says plainly that this is a sandbox and nothing leaves the browser,
+ * Main Responsibility: The VibeVaults strip above the two halves of /demo. Says plainly that this is a sandbox and nothing leaves the browser,
  * and keeps the trial CTA one click away.
  *
  * Sensitive Dependencies:
  * - The "nothing leaves your browser" claim is only true because
  *   `public/widget-demo-backend.js` answers every widget request locally.
  *   Pinned by `tests/widget-demo.spec.ts`.
- * - Links are plain <a> on purpose, see the note in `src/app/demo/layout.tsx`.
+ * - Links are plain <a> on purpose, see the note in `src/components/demo/demo-split.tsx`.
  */
-const NOTE = "A pretend client site. Use the Feedback button in the bottom-right corner. Nothing you type leaves your browser.";
+const NOTE = "Left: a pretend client site with the widget. Right: your agency dashboard. Nothing you type leaves your browser.";
 
 export function DemoSandboxBar() {
   return (
-    <div className="sticky top-0 z-40 bg-gray-950 text-white shadow-lg">
+    <div className="relative z-40 shrink-0 bg-gray-950 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 flex items-center gap-3 md:gap-5">
-        {/* Full page load on purpose: see the exits note in src/app/demo/layout.tsx. */}
+        {/* Full page load on purpose: see the exits note in src/components/demo/demo-split.tsx. */}
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/" className="font-bold text-lg tracking-tight text-primary whitespace-nowrap hover:opacity-90 transition-opacity">
           VibeVaults

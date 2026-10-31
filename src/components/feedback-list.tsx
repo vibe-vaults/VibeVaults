@@ -43,9 +43,13 @@ interface FeedbackListProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     feedbackItems: any[];
     senderAvatars?: Record<string, string>;
+    /** Open a card in place instead of navigating to its page (the /demo agency pane). */
+    onOpen?: (id: string) => void;
+    /** A card to draw the eye to (the /demo guide's "open the new report"). */
+    highlightId?: string | null;
 }
 
-export function FeedbackList({ feedbackItems, senderAvatars = {} }: FeedbackListProps) {
+export function FeedbackList({ feedbackItems, senderAvatars = {}, onOpen, highlightId }: FeedbackListProps) {
     const [activeStatuses, setActiveStatuses] = useState<string[]>(DEFAULT_STATUSES);
     const [hydrated, setHydrated] = useState(false);
 
@@ -111,7 +115,11 @@ export function FeedbackList({ feedbackItems, senderAvatars = {} }: FeedbackList
                     <p className="text-gray-500">No feedback matches the selected filters.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-start">
+                // Container, not viewport, breakpoints: the list also renders in
+                // the half-width agency pane on /demo, where xl would mean three
+                // columns in 400px.
+                <div className="@container">
+                <div className="grid grid-cols-1 @2xl:grid-cols-2 @4xl:grid-cols-3 gap-6 items-start">
                     {filtered.map((item) => (
                         <FeedbackListCard
                             key={item.id}
@@ -119,8 +127,11 @@ export function FeedbackList({ feedbackItems, senderAvatars = {} }: FeedbackList
                             replyCount={item.reply_count ?? 0}
                             attachmentCount={item.attachment_count ?? 0}
                             senderAvatarUrl={senderAvatars[item.sender]}
+                            onOpen={onOpen ? () => onOpen(item.id) : undefined}
+                            highlight={item.id === highlightId}
                         />
                     ))}
+                </div>
                 </div>
             )}
         </>
