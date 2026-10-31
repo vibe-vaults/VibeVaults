@@ -5,23 +5,23 @@ import { usePathname } from "next/navigation";
 import { Croissant, Phone } from "lucide-react";
 
 /**
- * Main Responsibility: The pretend bakery's own nav on /demo. Its links are
+ * Main Responsibility: The pretend bakery's own nav, inside the /demo iframe. Its links are
  * Next <Link>s on purpose: moving between the bakery's pages is a client-side
  * route change, which is exactly what a customer's React or Next site does,
  * so the demo exercises widget.js's pushState/popstate handling for real.
  *
  * Sensitive Dependencies:
- * - Routes under `src/app/demo/`. The widget keys pins by path, so each page
- *   must be its own URL; switching content in place on /demo would put every
+ * - Routes under `src/app/demo/site/`. The widget keys pins by path, so each page
+ *   must be its own URL; switching content in place on one page would put every
  *   page's pins on one page.
  * - A client component only for the active-link state. Keep it out of the
  *   page content, which stays plain markup so pin anchors are not re-rendered.
  */
 
 const NAV = [
-  { href: "/demo/menu", label: "Menu" },
-  { href: "/demo/catering", label: "Catering" },
-  { href: "/demo/story", label: "Our story" },
+  { href: "/demo/site/menu", label: "Menu" },
+  { href: "/demo/site/catering", label: "Catering" },
+  { href: "/demo/site/story", label: "Our story" },
 ];
 
 export function BakeryHeader() {
@@ -30,7 +30,7 @@ export function BakeryHeader() {
   return (
     <header className="border-b border-[#ecdcc6] text-[#3b2414]">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-5 flex items-center justify-between gap-4">
-        <Link href="/demo" className="flex items-center gap-2.5 shrink-0">
+        <Link href="/demo/site" className="flex items-center gap-2.5 shrink-0">
           <span className="grid h-10 w-10 place-items-center rounded-full bg-[#6b3f1d] text-[#fffaf3]">
             <Croissant className="h-5 w-5" aria-hidden />
           </span>

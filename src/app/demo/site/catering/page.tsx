@@ -5,6 +5,7 @@ import { BakeryCateringPage } from "@/components/demo/bakery-pages";
 export const metadata: Metadata = {
   title: "Catering | Live Demo | VibeVaults",
   alternates: { canonical: "/demo" },
+  robots: { index: false },
 };
 
 export default function DemoCateringPage() {

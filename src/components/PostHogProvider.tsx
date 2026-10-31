@@ -13,6 +13,8 @@
  * - Reacts to `vv:consent-changed` events from src/lib/consent.ts.
  * - On consent, identifies a signed-in visitor by their Supabase user id via
  *   src/lib/analytics-identity.ts (never the email). Sign-out paths reset it.
+ * - Skipped inside the /demo bakery iframe (`isDemoFrame()`), which would otherwise double every
+ *   demo pageview; the demo's own events are captured by the top window.
  */
 'use client'
 
@@ -20,6 +22,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { CONSENT_CHANGED_EVENT, readConsent, type ConsentState } from '@/lib/consent'
 import { identifySignedInUser } from '@/lib/analytics-identity'
+import { isDemoFrame } from '@/lib/demo-frame'
 
 type PostHogClient = typeof import('posthog-js').default
 type ProviderComponent = ComponentType<{ children: ReactNode }>
@@ -85,6 +88,8 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return
+    // The /demo bakery iframe: the page around it already counts the visit.
+    if (isDemoFrame()) return
     let cancelled = false
 
     const idle = (cb: () => void): number => {

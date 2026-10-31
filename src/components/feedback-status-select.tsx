@@ -8,22 +8,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { updateFeedbackStatus } from '@/actions/feedback';
 import { toast } from 'sonner';
 import { AlertCircle } from 'lucide-react';
 
 interface FeedbackStatusSelectProps {
-    id: string;
     initialStatus: string;
+    /** The write. The dashboard passes the server action, the /demo its sandbox. */
+    onStatusChange: (status: string) => Promise<{ error?: string }>;
 }
 
-export function FeedbackStatusSelect({ id, initialStatus }: FeedbackStatusSelectProps) {
+export function FeedbackStatusSelect({ initialStatus, onStatusChange }: FeedbackStatusSelectProps) {
     const [status, setStatus] = React.useState(initialStatus);
 
     const handleStatusChange = async (newStatus: string) => {
         setStatus(newStatus); // Optimistic update
         try {
-            const result = await updateFeedbackStatus(id, newStatus);
+            const result = await onStatusChange(newStatus);
             if (result?.error) {
                 toast("Error", { description: result.error, icon: <AlertCircle className="h-4 w-4 text-red-500" /> });
                 setStatus(initialStatus); // Revert on error

@@ -17,6 +17,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    // The bakery's pages moved under /demo/site when /demo became a split
+    // view (they now load inside its iframe). Old links land on the demo.
+    return ["/demo/menu", "/demo/catering", "/demo/story"].map((source) => ({
+      source,
+      destination: "/demo",
+      permanent: true,
+    }));
+  },
   skipTrailingSlashRedirect: true,
   // Stable Server Action encryption is configured via the
   // NEXT_SERVER_ACTIONS_ENCRYPTION_KEY env var (read automatically by Next at

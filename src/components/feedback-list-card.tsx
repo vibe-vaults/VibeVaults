@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils"
 import { MessageSquare, Paperclip } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { getStatusStyles } from "@/lib/feedback-utils"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
+import { BeckonHalo, beckonBounce } from "@/components/beckon"
 
 interface FeedbackListCardProps {
     feedback: {
@@ -18,21 +19,31 @@ interface FeedbackListCardProps {
     replyCount: number
     attachmentCount: number
     senderAvatarUrl?: string
+    /** Opens the report in place instead of linking to its dashboard page (the /demo agency pane). */
+    onOpen?: () => void
+    /** The /demo guide's "this one": the same halo and bounce the guide card uses. */
+    highlight?: boolean
 }
 
-export function FeedbackListCard({ feedback, replyCount, attachmentCount, senderAvatarUrl }: FeedbackListCardProps) {
+export function FeedbackListCard({ feedback, replyCount, attachmentCount, senderAvatarUrl, onOpen, highlight }: FeedbackListCardProps) {
+    const reduceMotion = useReducedMotion()
     const status = feedback.status || 'open'
     const snippet = feedback.content.length > 120
         ? feedback.content.slice(0, 120) + '...'
         : feedback.content
 
-    return (
-        <Link href={`/dashboard/feedback/${feedback.id}`}>
+    const beckon = !!highlight && !reduceMotion
+    const card = (
             <motion.div
+                className="relative"
                 whileHover={{ scale: 1.01, y: -2 }}
-                transition={{ duration: 0.15 }}
+                {...(beckon ? beckonBounce(true) : { transition: { duration: 0.15 } })}
             >
-                <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border-gray-200/60 bg-white/50 backdrop-blur-sm">
+                {beckon && <BeckonHalo className="rounded-2xl" />}
+                <Card className={cn(
+                    "group cursor-pointer hover:shadow-lg transition-all duration-300 border-gray-200/60 bg-white/50 backdrop-blur-sm",
+                    highlight && "relative ring-1 ring-primary/30 bg-white shadow-lg"
+                )}>
                     <CardContent className="p-5">
                         <div className="flex items-start justify-between gap-3 mb-3">
                             <div className="flex items-center gap-3 min-w-0">
@@ -94,6 +105,13 @@ export function FeedbackListCard({ feedback, replyCount, attachmentCount, sender
                     </CardContent>
                 </Card>
             </motion.div>
-        </Link>
+    )
+
+    return onOpen ? (
+        <button type="button" onClick={onOpen} className="block w-full text-left cursor-pointer" data-feedback-id={feedback.id}>
+            {card}
+        </button>
+    ) : (
+        <Link href={`/dashboard/feedback/${feedback.id}`}>{card}</Link>
     )
 }

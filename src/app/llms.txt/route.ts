@@ -50,7 +50,7 @@ function buildLlmsTxt(baseUrl: string): string {
 - **Client access:** send one shareable review link (the reviewer enters a name and email, no account), or invite clients individually by email. The widget is invite-only, so ordinary visitors of the site never see it.
 - **Setup:** paste one script tag into the site. Works on Webflow, Framer (including the free plan), WordPress, Shopify, React, Next.js, Vue and plain HTML, including single-page apps with client-side routing.
 - **Team side:** a shared dashboard with workspaces, projects and roles (owner, member, client), feedback statuses (open, in progress, in review, completed), email notifications, and an optional public read-only board for stakeholders.
-- **Try it without signing up:** an interactive demo on a made-up site at ${url("/demo")}.
+- **Try it without signing up:** an interactive demo at ${url("/demo")}: pin feedback on a made-up client site on one side and answer it from the agency dashboard on the other.
 - **Trust and data:** data hosted in the EU, GDPR processor terms (DPA) included in the Terms of Service, daily backups, and public uptime monitoring.
 - **AI agents (MCP):** an MCP server at ${url("/api/mcp")} lets Claude, Cursor and other AI tools read a team's pinned feedback (pin location, page, console logs, failed requests, screenshots, thread) and, only if the user allows it, reply and change status. Included on every plan and the trial. Connections are read-only by default, limited to the workspaces the user picks, and revocable instantly; replies can carry an AI-assisted marker. Setup: ${url("/docs/ai-agents")}.
 - **Integrations:** native integrations with project-management tools (Jira, Trello, etc.) are not available yet; feedback lives in the VibeVaults dashboard.

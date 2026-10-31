@@ -13,6 +13,8 @@
  * - While the banner is up it publishes its height as `--cookie-banner-height`
  *   on <html>, so fixed bottom-docked UI (the /demo guide) can sit above it
  *   instead of underneath. Removed again when the banner closes.
+ * - Never shows inside the /demo bakery iframe (`isDemoFrame()`): the top /demo page asks once,
+ *   and a second banner inside the left pane would cover the widget.
  */
 'use client'
 
@@ -32,6 +34,7 @@ import {
     readConsent,
     writeConsent,
 } from '@/lib/consent'
+import { isDemoFrame } from '@/lib/demo-frame'
 
 export function CookieConsent({ requireConsent }: { requireConsent: boolean }) {
     const [showBanner, setShowBanner] = useState(false)
@@ -54,6 +57,8 @@ export function CookieConsent({ requireConsent }: { requireConsent: boolean }) {
     }, [showBanner])
 
     useEffect(() => {
+        // The /demo bakery iframe: the page around it already asks.
+        if (isDemoFrame()) return
         const existing = readConsent()
         if (existing) {
             setAnalytics(existing.analytics)
