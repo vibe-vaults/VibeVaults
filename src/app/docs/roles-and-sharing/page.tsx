@@ -13,7 +13,7 @@ import Link from "next/link";
 import { DocsPageHeader } from "@/components/docs/docs-page-header";
 import { DocsPageFooter } from "@/components/docs/docs-page-footer";
 import { getDocPage } from "@/lib/docs-data";
-import { TIER_DISPLAY, TIER_LIMITS, YEARLY_DISCOUNT } from "@/lib/tier-config";
+import { TIER_DISPLAY, TIER_LIMITS, YEARLY_DISCOUNT, seatsIncludingOwner } from "@/lib/tier-config";
 
 const page = getDocPage("roles-and-sharing")!;
 
@@ -31,7 +31,7 @@ function planLine(slug: (typeof TIER_DISPLAY)[number]["slug"]): string {
     const l = TIER_LIMITS[slug];
     const workspaces = `${count(l.maxWorkspaces)} ${l.maxWorkspaces === 1 ? "workspace" : "workspaces"}`;
     const projects = `${count(l.maxProjects)} ${l.maxProjects === 1 ? "project" : "projects"}`;
-    const members = `${count(l.maxTeamMembers)} team ${l.maxTeamMembers === 1 ? "member" : "members"}`;
+    const members = `${count(seatsIncludingOwner(l.maxTeamMembers))} team members`;
     return `${workspaces}, ${projects}, ${members}, ${storage(l.storageBytes)} of attachment storage`;
 }
 
@@ -99,7 +99,7 @@ export default function RolesAndSharingDoc() {
                 <h2 id="limits">What each plan allows</h2>
                 <p>
                     Limits are counted across your whole account, not per workspace, so ten projects means ten projects in
-                    total. Team member counts exclude you and exclude clients.
+                    total. Team member counts include you and exclude clients.
                 </p>
                 <ul>
                     {TIER_DISPLAY.map((tier) => {

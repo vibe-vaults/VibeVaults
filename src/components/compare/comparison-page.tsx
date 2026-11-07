@@ -10,12 +10,14 @@
  */
 
 import Image from "next/image";
+import Link from "next/link";
 import { Check, X, Maximize2 } from "lucide-react";
 import { PricingCards } from "@/components/landing/pricing-cards";
 import { DetailsFaq } from "@/components/landing/details-faq";
 import { ClosingCta } from "@/components/landing/closing-cta";
 import { HeroCtas } from "@/components/landing/hero-ctas";
 import { ZoomableImage } from "@/components/zoomable-image";
+import { allComparisons } from "@/lib/compare-data";
 import type { ComparisonData, CompareValue } from "@/lib/compare-data";
 
 function Cell({ value }: { value: CompareValue }) {
@@ -116,9 +118,9 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
             {/* Comparison table */}
             <section id="compare" className="max-w-5xl mx-auto px-4 md:px-8 py-20 scroll-mt-24">
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">VibeVaults vs {data.competitorName}</h2>
+                    <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">VibeVaults vs {data.competitorName}: the facts, side by side</h2>
                     <p className="text-gray-500 max-w-2xl mx-auto">
-                        An honest, feature-by-feature comparison. Competitor pricing and features verified August 2026.
+                        Prices shown for monthly billing. Competitor pricing and plans checked November 2026.
                     </p>
                 </div>
                 <div className="overflow-x-auto">
@@ -206,6 +208,32 @@ export function ComparisonPage({ data }: { data: ComparisonData }) {
                     </p>
                 </div>
                 <PricingCards ctaLabel="Start your 14-day trial" staticCtaHref="/auth/register" showTrialNote />
+            </section>
+
+            {/* Other alternatives (matches the plural search intent, cross-links the /compare pages) */}
+            <section className="max-w-6xl mx-auto px-4 md:px-8 py-20">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">
+                        Other {data.competitorName} alternatives
+                    </h2>
+                    <p className="text-gray-500 max-w-2xl mx-auto">
+                        Still comparing? Here is how VibeVaults stacks up against the other tools agencies look at.
+                    </p>
+                </div>
+                <div className="grid md:grid-cols-3 gap-6">
+                    {allComparisons
+                        .filter((c) => c.slug !== data.slug)
+                        .map((c) => (
+                            <Link
+                                key={c.slug}
+                                href={`/compare/${c.slug}`}
+                                className="rounded-2xl border-2 border-gray-200 bg-white p-8 hover:border-primary/30 hover:shadow-lg transition-all duration-300"
+                            >
+                                <h3 className="text-lg font-bold text-gray-900 mb-2">VibeVaults vs {c.competitorName}</h3>
+                                <p className="text-gray-500 leading-relaxed">{c.hubBlurb}</p>
+                            </Link>
+                        ))}
+                </div>
             </section>
 
             <DetailsFaq title={`${data.competitorName} alternative FAQ`} faqs={data.faqs} />

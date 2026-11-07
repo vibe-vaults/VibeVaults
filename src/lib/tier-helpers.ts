@@ -10,7 +10,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getTierLimits, hasActiveAccess, isSubscribed, isTrialActive, type TierSlug, type TierLimits } from './tier-config';
+import { getTierLimits, hasActiveAccess, isSubscribed, isTrialActive, seatsIncludingOwner, type TierSlug, type TierLimits } from './tier-config';
 
 export { hasActiveAccess, isTrialExpired, isSubscribed, isTrialActive } from './tier-config';
 
@@ -440,7 +440,7 @@ export async function checkMemberLimit(workspaceId: string): Promise<LimitCheck>
     if (count >= effectiveLimits.maxTeamMembers) {
         return {
             allowed: false,
-            message: `This workspace has reached its team member limit which is ${effectiveLimits.maxTeamMembers}. Upgrade to invite more members.`,
+            message: `This workspace has reached its team member limit which is ${seatsIncludingOwner(effectiveLimits.maxTeamMembers)}. Upgrade to invite more members.`,
         };
     }
 
