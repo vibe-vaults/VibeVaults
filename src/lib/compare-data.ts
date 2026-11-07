@@ -575,6 +575,80 @@ export const ruttlComparison: ComparisonData = {
     ],
 };
 
+export const feedbucketComparison: ComparisonData = {
+    slug: "feedbucket-alternative",
+    competitorName: "Feedbucket",
+    metaTitle: "Feedbucket Alternative for Agencies: VibeVaults vs Feedbucket",
+    metaDescription:
+        "Looking for a Feedbucket alternative? VibeVaults starts at $29/mo, with console logs on every plan and 10 team members on Pro. See the honest comparison.",
+    hubBlurb:
+        "A widget with deep integrations vs a lower-priced widget with console logs on every plan.",
+    heroKicker: "VibeVaults vs Feedbucket",
+    heroTitle: "A Feedbucket alternative with a lower entry price",
+    heroSubtitle:
+        "Feedbucket is a feedback widget for agencies, with integrations on every plan. VibeVaults works the same way, with one script tag on the site, but starts lower, includes console logs on every plan, and fits 10 people on Pro.",
+    tldrVibe:
+        "You run a small studio that keeps client feedback in one place. You want a lower entry price, console logs from the first plan, and room for a growing team without moving to a higher tier.",
+    tldrCompetitor:
+        "Your team works out of Jira, Linear, Trello or similar, and you want every piece of client feedback synced there from the first plan.",
+    rows: [
+        { label: "Starting price", vibevaults: "$29/mo", competitor: "$49/mo" },
+        { label: "Client setup", vibevaults: "Invite link, no account, no extension", competitor: "Widget, no account" },
+        { label: "Console logs captured", vibevaults: true, competitor: "Business plan and up ($89/mo)" },
+        { label: "Native integrations (Jira, Trello, GitHub…)", vibevaults: "On roadmap", competitor: "Jira, Linear, Trello, Slack and more on every plan" },
+        { label: "Projects included", vibevaults: "10 on Starter ($29/mo); unlimited on Pro", competitor: "Unlimited on every plan" },
+        { label: "Team members included", vibevaults: "3 on Starter; 10 on Pro ($49/mo)", competitor: "2 on Pro; 25 on Business ($89/mo)" },
+        { label: "AI agent access (MCP)", vibevaults: true, competitor: true },
+        { label: "Free trial", vibevaults: "14 days, no card", competitor: "14 days, no card" },
+    ],
+    competitorWins: [
+        "Integrations on every plan, including Jira, Linear, Trello, GitHub and Slack, where VibeVaults has none yet.",
+        "Unlimited projects from its first plan.",
+        "25 team members on Business at $89/mo, for larger teams.",
+        "API access on every plan.",
+    ],
+    vibevaultsWins: [
+        {
+            title: "A lower entry price",
+            body: "VibeVaults Starter is $29/month with 10 projects and 3 team members. Feedbucket starts at $49/month with unlimited projects and 2 team members.",
+        },
+        {
+            title: "Console logs on every plan",
+            body: "VibeVaults captures console logs with the screenshot and browser context from the first plan. Feedbucket includes them from its Business plan at $89/month.",
+        },
+        {
+            title: "More people for the same price",
+            body: "At $49/month, VibeVaults Pro fits 10 team members with unlimited projects. Feedbucket Pro fits 2 at the same price.",
+        },
+        {
+            title: "Invite-only by design",
+            body: "Each client gets a per-device link and uninvited visitors see nothing, with zero setup, so the feedback stays private to the people you chose.",
+        },
+    ],
+    faqs: [
+        {
+            question: "Is VibeVaults a good Feedbucket alternative?",
+            answer: "Yes, if you want a lower entry price, console logs on every plan, and room for 10 people at $49/month. Feedbucket is the stronger choice if you need feedback synced with Jira, Linear or similar tools today.",
+        },
+        {
+            question: "Do my clients need an account or a browser extension?",
+            answer: "No. Clients click a single invite link, once per device, and the widget appears on the site. They never create an account or install an extension, and uninvited visitors see nothing because VibeVaults is invite-only by design.",
+        },
+        {
+            question: "Does VibeVaults integrate with Jira or Trello?",
+            answer: "Not yet. All feedback lives in the VibeVaults dashboard, and native integrations are on the roadmap. If you need them today, Feedbucket already offers them on every plan.",
+        },
+        {
+            question: "Is VibeVaults cheaper than Feedbucket?",
+            answer: "For small teams, yes. VibeVaults starts at $29/month against $49/month, and $49/month on VibeVaults Pro fits 10 people against 2 on Feedbucket Pro. For more than 10 people, Feedbucket Business at $89/month fits 25.",
+        },
+        {
+            question: "Can I try VibeVaults for free?",
+            answer: "Yes. Every plan starts with a 14-day free trial and no credit card required, and you can have the widget live on a real project in about 30 seconds.",
+        },
+    ],
+};
+
 export const allComparisons: ComparisonData[] = [
     bugherdComparison,
     markerComparison,
@@ -583,4 +657,5 @@ export const allComparisons: ComparisonData[] = [
     atarimComparison,
     pastelComparison,
     ruttlComparison,
+    feedbucketComparison,
 ];
