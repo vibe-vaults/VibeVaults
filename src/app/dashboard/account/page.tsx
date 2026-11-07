@@ -7,6 +7,7 @@ import { Highlight } from "@/components/highlight";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserTier, countUserWorkspaces, countUserProjects, countWorkspaceMembers, getStorageUsedBytes, formatBytes } from "@/lib/tier-helpers";
+import { seatsIncludingOwner } from "@/lib/tier-config";
 import { cookies } from "next/headers";
 
 export default async function AccountPage() {
@@ -85,7 +86,7 @@ export default async function AccountPage() {
     const usage = {
         workspaces: { used: workspaceCount, max: limits.maxWorkspaces },
         projects: { used: projectCount, max: limits.maxProjects },
-        ...(memberCount !== null && { members: { used: memberCount, max: limits.maxTeamMembers } }),
+        ...(memberCount !== null && { members: { used: memberCount + 1, max: seatsIncludingOwner(limits.maxTeamMembers) } }),
         storage: { used: storageBytes, max: limits.storageBytes, usedLabel: formatBytes(storageBytes), maxLabel: formatBytes(limits.storageBytes) },
     };
 

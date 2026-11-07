@@ -55,7 +55,7 @@ export const TIER_LIMITS: Record<TierSlug, TierLimits> = {
     pro: {
         maxWorkspaces: 3,
         maxProjects: Infinity,
-        maxTeamMembers: 10,
+        maxTeamMembers: 9,
         storageBytes: 5 * GB,
         emailFrequencies: ['digest', 'realtime'],
         showBranding: false,
@@ -159,6 +159,11 @@ function limitValue(n: number): string {
     return n === Infinity ? 'Unlimited' : String(n);
 }
 
+/** Displayed team size: `maxTeamMembers` excludes the owner, buyers count everyone. */
+export function seatsIncludingOwner(maxTeamMembers: number): number {
+    return maxTeamMembers === Infinity ? Infinity : maxTeamMembers + 1;
+}
+
 function limitLabel(n: number, singular: string, plural: string): string {
     if (n === Infinity) return `Unlimited ${plural}`;
     return `${n} ${n === 1 ? singular : plural}`;
@@ -176,7 +181,7 @@ export const TIER_DISPLAY: TierDisplay[] = [
         features: [
             limitLabel(TIER_LIMITS.starter.maxWorkspaces, 'workspace', 'workspaces'),
             limitLabel(TIER_LIMITS.starter.maxProjects, 'project', 'projects'),
-            limitLabel(TIER_LIMITS.starter.maxTeamMembers, 'team member', 'team members'),
+            limitLabel(seatsIncludingOwner(TIER_LIMITS.starter.maxTeamMembers), 'team member', 'team members'),
             'Unlimited feedback & clients',
             'Real-time chat',
             'AI agent access (MCP)',
@@ -194,7 +199,7 @@ export const TIER_DISPLAY: TierDisplay[] = [
         features: [
             limitLabel(TIER_LIMITS.pro.maxWorkspaces, 'workspace', 'workspaces'),
             limitLabel(TIER_LIMITS.pro.maxProjects, 'project', 'projects'),
-            limitLabel(TIER_LIMITS.pro.maxTeamMembers, 'team member', 'team members'),
+            limitLabel(seatsIncludingOwner(TIER_LIMITS.pro.maxTeamMembers), 'team member', 'team members'),
             'Unlimited feedback & clients',
             'Real-time chat',
             'AI agent access (MCP)',
@@ -227,9 +232,9 @@ export const TIER_DISPLAY: TierDisplay[] = [
 export const FEATURE_COMPARISON: TierFeature[] = [
     ...(['maxWorkspaces', 'maxProjects', 'maxTeamMembers'] as const).map((key) => ({
         label: { maxWorkspaces: 'Workspaces', maxProjects: 'Projects', maxTeamMembers: 'Team members' }[key],
-        starter: limitValue(TIER_LIMITS.starter[key]),
-        pro: limitValue(TIER_LIMITS.pro[key]),
-        business: limitValue(TIER_LIMITS.business[key]),
+        starter: limitValue(key === 'maxTeamMembers' ? seatsIncludingOwner(TIER_LIMITS.starter[key]) : TIER_LIMITS.starter[key]),
+        pro: limitValue(key === 'maxTeamMembers' ? seatsIncludingOwner(TIER_LIMITS.pro[key]) : TIER_LIMITS.pro[key]),
+        business: limitValue(key === 'maxTeamMembers' ? seatsIncludingOwner(TIER_LIMITS.business[key]) : TIER_LIMITS.business[key]),
     })),
     { label: 'Feedback & clients', starter: 'Unlimited', pro: 'Unlimited', business: 'Unlimited' },
     { label: 'Real-time chat', starter: true, pro: true, business: true },
