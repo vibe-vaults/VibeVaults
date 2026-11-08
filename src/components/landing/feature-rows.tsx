@@ -61,7 +61,7 @@ const FEATURES: Feature[] = [
         body: "A read-only board for stakeholders who want progress at a glance without joining anything.",
     },
     {
-        title: "Teams & roles",
+        title: "Teams & Roles",
         shot: { slug: "team", width: 1524, height: 696 },
         icon: Users,
         body: "Owners, members and clients each see what they need, with workspaces per client and notifications that keep everyone in the loop.",
