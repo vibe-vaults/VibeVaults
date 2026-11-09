@@ -56,7 +56,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "VibeVaults - Visual Feedback Widget for Agency Websites",
+        alt: "VibeVaults: clients pin feedback on a live website and an AI agent marks the fix as done",
       },
     ],
   },
