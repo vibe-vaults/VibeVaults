@@ -117,21 +117,33 @@ export async function getWorkspaceAccess(workspaceId: string): Promise<Workspace
         .eq('id', workspaceId)
         .single();
 
-    if (!workspace?.owner_id) {
+    return resolveOwnerAccess(admin, workspace?.owner_id ?? null);
+}
+
+/**
+ * The owner half of `getWorkspaceAccess`, for callers that already resolved
+ * the workspace's `owner_id` (e.g. through a joined select). A null owner
+ * fails open, as documented above.
+ */
+async function resolveOwnerAccess(
+    admin: ReturnType<typeof createAdminClient>,
+    ownerId: string | null,
+): Promise<WorkspaceAccess> {
+    if (!ownerId) {
         return { ok: true, ownerId: null, ownerEmail: null, ownerTier: null };
     }
 
     const { data: profile } = await admin
         .from('profiles')
         .select('email, subscription_status, trial_ends_at, subscription_tier')
-        .eq('id', workspace.owner_id)
+        .eq('id', ownerId)
         .single();
 
     const ok = hasActiveAccess(profile);
 
     return {
         ok,
-        ownerId: workspace.owner_id,
+        ownerId: ownerId,
         ownerEmail: (profile?.email as string | null) ?? null,
         // A lapsed owner has no effective tier, even if `subscription_tier`
         // still holds a value (a failed payment leaves the tier in place and
@@ -268,16 +280,29 @@ export async function checkFeedbackWorkspaceActive(
     userId: string,
 ): Promise<string | null> {
     const admin = createAdminClient();
+    // One joined read instead of feedback → project → workspace one by one:
+    // this guard sits in front of every feedback mutation, and each hop was a
+    // sequential round trip to the database.
     const { data: feedback } = await admin
         .from('feedbacks')
-        .select('project_id')
+        .select('project_id, projects(workspace_id, workspaces(owner_id))')
         .eq('id', feedbackId)
         .single();
 
     // No project to resolve — let the caller's own RLS check produce the error.
     if (!feedback?.project_id) return null;
 
-    return checkProjectWorkspaceActive(feedback.project_id, userId);
+    // Many-to-one embeds come back as a single object (or null).
+    const project = feedback.projects as unknown as
+        { workspace_id: string | null; workspaces: { owner_id: string | null } | null } | null;
+
+    // Same outcomes as checkProjectWorkspaceActive: a project without a
+    // workspace is treated as paused, an ownerless workspace fails open.
+    const access: WorkspaceAccess = project?.workspace_id
+        ? await resolveOwnerAccess(admin, project.workspaces?.owner_id ?? null)
+        : { ok: false, ownerId: null, ownerEmail: null, ownerTier: null };
+    if (access.ok) return null;
+    return workspacePausedMessage(access.ownerId === userId, access.ownerEmail);
 }
 
 // ---------------------------------------------------------------------------

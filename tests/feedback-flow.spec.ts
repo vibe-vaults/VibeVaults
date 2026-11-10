@@ -44,14 +44,25 @@ async function loadWidgetWithToken(page: Page, token: string): Promise<void> {
     await expect(page.locator('.trigger-btn')).toBeVisible({ timeout: 15_000 });
 }
 
+// Submitted through the real widget, so the row is created by the API, not here.
+// It is removed in afterAll: every browser project in one run shares a seed and
+// pins the same spot (the h1 centre), and a pin left behind sits above the
+// placement overlay, so the next project's click opened the old pin(s) instead
+// of the composer. That failed WebKit on every full local run (CI runs
+// Chromium only, so it never saw it). Deleted at file level, not per describe,
+// because the dashboard tests below still read it.
+const feedbackContent = `E2E feedback ${Date.now()}`;
+
+test.afterAll(async () => {
+    await supabaseAdmin.from('feedbacks').delete().eq('content', feedbackContent);
+});
+
 // ---------------------------------------------------------------------------
 // Widget test — uses NO pre-auth session (simulates external visitor)
 // ---------------------------------------------------------------------------
 
 test.describe('Widget feedback flow (real API)', () => {
     test.use({ storageState: AUTH_FILES.empty });
-
-    const feedbackContent = `E2E feedback ${Date.now()}`;
 
     test('client submits pinned feedback via widget → visible in dashboard', async ({ page, context }) => {
         const seed = getSeedResult();
@@ -184,6 +195,41 @@ test.describe('Dashboard feedback interaction', () => {
             await expect(page.getByText('Reply pin', { exact: false })).toHaveCount(2);
         } finally {
             await supabaseAdmin.from('feedback_replies').delete().eq('feedback_id', fb.id);
+            await supabaseAdmin.from('feedbacks').delete().eq('id', fb.id);
+        }
+    });
+
+    test('deleting from the detail page lands on a list without it', async ({ page }) => {
+        // The action no longer revalidates (that re-rendered the deleted row's
+        // page inside the response and made delete take seconds), so this pins
+        // that the list the user lands on is still fresh, not a cached copy.
+        const seed = getSeedResult();
+        const content = `E2E delete me ${Date.now()}`;
+        const { data: fb, error } = await supabaseAdmin
+            .from('feedbacks')
+            .insert({ project_id: seed.projectId, content, type: 'Bug', sender: seed.clientEmail, status: 'open' })
+            .select('id')
+            .single();
+        if (error || !fb) throw new Error(`feedback insert failed: ${error?.message}`);
+
+        try {
+            // Visit the list first so a stale client-cached copy of it would
+            // exist to be (wrongly) reused after the delete.
+            await page.goto('/dashboard/feedback');
+            await expect(page.getByText(content)).toBeVisible({ timeout: 10_000 });
+
+            // Soft navigation, so the list stays in the client router cache.
+            await page.locator(`a[href="/dashboard/feedback/${fb.id}"]`).first().click();
+            await page.waitForURL(`**/dashboard/feedback/${fb.id}`);
+            await page.locator('button:has(svg.lucide-trash-2)').click();
+            await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click();
+
+            await page.waitForURL(/\/dashboard\/feedback$/, { timeout: 10_000 });
+            await expect(page.getByText(content)).toHaveCount(0);
+
+            const { data: row } = await supabaseAdmin.from('feedbacks').select('id').eq('id', fb.id).maybeSingle();
+            expect(row).toBeNull();
+        } finally {
             await supabaseAdmin.from('feedbacks').delete().eq('id', fb.id);
         }
     });

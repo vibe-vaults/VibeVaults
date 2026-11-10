@@ -56,7 +56,13 @@ export async function deleteFeedback(id: string) {
         return { error: 'Feedback not found or you no longer have access.' };
     }
 
-    revalidatePath('/dashboard/feedback');
+    // No revalidatePath here, on purpose. Revalidating makes Next re-render the
+    // CURRENT route inside the action's response, and the only caller is the
+    // detail page of the row just deleted: that re-render ran the whole
+    // dashboard layout, then redirected (not found) into a second render of the
+    // list, before the client's own router.push rendered it a third time
+    // (~3-4s on prod). Every dashboard route is dynamic and nothing uses a Next
+    // data cache, so the caller's navigation already fetches a fresh list.
     return { error: null };
 }
 

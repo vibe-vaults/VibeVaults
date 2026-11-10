@@ -12,9 +12,12 @@ import { cn } from "@/lib/utils";
  * Sensitive Dependencies: every chip is a factual claim and goes stale
  * silently, so each one is tied to something checkable:
  * - "Daily backups": the cron in .github/workflows/supabase-backup.yml.
- * - "200+ automated tests": the Playwright suite in tests/ (~225 tests when
- *   written), run on every pull request to main by playwright.yml. Keep the
- *   rounded number; lower it if the suite ever shrinks below it.
+ * - "200+ automated tests": the Playwright suite in tests/, run on every pull
+ *   request to main by playwright.yml. Counted as distinct tests (271 on
+ *   2026-11-10, `npx playwright test --list --project=chromium`), NOT the 813
+ *   runs a local full run reports: Firefox and WebKit repeat the same tests
+ *   and only run locally, CI runs Chromium alone. Round DOWN to the hundred;
+ *   raise it at 300, lower it if the suite ever shrinks below 200.
  * - "Uptime monitored 24/7": the public UptimeRobot page (STATUS_PAGE_URL).
  * - "Data hosted in the EU": the Supabase project region (EU), confirmed by
  *   the owner. Changing region means changing this chip.
