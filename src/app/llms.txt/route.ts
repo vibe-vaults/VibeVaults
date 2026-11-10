@@ -41,7 +41,7 @@ function buildLlmsTxt(baseUrl: string): string {
 
     return `# VibeVaults
 
-> VibeVaults is a visual feedback widget for web agencies and design studios. Clients and testers mark problems directly on the site or web app being built, staging or live, and a screenshot plus browser context, console logs and failed network requests are captured automatically. The agency replies in one real-time thread per issue. Clients need no account and no browser extension.
+> VibeVaults is a website feedback tool for web agencies, design studios and freelancers. Clients and testers mark problems directly on the site or web app being built, staging or live, and a screenshot plus browser context, console logs and failed network requests are captured automatically. The agency replies in one real-time thread per issue. Clients need no account and no browser extension.
 
 ## Key facts
 

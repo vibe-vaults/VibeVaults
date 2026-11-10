@@ -63,7 +63,7 @@ export function SiteFooter() {
                     <div className="col-span-2 lg:col-span-1">
                         <Wordmark className="text-2xl" />
                         <p className="mt-4 max-w-xs text-sm text-gray-500 leading-relaxed">
-                            A visual feedback widget for web agencies and design studios. Data hosted in the EU.
+                            A website feedback tool for web agencies, design studios and freelancers. Data hosted in the EU.
                         </p>
                         <a
                             href={STATUS_PAGE_URL}

@@ -24,7 +24,7 @@ import { Accent, SectionHeading } from "@/components/landing/section-heading";
 const faqs: { question: string; answer: string; link?: { match: string; href: string } }[] = [
     {
         question: "What is VibeVaults?",
-        answer: "VibeVaults is a visual feedback widget for websites. It lets your clients click on any part of a live website and leave feedback exactly where it belongs, with a screenshot and technical details captured automatically. Agencies use it to replace scattered email threads, vague screenshots, and endless revision calls with one clear feedback stream.",
+        answer: "VibeVaults is a website feedback tool for web agencies, design studios and freelancers. Clients pin feedback directly on the live site with no account, and a screenshot with browser context is captured automatically. Agencies use it to replace scattered email threads, vague screenshots, and endless revision calls with one clear feedback stream.",
     },
     {
         question: "Who is VibeVaults for?",

@@ -17,7 +17,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { GlobalNotificationProvider } from "@/components/global-notification-provider";
 import { DashboardLockProvider } from "@/components/dashboard-lock-context";
-import { getUserTier, isTrialExpired as isTierExpired, getViewerWorkspaceLiveness, isWorkspaceLive } from "@/lib/tier-helpers";
+import { getUserTier, getViewerWorkspaceLiveness, isWorkspaceLive } from "@/lib/tier-helpers";
 import { sendWelcomeNotification } from "@/lib/notifications";
 import { dispatchMemberWelcomeBootstrap, reopenOnboardingChecklist } from "@/lib/member-onboarding";
 
@@ -81,10 +81,9 @@ export default async function DashboardLayout({
             .eq("welcome_email_sent", false)
             .select("id");
         if (claimed && claimed.length > 0) {
+            // Greeted as "Hi there": an email address's local part is often not a name (info@, szurilo@).
             const email = user.email || 'friend';
-            const nameStr = email.split('@')[0];
-            const formattedName = nameStr.charAt(0).toUpperCase() + nameStr.slice(1);
-            sendWelcomeNotification({ to: email, name: formattedName }).catch(e =>
+            sendWelcomeNotification({ to: email }).catch(e =>
                 console.error('Failed to send welcome email:', e)
             );
         }
@@ -171,8 +170,6 @@ export default async function DashboardLayout({
             workspaces = refreshedWorkspaces;
         }
     }
-
-    const isTrialExpired = isTierExpired(tierInfo);
 
     // Per-workspace liveness, keyed on each workspace's OWNER. A member of a
     // lapsed owner must be locked out of that workspace just like the owner is,

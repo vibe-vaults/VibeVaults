@@ -41,7 +41,7 @@ export default function Home() {
               "name": "VibeVaults",
               "operatingSystem": "Web",
               "applicationCategory": "BusinessApplication",
-              "description": "VibeVaults is a visual feedback widget for websites. The feedback tool for modern agencies: collect visual feedback directly on client sites, from staging to launch, share progress, and ship faster.",
+              "description": "VibeVaults is a website feedback tool for web agencies, design studios and freelancers. Clients pin feedback directly on the live site with no account, and a screenshot with browser context is captured automatically.",
               "offers": {
                 "@type": "AggregateOffer",
                 "lowPrice": "29.00",
