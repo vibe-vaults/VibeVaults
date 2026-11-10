@@ -84,6 +84,32 @@ test.describe('direct reply email', () => {
         expect(html).not.toContain('/access');
         expect(html).toContain('/unsubscribe?token=tok-123');
     });
+
+    // This template used to drop the CTA entirely, so a guest had no way back
+    // to the thread from the email at all.
+    test('guest gets the site CTA, never the dashboard link', async () => {
+        const html = await render(() => sendReplyNotification({
+            ...baseReply,
+            originalFeedback: 'Button is broken',
+            recipientKind: 'guest',
+            siteUrl: SITE,
+        }));
+
+        expect(html).toContain(SITE);
+        expect(html).toContain('Open the site to reply');
+        expect(html).not.toContain('/api/email-redirect');
+    });
+
+    test('member gets the dashboard link', async () => {
+        const html = await render(() => sendReplyNotification({
+            ...baseReply,
+            originalFeedback: 'Button is broken',
+            recipientKind: 'member',
+        }));
+
+        expect(html).toContain('/api/email-redirect');
+        expect(html).toContain('View in Dashboard');
+    });
 });
 
 test.describe('reply digest email', () => {

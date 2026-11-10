@@ -461,6 +461,9 @@ interface SendReplyEmailParams {
     unsubscribeToken?: string;
     recipientKind?: RecipientKind;
     siteUrl?: string;
+    workspaceId?: string;
+    projectId?: string;
+    feedbackId?: string;
     aiAssisted?: boolean;
 }
 
@@ -473,6 +476,9 @@ export async function sendReplyNotification({
     unsubscribeToken,
     recipientKind = 'member',
     siteUrl,
+    workspaceId,
+    projectId,
+    feedbackId,
     aiAssisted
 }: SendReplyEmailParams) {
     try {
@@ -500,6 +506,10 @@ export async function sendReplyNotification({
                         <p style="font-size: 14px; color: #718096; margin-bottom: 8px;">Your original feedback:</p>
                         <div style="background-color: #f9fafb; padding: 16px; border-radius: 12px; margin-bottom: 32px; border: 1px solid #f1f5f9; border-left: 4px solid #209CEE;">
                             <p style="margin: 0; color: #4a5568; font-size: 14px; line-height: 1.6; font-style: italic;">"${esc(originalFeedback)}"</p>
+                        </div>
+
+                        <div style="margin-top: 32px;">
+                            ${threadCtaButton({ recipientKind, siteUrl, workspaceId, projectId, feedbackId })}
                         </div>
                         
                         <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #f1f5f9;">
@@ -840,9 +850,8 @@ export async function sendWorkspaceInviteNotification({
 export async function sendMemberRemovedNotification({
     to,
     workspaceName,
-    removedByName,
-    workspaceId
-}: { to: string, workspaceName: string, removedByName: string, workspaceId?: string }) {
+    removedByName
+}: { to: string, workspaceName: string, removedByName: string }) {
     try {
         const { data, error } = await resend.emails.send({
             from: 'VibeVaults <notifications@mail.vibe-vaults.com>',
@@ -976,7 +985,7 @@ export async function sendWelcomeNotification({
                         </p>
 
                         <p style="margin-bottom: 24px; font-size: 16px; color: #4a5568;">
-                            I'm József, the founder of VibeVaults. Thanks for joining the beta! Quick question: what is the #1 problem you're hoping VibeVaults will solve for you today?
+                            I'm József, the founder of VibeVaults. Thanks for trying VibeVaults! Quick question: what is the #1 problem you're hoping VibeVaults will solve for you today?
                         </p>
 
                         <p style="margin-bottom: 32px; font-size: 16px; color: #4a5568;">
@@ -1315,7 +1324,7 @@ export async function sendNewSignupNotification({ userEmail }: { userEmail: stri
                         </div>
 
                         <p style="font-size: 14px; color: #718096;">
-                            Now's a great time to reach out with a personalised beta welcome or discount offer.
+                            Now's a great time to reach out with a personalised welcome or discount offer.
                         </p>
 
                         <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #f1f5f9;">

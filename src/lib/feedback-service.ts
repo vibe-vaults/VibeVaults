@@ -122,6 +122,9 @@ export async function sendAgencyReplyCore(
                     unsubscribeToken: prefs.unsubscribeToken,
                     recipientKind: prefs.recipientKind,
                     siteUrl: project.website_url ?? undefined,
+                    workspaceId: project.workspace_id,
+                    projectId: project.id,
+                    feedbackId,
                     aiAssisted
                 });
                 await recordEmailSent({

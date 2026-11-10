@@ -1,4 +1,5 @@
 import { HeroCtas } from "@/components/landing/hero-ctas";
+import { RollingWords } from "@/components/landing/rolling-words";
 
 /**
  * Main Responsibility: Landing page hero. Split layout: the headline (sans,
@@ -10,6 +11,10 @@ import { HeroCtas } from "@/components/landing/hero-ctas";
  * - The negative top margin pulls the glow under SiteHeader (h-[76px]); keep
  *   the two heights in sync.
  * - The headline is the page's main SEO signal; change it deliberately.
+ * - The pitch opens with the agreed long one-liner ("a website feedback tool
+ *   for web agencies, design studios and freelancers"), with the audience
+ *   rolling through RollingWords. Keep it in step with the footer, the FAQ,
+ *   llms.txt and the JSON-LD in app/page.tsx.
  */
 export function Hero() {
     return (
@@ -23,9 +28,14 @@ export function Hero() {
                 <div className="flex flex-col gap-6 max-w-md lg:pt-4">
                     <span className="text-[17px] text-gray-900">Clear feedback &middot; Faster sign-off</span>
                     <p className="text-[15.5px] leading-relaxed text-gray-500">
-                        VibeVaults is a visual feedback widget for <b className="text-gray-900">web agencies</b> and{" "}
-                        <b className="text-gray-900">design studios</b>. Clients comment right on the site you&apos;re
-                        building. <b className="text-gray-900">No logins</b>, no browser extensions, and you{" "}
+                        VibeVaults is a website feedback tool for{" "}
+                        <RollingWords
+                            words={["web agencies", "design studios", "freelancers"]}
+                            className="text-gray-900"
+                        />
+                        . Clients pin feedback right on the site you&apos;re building, and a screenshot with browser
+                        context is captured automatically. <b className="text-gray-900">No logins</b>, no browser
+                        extensions, and you{" "}
                         <b className="text-gray-900">never pay per client</b>. Send a link, they start marking up, and
                         your <b className="text-gray-900">AI agent</b> can pick up every report and fix it.
                     </p>
