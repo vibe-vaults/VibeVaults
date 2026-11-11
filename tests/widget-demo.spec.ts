@@ -256,6 +256,14 @@ test.describe('demo page', () => {
 
     test.use({ viewport: { width: 1600, height: 1000 } });
 
+    // Not a retry: WebKit on Linux runs these multi-page flows (landing page
+    // full load, iframe boot, a reload) roughly 3x slower than Chromium,
+    // evenly across every step, and the two longest runs crossed the default
+    // 30s budget. test.slow() triples the timeout for WebKit only.
+    test.beforeEach(({ browserName }) => {
+        test.slow(browserName === 'webkit', 'WebKit runs the demo flows ~3x slower than Chromium');
+    });
+
     test('the whole loop across both panes, one guide at a time, with zero API traffic', async ({ page }) => {
         const apiCalls = recordApiCalls(page);
         await recordDemoEvents(page);
@@ -296,6 +304,31 @@ test.describe('demo page', () => {
         await expect(page.locator('[data-demo-pane="agency"]')).toContainText('Looks great, thank you!');
 
         expect(apiCalls).toEqual([]);
+    });
+
+    test('a widget moved to the left edge gets the client card on its right, fully on screen', async ({ page }) => {
+        await page.goto('/demo');
+        let frame = await site(page);
+        await expect(await clientGuide(page)).toBeVisible();
+        // Park the launcher bottom-left the way a drag would, then reload (a
+        // reload of /demo resumes, and the widget reads the spot on boot).
+        await frame.evaluate(() => {
+            const key = document.querySelector('script[data-key]')!.getAttribute('data-key');
+            localStorage.setItem(`vv_pos_${key}`, JSON.stringify({ h: 'left', x: 20, v: 'bottom', y: 20 }));
+        });
+        await page.reload();
+        frame = await site(page);
+        // The card renders once widget.js has loaded, so the host exists after this.
+        const card = await clientGuide(page);
+        await expect(card).toBeVisible();
+        const launcherRight = () => shadow(frame, `return root.querySelector('.launcher').getBoundingClientRect().right;`) as Promise<number>;
+        await expect.poll(launcherRight).toBeLessThan(200);
+
+        const frameWidth = await frame.evaluate(() => window.innerWidth);
+        await expect.poll(async () => (await card.evaluate((el) => el.getBoundingClientRect().left))).toBeGreaterThan(await launcherRight());
+        const box = await card.evaluate((el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right }; });
+        expect(box.left).toBeGreaterThanOrEqual(0);
+        expect(box.right).toBeLessThanOrEqual(frameWidth);
     });
 
     test('leaving and coming back restarts the run; a refresh resumes it', async ({ page }) => {
@@ -415,6 +448,11 @@ test.describe('demo page', () => {
             await openThread(await site(page), 'Typo on my phone');
             await expect(strip).toContainText('Fewer review rounds');
             await expect(strip.getByRole('link', { name: /Start free trial/ })).toBeVisible();
+            await expect(strip.getByRole('button', { name: 'Start over' })).toBeVisible();
+            // Compact on a phone: the finished strip must leave the frame (and
+            // the widget panel open in it) most of the screen.
+            const stripHeight = (await strip.boundingBox())!.height;
+            expect(stripHeight).toBeLessThan(170);
         });
     });
 

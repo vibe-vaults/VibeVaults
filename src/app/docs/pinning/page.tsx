@@ -70,6 +70,15 @@ export default function PinningDoc() {
                     the site back completely.
                 </p>
 
+                <h2 id="moving-the-widget">Moving the widget</h2>
+                <p>
+                    If the widget button covers something you want to see, move it. Rest the mouse on the button for a
+                    moment and a small handle with six dots appears beside it: drag that handle anywhere on the screen. On
+                    a phone or tablet, press and hold the button, then drag. The panel opens next to the button wherever
+                    you put it, and the widget remembers the spot on this site for the next visit. Double-click the handle
+                    to send it back to the corner.
+                </p>
+
                 <h2 id="reading-pins">Reading what other people left</h2>
                 <p>
                     Pins are numbered in the order they were created across the whole project, so pin 1 is the oldest and a
