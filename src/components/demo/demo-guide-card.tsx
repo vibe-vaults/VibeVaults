@@ -68,6 +68,7 @@ export function DemoGuideCard({
   const role = ROLES[side];
   const current = stage < STEP_COUNT ? TOUR_STEPS[stage] : null;
   const done = stage >= STEP_COUNT;
+  const compactDone = compact && done;
   const startOverButton = (
     <button
       type="button"
@@ -110,13 +111,30 @@ export function DemoGuideCard({
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{role.badge}</p>
             <p className={`text-sm font-bold ${compact ? "" : "truncate"}`}>
-              {compact && current ? (active ? `${stage + 1}. ${current.title}` : current.waiting) : role.name}
+              {compactDone
+                ? "That's the whole loop"
+                : compact && current ? (active ? `${stage + 1}. ${current.title}` : current.waiting) : role.name}
             </p>
             {compact && active && current && <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{current.hint}</p>}
+            {compactDone && <p className="mt-0.5 text-xs leading-relaxed text-gray-500">Fewer review rounds, and client sites that ship faster.</p>}
           </div>
-          <span className="text-xs font-semibold text-gray-400 tabular-nums shrink-0">
-            {Math.min(stage, STEP_COUNT)}/{STEP_COUNT}
-          </span>
+          {compactDone ? (
+            // Start over moves up here as an icon, so the finished strip stays
+            // two short rows and the widget below keeps the screen.
+            <button
+              type="button"
+              onClick={onStartOver}
+              aria-label="Start over"
+              title="Start over"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-gray-400 ring-1 ring-gray-200 hover:text-primary hover:ring-primary/40 transition-colors cursor-pointer"
+            >
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          ) : (
+            <span className="text-xs font-semibold text-gray-400 tabular-nums shrink-0">
+              {Math.min(stage, STEP_COUNT)}/{STEP_COUNT}
+            </span>
+          )}
         </div>
 
         {!compact && (
@@ -166,12 +184,7 @@ export function DemoGuideCard({
 
         {/* The strip has no step list, but the end of the run still gets its
             finale: on a phone it is the last thing on screen. */}
-        {compact && done && (
-          <div className="px-4 pb-4">
-            {finale}
-            {startOverButton}
-          </div>
-        )}
+        {compactDone && <div className="px-4 pb-3">{finale}</div>}
       </motion.div>
     </motion.aside>
   );

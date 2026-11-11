@@ -24,10 +24,13 @@ const handLettering = Permanent_Marker({ weight: "400", subsets: ["latin"] });
  *   widget reads the hook once at init. Loading widget.js without it would
  *   send the demo's requests to the real API with a key that matches no
  *   project.
- * - Docks beside the widget: `useWidgetLeftEdge` measures the widget's
+ * - Docks beside the widget: `useWidgetChrome` measures the widget's
  *   `.launcher` and `.popup` inside its (open) shadow root and floats the card
- *   just left of whichever is further left. Renaming those classes in
- *   widget.js only degrades this to the fallback offset, never breaks it.
+ *   on whichever side of them has more room. That is the left by default, but
+ *   the visitor can drag the launcher (and with it the panel) to the left
+ *   edge, and a card still docked to its left would be pushed off-screen.
+ *   Renaming those classes in widget.js only degrades this to the fallback
+ *   offset, never breaks it.
  *   Below `DOCK_MIN_FRAME` there is no room beside the open panel (which on a
  *   phone covers nearly the whole frame, and sits above anything in it), so
  *   the card is not drawn here at all: `DemoSplit` shows it in a strip above
@@ -43,15 +46,18 @@ const DOCK_GAP = 16;
 /** Where the widget's launcher sits, for the "start here" arrow. */
 type LauncherSpot = { centerX: number; bottom: number; panelOpen: boolean };
 
+/** Horizontal extent (viewport px) of the widget's visible launcher + panel. */
+type ChromeSpan = { left: number; right: number };
+
 /**
- * Distance (px) from the viewport's right edge to just left of the widget's
- * visible chrome, tracked as its panel opens, closes and resizes. `null` until
- * the widget has rendered, so the caller keeps its CSS fallback until then.
- * Also reports the launcher's position and whether the panel is open, which
- * drives the arrow that points first-time visitors at the widget.
+ * The widget's visible chrome, tracked as its panel opens, closes, resizes
+ * and as the launcher is dragged. `null` until the widget has rendered, so the
+ * caller keeps its CSS fallback until then. Also reports the launcher's
+ * position and whether the panel is open, which drives the arrow that points
+ * first-time visitors at the widget.
  */
-function useWidgetLeftEdge() {
-  const [right, setRight] = useState<number | null>(null);
+function useWidgetChrome() {
+  const [chrome, setChrome] = useState<ChromeSpan | null>(null);
   const [launcher, setLauncher] = useState<LauncherSpot | null>(null);
 
   useEffect(() => {
@@ -64,13 +70,20 @@ function useWidgetLeftEdge() {
       raf = requestAnimationFrame(() => {
         if (!root) return;
         let left = Infinity;
+        let right = -Infinity;
         for (const sel of [".launcher", ".popup"]) {
           const r = root.querySelector(sel)?.getBoundingClientRect();
-          if (r && r.width > 0) left = Math.min(left, r.left);
+          if (r && r.width > 0) {
+            left = Math.min(left, r.left);
+            right = Math.max(right, r.right);
+          }
         }
         // Nothing visible (widget hidden, or chrome tucked away while a pin
         // is being placed): keep the last position rather than jumping.
-        if (left !== Infinity) setRight(Math.round(window.innerWidth - left + DOCK_GAP));
+        if (left !== Infinity) {
+          const next = { left: Math.round(left), right: Math.round(right) };
+          setChrome((prev) => (prev && prev.left === next.left && prev.right === next.right ? prev : next));
+        }
         const l = root.querySelector(".launcher")?.getBoundingClientRect();
         const next: LauncherSpot | null =
           l && l.width > 0
@@ -98,6 +111,12 @@ function useWidgetLeftEdge() {
       const mo = new MutationObserver(measure);
       mo.observe(root, { subtree: true, attributes: true, attributeFilter: ["class"] });
       mo.observe(host, { attributes: true, attributeFilter: ["style"] });
+      // A dragged launcher (and the panel that follows it) moves by inline
+      // style alone, so watch those two elements' style as well.
+      for (const sel of [".launcher", ".popup"]) {
+        const el = root.querySelector(sel);
+        if (el) mo.observe(el, { attributes: true, attributeFilter: ["style"] });
+      }
       observers.push(mo);
       measure();
       return true;
@@ -117,7 +136,7 @@ function useWidgetLeftEdge() {
     };
   }, []);
 
-  return { right, launcher };
+  return { chrome, launcher };
 }
 
 /**
@@ -210,7 +229,7 @@ export function DemoClientGuide() {
   const [backend, setBackend] = useState<DemoBackend | null>(null);
   const stage = useDemoStage(backend);
   const reduceMotion = useReducedMotion();
-  const { right: dockRight, launcher } = useWidgetLeftEdge();
+  const { chrome, launcher } = useWidgetChrome();
   const [frameWidth, setFrameWidth] = useState(0);
   const router = useRouter();
   // Read through a ref so the mount effect below never re-runs (and tears the
@@ -253,8 +272,14 @@ export function DemoClientGuide() {
 
   if (!backend) return null;
 
-  const right = dockRight ?? 96;
-  const room = frameWidth - right - 16;
+  // Dock on the side of the widget with more room: left of it by default,
+  // right of it once the visitor has dragged the widget to the left.
+  const roomLeft = chrome ? chrome.left - DOCK_GAP - 16 : frameWidth - 96 - 16;
+  const roomRight = chrome ? frameWidth - chrome.right - DOCK_GAP - 16 : 0;
+  const dockRightOfWidget = roomRight > roomLeft;
+  const dock = dockRightOfWidget
+    ? { left: chrome!.right + DOCK_GAP, width: Math.min(MAX_CARD, roomRight) }
+    : { right: chrome ? frameWidth - chrome.left + DOCK_GAP : 96, width: Math.min(MAX_CARD, roomLeft) };
   // Gone while the agency works: the visitor's attention belongs on the
   // other pane. Also gone in a narrow frame, where the open widget panel
   // would cover it: the top window shows it above the frame instead.
@@ -279,8 +304,8 @@ export function DemoClientGuide() {
             That&apos;s the loop from Maria&apos;s side: she pinned it on her own site, and the answer came back in the same thread.
           </p>
         }
-        className="fixed z-30 bottom-[calc(var(--cookie-banner-height,0px)+1.25rem)] transition-[right] duration-300 ease-out"
-        style={{ right, width: Math.min(MAX_CARD, room) }}
+        className="fixed z-30 bottom-[calc(var(--cookie-banner-height,0px)+1.25rem)] transition-[left,right] duration-300 ease-out"
+        style={dock}
       />}
     </>
   );

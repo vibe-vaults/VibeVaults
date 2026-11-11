@@ -9,8 +9,39 @@ import { track } from "./demo-tour";
  * in agency terms, and the two ways forward (trial, setup call). Shown in
  * the agency guide card, and in the client strip on narrow screens, where
  * the client view is the last thing on screen when the run ends.
+ *
+ * `compact` is the strip's version: on a phone the strip sits above the
+ * bakery frame, and the full finale (pitch paragraph plus two stacked
+ * buttons) took so much height that the frame, and the widget panel open in
+ * it, were squeezed out of view. The strip's header carries the pitch line,
+ * so the compact finale is just the two CTAs side by side.
  */
-export function DemoFinale() {
+export function DemoFinale({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div>
+        <div className="grid grid-cols-2 gap-2">
+          <a
+            href="/auth/register"
+            onClick={() => track("demo_cta_clicked", { cta: "trial" })}
+            className="flex items-center justify-center gap-1.5 rounded-full bg-secondary px-3 py-2 text-xs font-bold text-white hover:bg-secondary/90 hover:shadow-md transition-all duration-300"
+          >
+            Start free trial <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+          </a>
+          <a
+            href={SETUP_CALL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("demo_cta_clicked", { cta: "setup_call" })}
+            className="flex items-center justify-center gap-1.5 rounded-full border-2 border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-primary hover:text-primary transition-all duration-300"
+          >
+            <Calendar className="h-3.5 w-3.5" aria-hidden /> Setup call
+          </a>
+        </div>
+        <p className="mt-1.5 text-center text-[10px] text-gray-400">14-day free trial &middot; No credit card required</p>
+      </div>
+    );
+  }
   return (
     <div className="mt-4 rounded-2xl bg-gradient-to-br from-primary/10 via-white to-secondary/10 p-4 ring-1 ring-primary/15">
       <p className="text-sm text-gray-700 leading-relaxed">

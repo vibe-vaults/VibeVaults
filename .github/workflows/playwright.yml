@@ -37,8 +37,11 @@ jobs:
 
     - name: Install Playwright Browsers (cache miss)
       # CI only runs the chromium project (see playwright.config.ts).
+      # Browser binary only (from Playwright's CDN). System packages are a
+      # separate, non-fatal step below, so an Ubuntu mirror outage cannot fail
+      # the browser download.
       if: steps.playwright-cache.outputs.cache-hit != 'true'
-      run: npx playwright install --with-deps chromium
+      run: npx playwright install chromium
 
     - name: Save Playwright browsers
       # Saved right after the install rather than by the cache action's own
@@ -51,11 +54,24 @@ jobs:
         path: ~/.cache/ms-playwright
         key: ${{ steps.playwright-cache.outputs.cache-primary-key }}
 
-    - name: Install Playwright system deps (cache hit)
-      # System libs (libnss3 etc.) live in /usr/lib, not in the cached path,
-      # so they must be reinstalled every run. install-deps does only that.
-      if: steps.playwright-cache.outputs.cache-hit == 'true'
-      run: npx playwright install-deps chromium
+    - name: Install Playwright system deps
+      # System libs (libnss3 etc.) live in /usr/lib, not in the cached path, so
+      # this runs on every build. The ubuntu-24.04 image already ships every
+      # library Chromium needs; what install-deps adds on top is optional fonts.
+      # Twice in Nov 2026 the runner could not resolve azure.archive.ubuntu.com
+      # and apt failed the whole job over those fonts. So: retry once, then
+      # carry on with a warning. If a library were genuinely missing, Chromium
+      # would fail to launch and the tests would say so loudly.
+      continue-on-error: true
+      timeout-minutes: 12
+      run: |
+        for attempt in 1 2; do
+          npx playwright install-deps chromium && exit 0
+          echo "install-deps attempt $attempt failed"
+          [ "$attempt" -lt 2 ] && sleep 30
+        done
+        echo "::warning::Playwright system deps could not be installed (apt mirror unreachable). Continuing with the runner's preinstalled libraries."
+        exit 1
 
     - name: Setup Supabase CLI
       uses: supabase/setup-cli@v1

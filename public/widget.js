@@ -441,6 +441,7 @@
       // Parented to the wrapper, never to the panel or composer: both of them
       // get hidden mid-flow, and a toast inside a hidden node is a silent no-op.
       wrapper.appendChild(toast);
+      layoutAroundLauncher();
       setTimeout(() => { toast.style.opacity = '0'; }, 4500);
       setTimeout(() => { toast.remove(); }, 5000);
     };
@@ -527,6 +528,30 @@
     .trigger-btn .bottom-text { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.8px; }
     .trigger-btn:hover { transform: scale(1.05) translateY(-2px); }
     .badge { position: absolute; top: -2px; right: -2px; width: 14px !important; height: 14px; background: #ef4444; border: 2px solid white; border-radius: 50%; display: none; }
+
+    /* Move handle. Hidden until a mouse rests on the launcher for a moment (a
+       permanent grip is noise on the customer's site) and drawn on the side
+       facing the middle of the screen, so it can never sit off-screen. Touch
+       has no hover: a long press on the launcher starts the same drag. The
+       launcher opts out of touch scrolling and the long-press callout so that
+       press reaches us at all. */
+    .launcher { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+    .drag-handle {
+      position: absolute; top: 50%; right: calc(100% + 8px); width: 22px; height: 40px; margin-top: -20px; padding: 0;
+      display: grid; grid-template-columns: repeat(2, 4px); grid-auto-rows: 4px; gap: 4px; align-content: center; justify-content: center;
+      background: white; border: 1px solid #e5e7eb; border-radius: 999px; box-shadow: 0 4px 12px rgba(15,23,42,0.15);
+      cursor: grab; touch-action: none; opacity: 0; transform: scale(0.85); pointer-events: none;
+      transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+    }
+    .drag-handle span { width: 4px; height: 4px; border-radius: 50%; background: #94a3b8; transition: background 0.15s; pointer-events: none; }
+    .drag-handle:hover span, .launcher.dragging .drag-handle span { background: #209CEE; }
+    .launcher.handle-right .drag-handle { right: auto; left: calc(100% + 8px); }
+    .launcher.handle-visible .drag-handle, .launcher.dragging .drag-handle, .drag-handle:focus-visible {
+      opacity: 1; transform: scale(1); pointer-events: auto;
+    }
+    .drag-handle:focus-visible { outline: 2px solid #209CEE; outline-offset: 2px; }
+    .launcher.dragging .drag-handle { cursor: grabbing; }
+    .launcher.dragging .trigger-btn { transform: scale(1.04); box-shadow: 0 12px 28px rgba(32,156,238,0.45); transition: none; }
 
     .popup {
       position: fixed; bottom: 120px; right: 20px; pointer-events: auto;
@@ -845,6 +870,7 @@
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
     <div class="launcher">
+      <button type="button" class="drag-handle" aria-label="Move the feedback widget (arrow keys, double-click to reset)" title="Drag to move. Double-click to reset."><span></span><span></span><span></span><span></span><span></span><span></span></button>
       <button class="trigger-btn">
         ${isVibeVaults ? '<div class="top-text">VibeVaults</div>' : ''}
         <div class="bottom-text">Feedback</div>
@@ -932,6 +958,248 @@
       host.style.setProperty('display', visible ? 'block' : 'none', 'important');
     };
     setWidgetVisible(false);
+
+    // --- Movable launcher ----------------------------------------------------
+    // Main responsibility: let the visitor move the launcher off whatever it
+    // covers on the customer's page, remember the spot per site, and keep the
+    // panel and toast opening beside the launcher wherever it ends up.
+    //
+    // Sensitive dependencies:
+    //   * The position is stored relative to the NEAREST corner ({ h, x, v, y }),
+    //     never as a raw left/top, so a launcher parked bottom-left stays
+    //     bottom-left when the window is resized. It is re-clamped on every
+    //     resize so a smaller window can never strand it off-screen.
+    //   * With nothing stored, every inline style is cleared and the stylesheet
+    //     (including its mobile corner) is in charge, exactly as before.
+    //   * The panel and toast are positioned from the launcher's live rect only
+    //     while a custom position exists. Their stylesheet corners assume the
+    //     launcher is bottom-right and would open off-screen anywhere else.
+    //   * Only the handle starts a mouse drag, so a click on the launcher is
+    //     always just open/close. Touch uses a long press on the launcher, and
+    //     the click that follows it is swallowed (`consumeLongPressClick`).
+    const posKey = `vv_pos_${embedKey}`;
+    const EDGE_GAP = 12;        // closest the launcher or panel may get to a viewport edge
+    const PANEL_GAP = 16;       // space between the launcher and the panel/toast
+    const HANDLE_SHOW_MS = 600; // hover this long before the handle appears
+    const HANDLE_HIDE_MS = 1000;
+    const LONG_PRESS_MS = 500;
+    const LONG_PRESS_SLOP = 10; // px a finger may wander before the press counts as a scroll attempt
+    const launcherEl = wrapper.querySelector('.launcher');
+    const launcherBtn = launcherEl.querySelector('.trigger-btn');
+    const dragHandle = launcherEl.querySelector('.drag-handle');
+    const panelEl = wrapper.querySelector('.popup');
+
+    const readLauncherPos = () => {
+      try {
+        const p = JSON.parse(localStorage.getItem(posKey) || 'null');
+        if (p && (p.h === 'left' || p.h === 'right') && (p.v === 'top' || p.v === 'bottom')
+          && Number.isFinite(p.x) && Number.isFinite(p.y)) return p;
+      } catch (_) { /* storage blocked or junk value: fall back to the default corner */ }
+      return null;
+    };
+    let launcherPos = readLauncherPos();
+    const saveLauncherPos = () => {
+      try {
+        if (launcherPos) localStorage.setItem(posKey, JSON.stringify(launcherPos));
+        else localStorage.removeItem(posKey);
+      } catch (_) { /* position just will not survive a reload */ }
+    };
+
+    const clampTo = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+    const setBox = (el, box) => {
+      for (const [prop, val] of Object.entries(box)) {
+        if (val === null) el.style.removeProperty(prop);
+        else el.style.setProperty(prop, typeof val === 'number' ? Math.round(val) + 'px' : val);
+      }
+    };
+    const BOX_RESET = { left: null, right: null, top: null, bottom: null, 'max-width': null, 'max-height': null };
+
+    // Moves the launcher to a viewport left/top, clamped inside the window.
+    const placeLauncherAt = (left, top) => {
+      const w = launcherEl.offsetWidth, h = launcherEl.offsetHeight;
+      setBox(launcherEl, {
+        left: clampTo(left, EDGE_GAP, Math.max(EDGE_GAP, window.innerWidth - w - EDGE_GAP)),
+        top: clampTo(top, EDGE_GAP, Math.max(EDGE_GAP, window.innerHeight - h - EDGE_GAP)),
+        right: 'auto', bottom: 'auto',
+      });
+    };
+
+    // Current launcher spot expressed against the corner it is closest to.
+    const currentCornerPos = () => {
+      const r = launcherEl.getBoundingClientRect();
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const h = r.left + r.width / 2 < vw / 2 ? 'left' : 'right';
+      const v = r.top + r.height / 2 < vh / 2 ? 'top' : 'bottom';
+      return {
+        h, x: Math.round(h === 'left' ? r.left : vw - r.right),
+        v, y: Math.round(v === 'top' ? r.top : vh - r.bottom),
+      };
+    };
+
+    // Panel and toast follow the launcher: anchored to the same side edge, and
+    // opening toward the middle of the screen (above when the launcher is in
+    // the lower half, below otherwise), capped to the space actually there.
+    const layoutAroundLauncher = () => {
+      const toast = wrapper.querySelector('.vv-toast');
+      const custom = !!launcherPos || launcherEl.classList.contains('dragging');
+      if (!custom) {
+        launcherEl.classList.remove('handle-right');
+        setBox(panelEl, BOX_RESET);
+        if (toast) setBox(toast, BOX_RESET);
+        return;
+      }
+      const r = launcherEl.getBoundingClientRect();
+      if (!r.width) return; // hidden (chrome tucked away, or widget not shown yet)
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const onRight = r.left + r.width / 2 >= vw / 2;
+      const onBottom = r.top + r.height / 2 >= vh / 2;
+      launcherEl.classList.toggle('handle-right', !onRight);
+      setBox(panelEl, {
+        left: onRight ? 'auto' : r.left,
+        right: onRight ? vw - r.right : 'auto',
+        top: onBottom ? 'auto' : r.bottom + PANEL_GAP,
+        bottom: onBottom ? vh - r.top + PANEL_GAP : 'auto',
+        'max-width': Math.min(vw - 2 * EDGE_GAP, onRight ? r.right - EDGE_GAP : vw - r.left - EDGE_GAP),
+        'max-height': Math.max(160, (onBottom ? r.top : vh - r.bottom) - PANEL_GAP - EDGE_GAP),
+      });
+      if (toast) {
+        setBox(toast, {
+          left: onRight ? 'auto' : r.right + 10,
+          right: onRight ? vw - r.left + 10 : 'auto',
+          top: onBottom ? 'auto' : r.top,
+          bottom: onBottom ? vh - r.bottom : 'auto',
+          'max-width': Math.min(280, (onRight ? r.left : vw - r.right) - 10 - EDGE_GAP),
+        });
+      }
+    };
+
+    let drag = null;
+    const applyLauncherPos = () => {
+      if (drag) return;
+      if (!launcherPos) setBox(launcherEl, { left: null, right: null, top: null, bottom: null });
+      else if (launcherEl.offsetWidth) {
+        const w = launcherEl.offsetWidth, h = launcherEl.offsetHeight;
+        placeLauncherAt(
+          launcherPos.h === 'left' ? launcherPos.x : window.innerWidth - w - launcherPos.x,
+          launcherPos.v === 'top' ? launcherPos.y : window.innerHeight - h - launcherPos.y,
+        );
+      }
+      layoutAroundLauncher();
+    };
+    const commitLauncherPos = (pos) => {
+      launcherPos = pos;
+      saveLauncherPos();
+      applyLauncherPos();
+    };
+
+    const onDragKey = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      endDrag(false);
+    };
+    const startDrag = (pointerId, clientX, clientY, captureEl) => {
+      const r = launcherEl.getBoundingClientRect();
+      drag = { pointerId, captureEl, dx: clientX - r.left, dy: clientY - r.top, from: launcherPos, moved: false };
+      try { captureEl.setPointerCapture(pointerId); } catch (_) { /* pointer already released */ }
+      launcherEl.classList.add('dragging');
+      document.addEventListener('keydown', onDragKey, true);
+    };
+    const moveDrag = (e) => {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+      drag.moved = true;
+      placeLauncherAt(e.clientX - drag.dx, e.clientY - drag.dy);
+      layoutAroundLauncher();
+    };
+    // `commit` false (Escape, pointercancel) puts the launcher back where it was.
+    function endDrag(commit) {
+      if (!drag) return;
+      const d = drag;
+      try { d.captureEl.releasePointerCapture(d.pointerId); } catch (_) { /* already released */ }
+      document.removeEventListener('keydown', onDragKey, true);
+      const pos = commit && d.moved ? currentCornerPos() : d.from;
+      drag = null;
+      launcherEl.classList.remove('dragging');
+      commitLauncherPos(pos);
+    }
+    for (const el of [dragHandle, launcherBtn]) {
+      el.addEventListener('pointermove', moveDrag);
+      el.addEventListener('pointerup', (e) => { if (drag && e.pointerId === drag.pointerId) endDrag(true); });
+      el.addEventListener('pointercancel', (e) => { if (drag && e.pointerId === drag.pointerId) endDrag(false); });
+    }
+
+    dragHandle.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      startDrag(e.pointerId, e.clientX, e.clientY, dragHandle);
+    });
+    dragHandle.addEventListener('click', (e) => e.preventDefault());
+    dragHandle.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      commitLauncherPos(null);
+    });
+    dragHandle.addEventListener('keydown', (e) => {
+      const step = e.shiftKey ? 64 : 16;
+      const delta = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+      if (!delta) return;
+      e.preventDefault();
+      const r = launcherEl.getBoundingClientRect();
+      placeLauncherAt(r.left + delta[0], r.top + delta[1]);
+      commitLauncherPos(currentCornerPos());
+    });
+
+    // Hover reveal (mouse only). Re-entering via the handle itself fires
+    // pointerenter on the launcher too, which cancels the pending hide.
+    let handleShowTimer = null, handleHideTimer = null;
+    launcherEl.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      clearTimeout(handleHideTimer);
+      if (launcherEl.classList.contains('handle-visible')) return;
+      clearTimeout(handleShowTimer);
+      handleShowTimer = setTimeout(() => launcherEl.classList.add('handle-visible'), HANDLE_SHOW_MS);
+    });
+    launcherEl.addEventListener('pointerleave', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      clearTimeout(handleShowTimer);
+      clearTimeout(handleHideTimer);
+      handleHideTimer = setTimeout(() => launcherEl.classList.remove('handle-visible'), HANDLE_HIDE_MS);
+    });
+
+    // Long press (touch and pen) on the launcher picks it up.
+    let pressTimer = null, pressStart = null, swallowClick = false;
+    const cancelPress = () => { clearTimeout(pressTimer); pressTimer = null; pressStart = null; };
+    launcherBtn.addEventListener('pointerdown', (e) => {
+      swallowClick = false;
+      if (e.pointerType === 'mouse') return;
+      cancelPress();
+      pressStart = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      pressTimer = setTimeout(() => {
+        const p = pressStart;
+        cancelPress();
+        if (!p) return;
+        swallowClick = true;
+        startDrag(p.id, p.x, p.y, launcherBtn);
+        if (navigator.vibrate) { try { navigator.vibrate(10); } catch (_) { /* unsupported */ } }
+      }, LONG_PRESS_MS);
+    });
+    launcherBtn.addEventListener('pointermove', (e) => {
+      if (pressStart && e.pointerId === pressStart.id
+        && Math.hypot(e.clientX - pressStart.x, e.clientY - pressStart.y) > LONG_PRESS_SLOP) cancelPress();
+    });
+    launcherBtn.addEventListener('pointerup', cancelPress);
+    launcherBtn.addEventListener('pointercancel', cancelPress);
+    launcherEl.addEventListener('contextmenu', (e) => e.preventDefault());
+    const consumeLongPressClick = () => {
+      const swallow = swallowClick;
+      swallowClick = false;
+      return swallow;
+    };
+
+    // Re-place on resize, and whenever the launcher changes size: it measures
+    // 0x0 while hidden (and 80 vs 64px across the mobile breakpoint), so the
+    // clamp has to run again once it is actually on screen.
+    window.addEventListener('resize', applyLauncherPos);
+    if (typeof ResizeObserver === 'function') new ResizeObserver(applyLauncherPos).observe(launcherEl);
 
     // --- Pin anchoring -------------------------------------------------------
     // Main responsibility: convert a click position into an anchor that still
@@ -2819,7 +3087,11 @@
       }
     };
 
-    triggerBtn.onclick = () => setWidgetOpen(!isOpen);
+    triggerBtn.onclick = () => {
+      // The click that ends a long-press drag is not a request to open.
+      if (consumeLongPressClick()) return;
+      setWidgetOpen(!isOpen);
+    };
     wrapper.querySelector('.close-btn').onclick = () => setWidgetOpen(false);
 
     // Deliberately no close-on-outside-click. The pins are the point of having

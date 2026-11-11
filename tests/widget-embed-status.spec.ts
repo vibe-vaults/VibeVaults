@@ -2,7 +2,9 @@
  * Main Responsibility: Pins the embed status pill on the Embed widget card
  * (`/dashboard/project-settings`), derived from `projects.widget_last_seen_at`
  * by `getWidgetEmbedState()`: never seen -> "Not detected", seen within 7 days
- * -> "Embedded", older -> "Not seen in 7 days".
+ * -> "Embedded", older -> "Not seen in 7 days". Also pins that "Activate widget"
+ * is hidden until the widget is detected, and that it appears without a
+ * reload once the heartbeat lands (the card polls getWidgetEmbedStatus).
  *
  * Sensitive Dependencies:
  * - Mutates the seed project's `widget_last_seen_at`; saved in beforeAll and
@@ -63,6 +65,30 @@ test.describe('Embed widget status pill', () => {
             await expect(pill).toBeVisible({ timeout: 10_000 });
             await expect(pill).toHaveAttribute('data-state', c.state);
             await expect(pill).toHaveText(c.label);
+
+            const activate = page.getByRole('button', { name: /activate widget/i });
+            if (c.state === 'not_detected') {
+                await expect(page.getByTestId('activate-widget-waiting')).toBeVisible();
+                await expect(activate).toHaveCount(0);
+            } else {
+                await expect(activate).toBeVisible();
+                await expect(page.getByTestId('activate-widget-waiting')).toHaveCount(0);
+            }
         });
     }
+
+    test('Activate appears without a reload once the widget is detected', async ({ page }) => {
+        const projectId = getSeedResult().projectId;
+        await supabaseAdmin.from('projects').update({ widget_last_seen_at: null }).eq('id', projectId);
+
+        await page.goto('/dashboard/project-settings');
+        await expect(page.getByTestId('activate-widget-waiting')).toBeVisible({ timeout: 10_000 });
+
+        // What the heartbeat does when the snippet first loads on the site.
+        await supabaseAdmin.from('projects').update({ widget_last_seen_at: new Date().toISOString() }).eq('id', projectId);
+
+        await expect(page.getByRole('button', { name: /activate widget/i })).toBeVisible({ timeout: 10_000 });
+        await expect(page.getByTestId('widget-embed-status')).toHaveAttribute('data-state', 'embedded');
+        await expect(page.getByTestId('activate-widget-waiting')).toHaveCount(0);
+    });
 });

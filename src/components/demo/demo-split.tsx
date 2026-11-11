@@ -200,7 +200,7 @@ export function DemoSplit() {
           <div className="hidden lg:block"><PaneLabel side="client" /></div>
           {clientStrip && (
             <div className="shrink-0 border-b border-gray-200 bg-gray-50 p-2">
-              <DemoGuideCard side="client" stage={stage} compact onStartOver={startOver} finale={<DemoFinale />} />
+              <DemoGuideCard side="client" stage={stage} compact onStartOver={startOver} finale={<DemoFinale compact />} />
             </div>
           )}
           {backend ? (
