@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Check, Copy, Loader2, PartyPopper } from 'lucide-react';
 import { ActivateWidgetButton } from '@/components/activate-widget-button';
-import { getWidgetEmbedStatus } from '@/actions/widget-access';
+import { useWidgetEmbedDetected } from '@/hooks/use-widget-embed-detected';
 
 interface CreateProjectDialogProps {
     open: boolean;
@@ -33,29 +33,17 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId }: CreateP
     // project's shareable review link instead of the form.
     const [created, setCreated] = useState<CreatedProject | null>(null);
     const [copied, setCopied] = useState(false);
-    // Whether widget.js has been seen loading on the project's site. Stamped
-    // by the widget heartbeat, so it flips on its own once the customer pastes
-    // the snippet — no "I've done it" button to lie to.
-    const [embedded, setEmbedded] = useState(false);
 
     // Clear error + any previous embed step whenever the dialog opens
     useEffect(() => {
-        if (open) { setError(''); setCreated(null); setCopied(false); setEmbedded(false); }
+        if (open) { setError(''); setCreated(null); setCopied(false); }
     }, [open]);
 
-    // Poll for the embed while the step is on screen. Stops as soon as it is
-    // detected, and on unmount, so a dialog left open cannot poll forever.
-    useEffect(() => {
-        if (!open || !created || embedded) return;
-        let cancelled = false;
-        const timer = setInterval(async () => {
-            try {
-                const status = await getWidgetEmbedStatus(created.id);
-                if (!cancelled && status.embedded) setEmbedded(true);
-            } catch { /* transient — the next tick retries */ }
-        }, 3000);
-        return () => { cancelled = true; clearInterval(timer); };
-    }, [open, created, embedded]);
+    // Whether widget.js has been seen loading on the new project's site.
+    // Stamped by the widget heartbeat, so it flips on its own once the customer
+    // pastes the snippet (no "I've done it" button to lie to). Polls only while
+    // the embed step is on screen.
+    const embedded = useWidgetEmbedDetected(open && created ? created.id : null);
 
     const scriptTag = created
         ? `<script src="${process.env.NEXT_PUBLIC_APP_URL}/widget.js" data-key="${created.api_key}" async></script>`
@@ -186,7 +174,6 @@ export function CreateProjectDialog({ open, onOpenChange, workspaceId }: CreateP
                     <DialogFooter>
                         <Button
                             type="button"
-                            variant={embedded ? 'outline' : 'default'}
                             onClick={() => onOpenChange(false)}
                             className="cursor-pointer"
                         >

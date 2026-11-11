@@ -30,6 +30,30 @@ test.describe.configure({ mode: 'serial' });
 // so cross-browser execution would race on it.
 test.skip(({ browserName }) => browserName !== 'chromium', 'Server-action UI wrapper — single-browser run');
 
+// The button only renders once the widget has been seen on the site
+// (`widget_last_seen_at`), so mark the seed project as embedded for this file
+// and put the seeded value back afterwards.
+let originalLastSeen: string | null = null;
+test.beforeAll(async () => {
+    const { data, error } = await supabaseAdmin
+        .from('projects')
+        .select('widget_last_seen_at')
+        .eq('id', getSeedResult().projectId)
+        .single();
+    if (error) throw error;
+    originalLastSeen = data.widget_last_seen_at;
+    await supabaseAdmin
+        .from('projects')
+        .update({ widget_last_seen_at: new Date().toISOString() })
+        .eq('id', getSeedResult().projectId);
+});
+test.afterAll(async () => {
+    await supabaseAdmin
+        .from('projects')
+        .update({ widget_last_seen_at: originalLastSeen })
+        .eq('id', getSeedResult().projectId);
+});
+
 // ---------------------------------------------------------------------------
 // Owner-side happy path
 // ---------------------------------------------------------------------------

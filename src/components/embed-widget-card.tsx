@@ -10,11 +10,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { Check, Copy, Code, CircleCheck, CircleDashed, TriangleAlert } from 'lucide-react'
+import { Check, Copy, Code, Zap, CircleCheck, CircleDashed, TriangleAlert } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ActivateWidgetButton } from '@/components/activate-widget-button'
 import { Badge } from '@/components/ui/badge'
 import type { WidgetEmbedState } from '@/lib/widget-embed-state'
+import { useWidgetEmbedDetected } from '@/hooks/use-widget-embed-detected'
 
 const EMBED_PILL: Record<WidgetEmbedState, { label: string; Icon: typeof Check; className: string }> = {
     not_detected: { label: 'Not detected', Icon: CircleDashed, className: 'bg-slate-100 text-slate-600 border-slate-200' },
@@ -33,7 +34,11 @@ type EmbedWidgetCardProps = {
     embedState: WidgetEmbedState
 }
 
-export function EmbedWidgetCard({ project, embedState }: EmbedWidgetCardProps) {
+export function EmbedWidgetCard({ project, embedState: serverEmbedState }: EmbedWidgetCardProps) {
+    // While the server says "not detected", poll so the pill and the Activate
+    // button flip the moment the snippet goes live, without a page refresh.
+    const detected = useWidgetEmbedDetected(project.id, serverEmbedState !== 'not_detected')
+    const embedState: WidgetEmbedState = serverEmbedState === 'not_detected' && detected ? 'embedded' : serverEmbedState
     const pill = EMBED_PILL[embedState]
     const [copied, setCopied] = useState(false)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL!
@@ -96,20 +101,37 @@ export function EmbedWidgetCard({ project, embedState }: EmbedWidgetCardProps) {
                         </TooltipContent>
                     </Tooltip>
                 </div>
-                <p className="text-xs text-blue-600/70 mt-3">
-                    This script is uniquely generated for <strong>{project.name}</strong>.
+                <p className="text-sm text-blue-700/80 mt-3">
+                    This snippet is uniquely generated for <strong>{project.name}</strong>.
                 </p>
 
                 <div className="mt-5 pt-4 border-t border-blue-100/70">
-                    <p className="text-sm font-medium text-blue-900 mb-1">Activate widget</p>
-                    <p className="text-xs text-blue-700/80 mb-3">
-                        Use this whenever the widget doesn&apos;t appear on <strong>{project.website_url || 'your site'}</strong> — typically the first time you visit on each new device or browser, or after you&apos;ve cleared your browser data. Each click activates the widget for your account on the current device.
-                    </p>
-                    <ActivateWidgetButton projectId={project.id} disabled={!project.website_url} />
-                    {!project.website_url && (
-                        <p className="text-xs text-amber-700 mt-2">
-                            Add a website URL above to enable this.
+                    <CardTitle className="text-blue-900 mb-1 flex items-center gap-2">
+                        <Zap className="w-5 h-5" />
+                        Activate widget
+                    </CardTitle>
+                    {embedState === 'not_detected' ? (
+                        // Hidden, not disabled: before the snippet is live the
+                        // activation link lands on a page with nothing to plant
+                        // the token, so the click would silently do nothing.
+                        <p data-testid="activate-widget-waiting" className="text-sm text-blue-700/80">
+                            Activate becomes available once the widget loads on your site. Open your site after pasting the snippet.
                         </p>
+                    ) : (
+                        <>
+                            <p className="text-sm text-blue-700/80 mb-3">
+                                Use this whenever the widget doesn&apos;t appear on <strong>{project.website_url || 'your site'}</strong> — typically the first time you visit on each new device or browser, or after you&apos;ve cleared your browser data. Each click activates the widget for your account on the current device.
+                            </p>
+                            <ActivateWidgetButton projectId={project.id} disabled={!project.website_url} />
+                            {!project.website_url && (
+                                <p className="text-xs text-amber-700 mt-2">
+                                    Add a website URL above to enable this.
+                                </p>
+                            )}
+                            <p className="text-sm text-blue-700/80 mt-3">
+                                If the widget was removed or the site was rebuilt, add the snippet back, otherwise activation won&apos;t work.
+                            </p>
+                        </>
                     )}
                 </div>
             </CardContent>
