@@ -10,9 +10,17 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card'
-import { Check, Copy, Code } from 'lucide-react'
+import { Check, Copy, Code, CircleCheck, CircleDashed, TriangleAlert } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ActivateWidgetButton } from '@/components/activate-widget-button'
+import { Badge } from '@/components/ui/badge'
+import type { WidgetEmbedState } from '@/lib/widget-embed-state'
+
+const EMBED_PILL: Record<WidgetEmbedState, { label: string; Icon: typeof Check; className: string }> = {
+    not_detected: { label: 'Not detected', Icon: CircleDashed, className: 'bg-slate-100 text-slate-600 border-slate-200' },
+    embedded: { label: 'Embedded', Icon: CircleCheck, className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    stale: { label: 'Not seen in 7 days', Icon: TriangleAlert, className: 'bg-amber-50 text-amber-800 border-amber-200' },
+}
 
 type EmbedWidgetCardProps = {
     project: {
@@ -21,9 +29,12 @@ type EmbedWidgetCardProps = {
         name: string
         website_url?: string | null
     }
+    /** Computed on the server from `widget_last_seen_at` (see widget-embed-state.ts). */
+    embedState: WidgetEmbedState
 }
 
-export function EmbedWidgetCard({ project }: EmbedWidgetCardProps) {
+export function EmbedWidgetCard({ project, embedState }: EmbedWidgetCardProps) {
+    const pill = EMBED_PILL[embedState]
     const [copied, setCopied] = useState(false)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL!
     const scriptTag = `<script src="${baseUrl}/widget.js" data-key="${project.api_key}" async></script>`
@@ -39,9 +50,18 @@ export function EmbedWidgetCard({ project }: EmbedWidgetCardProps) {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                        <CardTitle className="text-blue-900 flex items-center gap-2">
+                        <CardTitle className="text-blue-900 flex flex-wrap items-center gap-2">
                             <Code className="w-5 h-5" />
                             Embed widget
+                            <Badge
+                                variant="outline"
+                                data-testid="widget-embed-status"
+                                data-state={embedState}
+                                className={pill.className}
+                            >
+                                <pill.Icon />
+                                {pill.label}
+                            </Badge>
                         </CardTitle>
                         <CardDescription className="text-blue-700/80">
                             Embed the widget on your site just before the closing &lt;/body&gt; tag to start collecting feedback.

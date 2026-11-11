@@ -142,7 +142,6 @@ export default function Onboarding({
                         </div>
                         <Button
                             variant="ghost"
-                            size="sm"
                             onClick={handleExpand}
                             className="text-primary hover:text-primary hover:bg-primary/10 cursor-pointer flex items-center gap-1"
                         >

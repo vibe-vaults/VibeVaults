@@ -78,7 +78,7 @@ export function DangerZoneCard({
 
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive" disabled={loading} size="sm" className="cursor-pointer shrink-0 self-start sm:self-auto">
+                            <Button variant="destructive" disabled={loading} className="cursor-pointer shrink-0 self-start sm:self-auto">
                                 {loading ? "Deleting..." : `Delete ${entityName}`}
                             </Button>
                         </AlertDialogTrigger>

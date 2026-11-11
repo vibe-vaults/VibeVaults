@@ -180,7 +180,6 @@ export function WorkspaceSettingsCard({ workspace }: WorkspaceSettingsCardProps)
                                             <Button
                                                 type="button"
                                                 variant="outline"
-                                                size="sm"
                                                 onClick={() => fileInputRef.current?.click()}
                                                 disabled={isUploading}
                                                 className="cursor-pointer"
@@ -197,7 +196,6 @@ export function WorkspaceSettingsCard({ workspace }: WorkspaceSettingsCardProps)
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
-                                                    size="sm"
                                                     onClick={() => setLogoUrl(null)}
                                                     className="text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer"
                                                 >

@@ -85,7 +85,7 @@ export function FeedbackList({ feedbackItems, senderAvatars = {}, onOpen, highli
             <div className="flex justify-end mb-4">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="gap-2">
+                        <Button variant="outline" className="gap-2">
                             <SlidersHorizontal className="h-4 w-4" />
                             Status
                             <span className="ml-1 rounded-full bg-primary text-primary-foreground text-xs px-1.5 py-0.5 leading-none">

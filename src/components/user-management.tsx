@@ -318,9 +318,8 @@ export function UserManagement({
                                             <AlertDialogTrigger asChild>
                                                 <Button
                                                     variant="destructive"
-                                                    size="sm"
                                                     disabled={revokingId === member.user_id}
-                                                    className="cursor-pointer h-8"
+                                                    className="cursor-pointer"
                                                 >
                                                     {revokingId === member.user_id ? "Revoking..." : "Revoke Access"}
                                                 </Button>
@@ -351,9 +350,8 @@ export function UserManagement({
                                             <AlertDialogTrigger asChild>
                                                 <Button
                                                     variant="destructive"
-                                                    size="sm"
                                                     disabled={isLeaving}
-                                                    className="cursor-pointer h-8"
+                                                    className="cursor-pointer"
                                                 >
                                                     {isLeaving ? "Leaving..." : "Leave Workspace"}
                                                 </Button>
@@ -402,7 +400,7 @@ export function UserManagement({
                                 </div>
                                 <div className="flex items-center gap-4 shrink-0 self-end sm:self-auto">
                                     <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                        Client
+                                        client
                                     </Badge>
 
                                     {isOwner && (
@@ -410,9 +408,8 @@ export function UserManagement({
                                             <AlertDialogTrigger asChild>
                                                 <Button
                                                     variant="destructive"
-                                                    size="sm"
                                                     disabled={revokingId === client.id}
-                                                    className="cursor-pointer h-8"
+                                                    className="cursor-pointer"
                                                 >
                                                     {revokingId === client.id ? "Revoking..." : "Revoke Access"}
                                                 </Button>
@@ -461,13 +458,12 @@ export function UserManagement({
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-                                        <Badge variant="outline">Pending</Badge>
+                                        <Badge variant="outline">pending</Badge>
                                         {isOwner && (
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
                                                     <Button
                                                         variant="destructive"
-                                                        size="sm"
                                                         className="cursor-pointer"
                                                     >
                                                         Cancel
