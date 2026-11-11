@@ -159,7 +159,7 @@ function ConnectionRow({
                 </div>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="cursor-pointer shrink-0">Disconnect</Button>
+                        <Button variant="outline" className="cursor-pointer shrink-0">Disconnect</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>

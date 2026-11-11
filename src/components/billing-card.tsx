@@ -102,7 +102,6 @@ export function BillingCard({ tierLabel, hasSubscription, billingInterval, usage
                     {hasSubscription && (
                         <Button
                             variant="outline"
-                            size="sm"
                             onClick={handleManageBilling}
                             disabled={loading}
                             className="cursor-pointer"

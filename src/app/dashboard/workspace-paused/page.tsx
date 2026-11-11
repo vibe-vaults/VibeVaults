@@ -89,7 +89,7 @@ export default async function WorkspacePausedPage() {
                     </div>
 
                     {ownerEmail && (
-                        <Button asChild className="w-full mt-6 h-11 cursor-pointer">
+                        <Button asChild className="w-full mt-6 cursor-pointer">
                             <a href={`mailto:${ownerEmail}?subject=${encodeURIComponent(`VibeVaults: ${paused.name} is paused`)}&body=${encodeURIComponent(`Hi,\n\nOur VibeVaults workspace "${paused.name}" is paused because the subscription has expired, so the team can't work in it. Could you renew the plan?\n\nThanks!`)}`}>
                                 <Mail className="w-4 h-4" />
                                 Email the owner

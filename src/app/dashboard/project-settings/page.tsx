@@ -15,6 +15,7 @@ import { EditProjectCard } from "@/components/edit-project-card";
 import { ShareProjectCard } from "@/components/share-project-card";
 import { ReviewLinkCard } from "@/components/review-link-card";
 import { EmbedWidgetCard } from "@/components/embed-widget-card";
+import { getWidgetEmbedState } from "@/lib/widget-embed-state";
 import { Highlight } from "@/components/highlight";
 
 
@@ -64,7 +65,10 @@ export default async function SettingsPage() {
                                     {currentProject.widget_last_seen_at && (
                                         <ReviewLinkCard project={currentProject} />
                                     )}
-                                    <EmbedWidgetCard project={currentProject} />
+                                    <EmbedWidgetCard
+                                        project={currentProject}
+                                        embedState={getWidgetEmbedState(currentProject.widget_last_seen_at)}
+                                    />
                                 </div>
                             </Highlight>
                             <Highlight id="share-board" className="rounded-xl">
