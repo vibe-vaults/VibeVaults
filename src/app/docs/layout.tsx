@@ -1,13 +1,16 @@
 /**
  * Main Responsibility: Shared chrome for the /docs section — marketing header
  * and footer (so docs feel like part of the site, not a bolted-on subdomain)
- * plus the sticky sidebar nav.
+ * plus the sticky sidebar nav and the docs search (`DocsSearch`). The search
+ * renders twice on purpose: in the sticky sidebar on desktop, and above the
+ * content below `lg`, where the sidebar is hidden.
  * Sensitive Dependencies: /docs must stay excluded from the auth gate in
  * src/lib/supabase/proxy.ts, otherwise these pages stop being crawlable.
  */
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { DocsNav } from "@/components/docs/docs-nav";
+import { DocsSearch } from "@/components/docs/docs-search";
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -17,10 +20,14 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 <div className="flex gap-12">
                     <aside className="hidden lg:block w-60 shrink-0">
                         <div className="sticky top-28">
+                            <DocsSearch className="mb-6" />
                             <DocsNav />
                         </div>
                     </aside>
-                    <main className="min-w-0 flex-1 max-w-3xl">{children}</main>
+                    <main className="min-w-0 flex-1 max-w-3xl">
+                        <DocsSearch className="lg:hidden mb-8" />
+                        {children}
+                    </main>
                 </div>
             </div>
             <SiteFooter />
