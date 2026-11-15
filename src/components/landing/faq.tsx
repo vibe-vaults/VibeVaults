@@ -31,6 +31,10 @@ const faqs: { question: string; answer: string; link?: { match: string; href: st
         answer: "VibeVaults is built for web agencies, dev studios, and freelancers who build websites for clients. If you run feedback rounds with clients on the sites you build, from staging to launch, VibeVaults is designed for you. It is not a survey tool or a bug tracker for end users; it is a client collaboration tool for the people who build and review websites.",
     },
     {
+        question: "Isn't this just one more layer between us and our clients?",
+        answer: "It replaces layers rather than adding one. Today feedback reaches you through email, WhatsApp, calls and screenshots, and you stitch it together. With VibeVaults, clients comment directly on the page they're reviewing, with no account and no extension, and you answer them in the same place. One channel instead of five.",
+    },
+    {
         question: "Does VibeVaults work on all websites?",
         answer: "Yes. VibeVaults works on any website where you can add a single script tag, including WordPress, Webflow, Framer, Shopify, React, and plain HTML sites. There are no plugins to maintain and no browser extensions for anyone to install.",
     },
