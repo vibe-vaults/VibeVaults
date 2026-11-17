@@ -19,7 +19,7 @@ VibeVaults implements a hybrid real-time architecture to ensure that an Agency (
 *   **Widget Side (End-User):** Connects to a Next.js API Route (`src/app/api/widget/stream/route.ts`) which maintains a Server-Sent Event (SSE) connection. The API route holds the Supabase Realtime subscription on behalf of the widget to enforce security.
 
 ## 2. Setting Up Dashboard Subscriptions
-When adding real-time listeners to the dashboard (e.g., inside `feedback-card.tsx`), follow this exact React hook pattern to avoid memory leaks or duplicate connections:
+Dashboard subscriptions live behind the `FeedbackDetailBackend` seam: `subscribe()` in `src/lib/feedback-detail-supabase.ts` (never in `feedback-detail-view.tsx`, which must stay Supabase-free for the /demo bundle). When adding a listener, follow this pattern to avoid leaks or duplicate connections:
 
 ```tsx
 useEffect(() => {
@@ -55,12 +55,12 @@ useEffect(() => {
 ## 3. SSE Stream Handling for the Widget
 If modifying the widget's ability to receive streams:
 1.  **Never expose Supabase Anon Keys directly to the widget for real-time.** 
-2.  The widget fetches a persistent connection to `GET /api/widget/stream?feedbackId=[ID]`.
+2.  The widget opens `GET /api/widget/stream?feedbackId=[ID]&key=[apiKey]&token=[widgetToken]` (query params, because EventSource cannot send an Authorization header).
 3.  The API route uses a generic `ReadableStream` controller. When the Supabase channel triggers an event on the server, the server writes JSON chunks (`controller.enqueue()`) directly to the widget.
 
 ## 4. Sending Messages
 *   When a message is sent from the Dashboard, always use **Server Actions** (`@/actions/feedback.ts`). Do not insert directly from the client.
-*   Once the Server Action completes the `INSERT`, the Postgres trigger (Realtime) will automatically broadcast to both the Dashboard (`feedback-card.tsx`) and the SSE Stream (`stream/route.ts`).
+*   Once the Server Action completes the `INSERT`, Realtime broadcasts to both the dashboard (`feedback-detail-supabase.ts` `subscribe()`) and the SSE stream (`stream/route.ts`).
 
 ## 5. Debugging Realtime
 *   If duplicates appear, check if the React `useEffect` is missing a cleanup phase or dependency array.

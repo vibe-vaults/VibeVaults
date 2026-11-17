@@ -43,8 +43,15 @@ const handLettering = Permanent_Marker({ weight: "400", subsets: ["latin"] });
 
 const DOCK_GAP = 16;
 
-/** Where the widget's launcher sits, for the "start here" arrow. */
-type LauncherSpot = { centerX: number; bottom: number; panelOpen: boolean };
+/**
+ * Where the widget's launcher sits, for the "start here" arrow, plus the
+ * viewport it was measured in. The viewport is part of the spot on purpose:
+ * the launcher is pinned bottom-right, so a height-only resize (the cookie
+ * banner closing, a mobile URL bar collapsing) leaves its bottom offset
+ * unchanged, and an arrow memoised on the launcher alone kept pointing at the
+ * old viewport's corner.
+ */
+type LauncherSpot = { centerX: number; top: number; vw: number; vh: number; panelOpen: boolean };
 
 /** Horizontal extent (viewport px) of the widget's visible launcher + panel. */
 type ChromeSpan = { left: number; right: number };
@@ -89,7 +96,9 @@ function useWidgetChrome() {
           l && l.width > 0
             ? {
                 centerX: Math.round(l.left + l.width / 2),
-                bottom: Math.round(window.innerHeight - l.top),
+                top: Math.round(l.top),
+                vw: window.innerWidth,
+                vh: window.innerHeight,
                 panelOpen: !!root.querySelector(".popup.open"),
               }
             : null;
@@ -97,7 +106,7 @@ function useWidgetChrome() {
         // here. Handing React a fresh but identical object would re-render the
         // arrow each time and restart its bounce, which shows up as a jitter.
         setLauncher((prev) =>
-          prev && next && prev.centerX === next.centerX && prev.bottom === next.bottom && prev.panelOpen === next.panelOpen
+          prev && next && prev.centerX === next.centerX && prev.top === next.top && prev.vw === next.vw && prev.vh === next.vh && prev.panelOpen === next.panelOpen
             ? prev
             : next
         );
@@ -149,11 +158,13 @@ function useWidgetChrome() {
  * font (self-hosted by next/font at build time, no runtime request to Google).
  */
 const LauncherArrow = memo(function LauncherArrow({ spot, reduceMotion }: { spot: LauncherSpot; reduceMotion: boolean | null }) {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
+  // Measured with the launcher, never read here: a memoised render that read
+  // the live window would mix a new viewport with an old launcher position.
+  const w = spot.vw;
+  const h = spot.vh;
   const start = { x: w / 2, y: h / 2 };
   // Tip lands just above the launcher.
-  const tip = { x: spot.centerX, y: h - spot.bottom - 16 };
+  const tip = { x: spot.centerX, y: spot.top - 16 };
   const dx = tip.x - start.x;
   const dy = tip.y - start.y;
   const len = Math.hypot(dx, dy) || 1;
@@ -195,6 +206,7 @@ const LauncherArrow = memo(function LauncherArrow({ spot, reduceMotion }: { spot
   return (
     <motion.div
       aria-hidden
+      data-demo-arrow-tip={`${Math.round(tip.x)},${Math.round(tip.y)}`}
       className="pointer-events-none fixed inset-0 z-40"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
