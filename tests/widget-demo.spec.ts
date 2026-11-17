@@ -331,6 +331,29 @@ test.describe('demo page', () => {
         expect(box.right).toBeLessThanOrEqual(frameWidth);
     });
 
+    test('the "Start here!" arrow keeps pointing at the launcher across a height-only resize', async ({ page }) => {
+        await page.goto('/demo');
+        const frame = await site(page);
+        await expect(await clientGuide(page)).toBeVisible();
+        // Tip in the frame's viewport, against the launcher's live top centre.
+        const offset = () => frame.evaluate(() => {
+            const tip = document.querySelector('[data-demo-arrow-tip]')?.getAttribute('data-demo-arrow-tip');
+            const host = document.getElementById('vibe-vaults-widget-host');
+            const l = host?.shadowRoot?.querySelector('.launcher')?.getBoundingClientRect();
+            if (!tip || !l) return null;
+            const [x, y] = tip.split(',').map(Number);
+            return { dx: Math.abs(x - (l.left + l.width / 2)), dy: Math.abs(y - (l.top - 16)) };
+        });
+        await expect.poll(offset).toEqual({ dx: expect.any(Number), dy: expect.any(Number) });
+        // The launcher is pinned bottom-right, so only its distance from the
+        // TOP changes here: the case the arrow used to miss (the cookie banner
+        // closing shrinks the frame exactly like this).
+        await page.setViewportSize({ width: 1600, height: 700 });
+        await expect.poll(async () => { const o = await offset(); return !!o && o.dx <= 1 && o.dy <= 1; }).toBe(true);
+        await page.setViewportSize({ width: 1600, height: 1000 });
+        await expect.poll(async () => { const o = await offset(); return !!o && o.dx <= 1 && o.dy <= 1; }).toBe(true);
+    });
+
     test('leaving and coming back restarts the run; a refresh resumes it', async ({ page }) => {
         await recordDemoEvents(page);
         await page.goto('/demo');
