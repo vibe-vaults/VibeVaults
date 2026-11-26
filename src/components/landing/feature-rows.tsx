@@ -9,14 +9,15 @@ import { ZoomableImage } from "@/components/zoomable-image";
 
 /**
  * Main Responsibility: "What it does" on the landing page. Six capabilities as
- * large hairline-ruled rows; one is open at a time and shows a short
+ * large hairline-ruled rows, each titled with the buyer's problem in their own
+ * words rather than the feature name; one is open at a time and shows a short
  * description, the concrete things it covers and, where one exists, a real
  * product screenshot (click to enlarge).
  *
  * Sensitive Dependencies:
- * - Every claim here mirrors real widget/dashboard behaviour. The "Pin &
- *   Screenshot" tags mirror getMetadata() in public/widget.js and
- *   /docs/widget-data; the "Review links" copy mirrors the hosted review gate
+ * - Every claim here mirrors real widget/dashboard behaviour. The first row's
+ *   tags mirror getMetadata() in public/widget.js and
+ *   /docs/widget-data; the review-link row mirrors the hosted review gate
  *   and its pause control. Change them when the product changes.
  * - `id="features"` is the target of the header and footer "Features" links.
  * - Screenshots live at /public/screenshots/feature-{slug}.png; `shot.width`
@@ -28,49 +29,50 @@ type Feature = { title: string; icon: LucideIcon; body: string; tags?: string[];
 
 const FEATURES: Feature[] = [
     {
-        title: "Pin & Screenshot",
+        title: "Know exactly what they mean",
         shot: { slug: "widget", width: 1001, height: 614 },
         icon: MapPin,
-        body: "Clients click any element on the live site to drop a pin. Every report arrives with the context a developer needs, captured automatically.",
+        body: "No more \u201cthe thing on the left looks off\u201d. Clients click the spot on the live site and drop a pin. The screenshot, page, browser and device come with it, plus the console errors your developer would ask for.",
         tags: ["Screenshot", "Page URL", "Browser & OS", "Screen & viewport", "Console logs", "Failed requests"],
     },
     {
-        title: "Real-time threads",
+        title: "Answer right where the comment is",
         shot: { slug: "chat", width: 1160, height: 739 },
         icon: MessageSquare,
-        body: "Reply right on the page. Threads sync live between the widget and your dashboard, and a reply can carry its own pin when the same issue shows up elsewhere.",
+        body: "No more digging through WhatsApp and email for what was said. Every comment is its own thread, live in the widget and your dashboard. If the same issue shows up on another page, a reply can pin it there too.",
         tags: ["Live replies", "Reply pins", "Attachments", "Email digests"],
     },
     {
-        title: "Shared feedback list",
+        title: "No more duplicate requests",
         shot: { slug: "feedback", width: 917, height: 641 },
         icon: List,
-        body: "Every reviewer sees what is already reported and where it stands, so the same request does not arrive three times.",
+        body: "Everyone on the client side sees what\u2019s already reported and where it stands, so the marketing lead doesn\u2019t resend what the founder already flagged.",
         tags: ["Open", "In progress", "In review", "Completed"],
     },
     {
-        title: "Review links",
+        title: "No new account for your clients",
+        shot: { slug: "review-link", width: 1105, height: 248 },
         icon: Link2,
-        body: "Share one link. Guests enter a name and email and land on the site ready to pin. Pause the link any time, or invite clients one by one instead.",
+        body: "Send one link. Reviewers type a name and email and land on the site ready to pin, with no login and no extension. Pause the link any time, or invite clients one by one.",
         tags: ["Guest access", "Client invites", "Pause anytime", "Revoke per person"],
     },
     {
-        title: "Public boards",
+        title: "Progress without chasing",
         shot: { slug: "dashboard", width: 995, height: 552 },
         icon: Columns3,
-        body: "A read-only board for stakeholders who want progress at a glance without joining anything.",
+        body: "A read-only board shows the client\u2019s boss what\u2019s done and what\u2019s next, without joining anything.",
     },
     {
-        title: "Teams & Roles",
+        title: "One workspace per client",
         shot: { slug: "team", width: 1524, height: 696 },
         icon: Users,
-        body: "Owners, members and clients each see what they need, with workspaces per client and notifications that keep everyone in the loop.",
+        body: "Keep each client\u2019s sites, feedback and people apart. Add your team where they\u2019re needed; clients only ever see their own site.",
     },
 ];
 
 function FeatureShot({ title, shot }: { title: string; shot: Shot }) {
     const src = `/screenshots/feature-${shot.slug}.png`;
-    const alt = `${title} feature screenshot`;
+    const alt = `Product screenshot: ${title}`;
     return (
         <ZoomableImage
             src={src}

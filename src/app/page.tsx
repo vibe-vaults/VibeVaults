@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { Hero } from "@/components/landing/hero";
 import { StatsStrip } from "@/components/landing/stats-strip";
+import { ProblemSection } from "@/components/landing/problem-section";
 import { McpAgents } from "@/components/landing/mcp-agents";
 import { FeatureRows } from "@/components/landing/feature-rows";
 import { HowItWorks } from "@/components/landing/how-it-works";
@@ -17,7 +18,7 @@ import { SETUP_CALL_URL } from "@/lib/contact-links";
 
 /**
  * Main Responsibility: The landing page. Sections alternate between light and
- * dark navy bands as the page scrolls: light hero and facts, dark AI
+ * dark navy bands as the page scrolls: light hero, facts and problem, dark AI
  * agents (MCP), light capabilities and setup, dark founder note, the ROI card
  * (light inputs, navy results), light pricing and FAQ, dark closing CTA.
  *
@@ -55,6 +56,7 @@ export default function Home() {
 
         <Hero />
         <StatsStrip />
+        <ProblemSection />
 
         {/* Product demo video: hidden temporarily (Oct 30, 2026) until the outdated
             recording is replaced. Bring it back by restoring this block:

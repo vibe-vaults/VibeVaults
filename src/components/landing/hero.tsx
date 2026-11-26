@@ -1,4 +1,5 @@
 import { HeroCtas } from "@/components/landing/hero-ctas";
+import { TesterQuote } from "@/components/landing/tester-quote";
 import { RollingWords } from "@/components/landing/rolling-words";
 
 /**
@@ -10,7 +11,9 @@ import { RollingWords } from "@/components/landing/rolling-words";
  * Sensitive Dependencies:
  * - The negative top margin pulls the glow under SiteHeader (h-[76px]); keep
  *   the two heights in sync.
- * - The headline is the page's main SEO signal; change it deliberately.
+ * - The headline is the page's main SEO signal; change it deliberately. The
+ *   line above it is the brand motto ("AI made building fast. Client feedback
+ *   is still slow."), approved 2026-11-18; it sets the scene, the h1 sells.
  * - The pitch opens with the agreed long one-liner ("a website feedback tool
  *   for web agencies, design studios and freelancers"), with the audience
  *   rolling through RollingWords. Keep it in step with the footer, the FAQ,
@@ -20,10 +23,15 @@ export function Hero() {
     return (
         <section className="relative w-full -mt-[76px] pt-[76px] bg-hero-glow">
             <div className="max-w-7xl mx-auto px-4 md:px-8 grid lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] gap-12 pt-14 md:pt-24 pb-16 md:pb-20 items-start">
-                <h1 className="text-[clamp(44px,6.4vw,96px)] leading-[1.02] tracking-[-0.03em] font-semibold text-gray-900 text-balance">
-                    Ship client sites faster without the{" "}
-                    <span className="font-serif italic font-normal text-[#0B6FB3]">feedback chaos.</span>
-                </h1>
+                <div>
+                    <p className="mb-5 md:mb-6 text-[15px] md:text-[17px] font-medium text-[#0B6FB3]">
+                        AI made building fast. Client feedback is still slow.
+                    </p>
+                    <h1 className="text-[clamp(44px,6.4vw,96px)] leading-[1.02] tracking-[-0.03em] font-semibold text-gray-900 text-balance">
+                        Ship client sites faster without the{" "}
+                        <span className="font-serif italic font-normal text-[#0B6FB3]">feedback chaos.</span>
+                    </h1>
+                </div>
 
                 <div className="flex flex-col gap-6 max-w-md lg:pt-4">
                     <span className="text-[17px] text-gray-900">Clear feedback &middot; Faster sign-off</span>
@@ -41,6 +49,7 @@ export function Hero() {
                     </p>
                     <HeroCtas align="start" trialLabel="Start free trial" />
                     <p className="text-xs text-gray-500">14-day free trial &middot; No credit card required</p>
+                    <TesterQuote />
                 </div>
             </div>
             <div className="max-w-7xl mx-auto px-4 md:px-8">

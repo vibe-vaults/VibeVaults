@@ -35,6 +35,7 @@ import { TrustStrip } from "@/components/landing/trust-strip";
 import { DetailsFaq, type FaqItem } from "@/components/landing/details-faq";
 import { ClosingCta } from "@/components/landing/closing-cta";
 import { HeroCtas } from "@/components/landing/hero-ctas";
+import { TesterQuote } from "@/components/landing/tester-quote";
 import { Accent, SectionHeading } from "@/components/landing/section-heading";
 
 const TITLE = "Client Feedback for Framer Sites | VibeVaults";
@@ -195,6 +196,7 @@ export default function FramerPage() {
                         </p>
                         <HeroCtas align="start" />
                         <p className="text-xs text-gray-500">14-day free trial &middot; No credit card required</p>
+                        <TesterQuote />
                     </div>
                 </section>
 
