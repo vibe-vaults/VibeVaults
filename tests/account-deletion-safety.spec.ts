@@ -11,6 +11,8 @@
  *      (feedback_replies.user_id becomes NULL, author_name preserved).
  *   3. email_digest_queue entries for the member's email are purged.
  *   4. workspace_invites addressed to the member's email are purged.
+ *   5. A pending admin signup alert and a stored welcome_email_id do not block
+ *      deletion, and the pending alert row is purged with the rest.
  *
  * Sensitive Dependencies:
  *   - Creates a throwaway member user (e2e-del-safety-*) in the seeded owner's
@@ -110,6 +112,20 @@ test.describe('Account deletion safety', () => {
             project_id: seed.projectId,
             payload: { test: true },
         });
+
+        // ── Simulate a signup the founder hasn't been alerted about yet, and a
+        // scheduled founder email. Deletion must still succeed with both (Resend
+        // calls are short-circuited during E2E, so this pins the DB side only).
+        await supabaseAdmin.from('email_digest_queue').insert({
+            recipient_email: tempEmail,
+            notification_type: 'admin_new_signup',
+            payload: { email: tempEmail },
+        });
+        const { error: welcomeIdErr } = await supabaseAdmin
+            .from('profiles')
+            .update({ welcome_email_id: 'e2e-fake-resend-id' })
+            .eq('id', tempUserId);
+        if (welcomeIdErr) throw new Error(`welcome_email_id update failed: ${welcomeIdErr.message}`);
 
         // ── Seed a workspace_invite for the member's email in another ws ────
         // Use the seeded workspace (already exists) — the invite keyed on email

@@ -1,6 +1,7 @@
 import { TIER_DISPLAY, YEARLY_DISCOUNT } from "@/lib/tier-config";
 import { docsPages } from "@/lib/docs-data";
 import { allComparisons } from "@/lib/compare-data";
+import { SETUP_CALL_URL, STATUS_PAGE_URL } from "@/lib/contact-links";
 
 /**
  * Main Responsibility: Serves /llms.txt (llmstxt.org convention), the Markdown
@@ -16,6 +17,9 @@ import { allComparisons } from "@/lib/compare-data";
  *   section, /docs/widget-data and the landing TrustStrip.
  * - Must stay public: excluded from the proxy matcher in src/proxy.ts and from
  *   the auth gate in src/lib/supabase/proxy.ts (both match "llms.txt").
+ * - "For AI agents" mirrors the MCP section of CLAUDE.md (tool names in
+ *   src/lib/mcp/tools.ts, registry name in server.json): update both together.
+ * - Contact links come from lib/contact-links.ts, never hand-typed here.
  * - Replaces the old static public/llms.txt; a file there would conflict with
  *   this route.
  */
@@ -81,6 +85,31 @@ ${comparisons}
 - [Documentation](${url("/docs")}): setup and how the widget works
 - [Comparisons](${url("/compare")}): VibeVaults compared with other visual feedback tools
 - [Widget access recovery](${url("/access")}): for invited clients and team members who lost their widget access link
+- [Start the free trial](${url("/auth/register")}): 14 days, no credit card
+- [Sign in](${url("/auth/login")}): for existing customers
+
+## For AI agents
+
+- **MCP server:** ${url("/api/mcp")} (Streamable HTTP, OAuth 2.1 with dynamic client registration). The user signs in to VibeVaults and approves the connection in the browser; no API key to copy.
+- **Listings:** the official MCP Registry as \`com.vibe-vaults/vibevaults\`, and the Claude connectors directory.
+- **Tools:** list_projects, list_feedback, get_feedback, reply_to_feedback, update_feedback_status. Writes work only when the user has turned them on for that connection.
+- **Who can connect:** workspace owners and members. Clients and review-link guests have no account and cannot connect.
+- **Setup guide:** ${url("/docs/ai-agents")}
+
+## Private or user-specific areas
+
+Do not use these as sources for describing the product; they are behind sign-in or hold customer data:
+
+- \`/dashboard/*\`, \`/oauth/*\` and \`/auth/*\` (signed-in app and sign-in flows)
+- \`/review/<token>\` and \`/share/<token>\` (a specific customer's review link or public board)
+- \`/api/*\` (application endpoints, not documentation)
+
+## Contact and support
+
+- **Email:** support@vibe-vaults.com, for customers and prospects alike.
+- **Setup call:** [book 15 minutes](${SETUP_CALL_URL}) for help embedding the widget or a walkthrough.
+- **Service status:** [public uptime page](${STATUS_PAGE_URL})
+- **Operator:** an EU-based (Hungary) sole trader; full legal details are in section 1 of the Terms of Service and the Privacy Policy.
 
 ## Legal
 

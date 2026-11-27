@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { after } from "next/server";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { GlobalNotificationProvider } from "@/components/global-notification-provider";
@@ -83,9 +84,22 @@ export default async function DashboardLayout({
         if (claimed && claimed.length > 0) {
             // Greeted as "Hi there": an email address's local part is often not a name (info@, szurilo@).
             const email = user.email || 'friend';
-            sendWelcomeNotification({ to: email }).catch(e =>
-                console.error('Failed to send welcome email:', e)
-            );
+            // `after()`, not a bare un-awaited promise: Vercel drops those once
+            // the response is sent. The Resend id is kept so account deletion
+            // can cancel the email if the user leaves inside its 15-min delay.
+            after(async () => {
+                const { data, error } = await sendWelcomeNotification({ to: email });
+                if (error) {
+                    console.error('Failed to send welcome email:', error);
+                    return;
+                }
+                if (data?.id) {
+                    await adminSupabase
+                        .from("profiles")
+                        .update({ welcome_email_id: data.id })
+                        .eq("id", user.id);
+                }
+            });
         }
     })().catch(e => console.error('Welcome claim failed:', e));
 
