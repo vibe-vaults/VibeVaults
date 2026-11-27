@@ -24,6 +24,7 @@ const productLinks = [
     { href: "/pricing", label: "Pricing" },
     { href: "/compare", label: "Compare" },
     { href: "/framer", label: "For Framer sites" },
+    { href: "/framer/client-sign-off", label: "Framer sign-off guide" },
 ];
 
 function FooterColumn({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {

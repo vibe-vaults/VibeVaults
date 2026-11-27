@@ -282,6 +282,19 @@
     margin: 2.5rem 0;
 }
 
+.docs-prose blockquote {
+    margin: 1.25rem 0;
+    padding: 1rem 1.25rem;
+    border-left: 3px solid var(--secondary);
+    background: #F7F9FB;
+    border-radius: 0 0.5rem 0.5rem 0;
+    color: #1F2B3A;
+}
+
+.docs-prose blockquote p:last-child {
+    margin-bottom: 0;
+}
+
 .docs-prose table {
     width: 100%;
     border-collapse: collapse;
