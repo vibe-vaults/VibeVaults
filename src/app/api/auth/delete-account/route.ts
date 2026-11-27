@@ -1,9 +1,23 @@
+/**
+ * Main Responsibility: Self-service account deletion. Removes the Stripe
+ * customer, email-keyed rows (prefs, digest queue, invites), owned workspace
+ * storage, then the auth user (FK cascades do the rest). Afterwards it cancels
+ * a still-scheduled founder email and sends ADMIN_EMAIL an alert that carries
+ * no personal data.
+ *
+ * Sensitive Dependencies:
+ * - Admin client (service role): bypasses RLS for every delete here.
+ * - email_digest_queue cleanup also removes a not-yet-sent `admin_new_signup`
+ *   row, which is why the deletion alert reports whether one was pending.
+ * - profiles.welcome_email_id, written by dashboard/layout.tsx.
+ */
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { cleanupWorkspaceStorage } from "@/lib/storage-cleanup";
 import { notifyOwnerMemberDeparted } from "@/lib/workspace-notifications";
+import { cancelScheduledEmail, sendAccountDeletedNotification } from "@/lib/notifications";
 
 export async function DELETE() {
     const supabase = await createClient();
@@ -36,7 +50,7 @@ export async function DELETE() {
         // Note: Using the specific current user ID for safety
         const { data: profile } = await adminAuthClient
             .from("profiles")
-            .select("stripe_customer_id")
+            .select("stripe_customer_id, welcome_email_id")
             .eq("id", user.id)
             .single();
 
@@ -49,6 +63,15 @@ export async function DELETE() {
                 // Continue with account deletion even if Stripe fails
             }
         }
+
+        // Read BEFORE the cleanup below deletes it: a pending signup alert means
+        // the account is going away before the founder was ever told it existed.
+        const { count: pendingSignupAlerts } = await adminAuthClient
+            .from("email_digest_queue")
+            .select("id", { count: "exact", head: true })
+            .eq("recipient_email", user.email)
+            .eq("notification_type", "admin_new_signup")
+            .is("sent_at", null);
 
         // Delete email_preferences and email_digest_queue (keyed by email, not user_id, so no FK cascade)
         await Promise.all([
@@ -72,6 +95,14 @@ export async function DELETE() {
             .from("workspaces")
             .select("id")
             .eq("owner_id", user.id);
+
+        const ownedWorkspaceIds = (ownedWorkspaces ?? []).map(w => w.id);
+        const { count: ownedProjects } = ownedWorkspaceIds.length > 0
+            ? await adminAuthClient
+                .from("projects")
+                .select("id", { count: "exact", head: true })
+                .in("workspace_id", ownedWorkspaceIds)
+            : { count: 0 };
 
         if (ownedWorkspaces) {
             for (const workspace of ownedWorkspaces) {
@@ -123,6 +154,21 @@ export async function DELETE() {
                 { status: deleteError.status || 500 }
             );
         }
+
+        // Best-effort side effects, after the deletion has succeeded so neither
+        // can block it. `after()` keeps them alive on Vercel past the response.
+        after(async () => {
+            const welcomeEmailCanceled = profile?.welcome_email_id
+                ? await cancelScheduledEmail(profile.welcome_email_id)
+                : false;
+            await sendAccountDeletedNotification({
+                accountAgeMs: Date.now() - new Date(user.created_at).getTime(),
+                ownedWorkspaces: ownedWorkspaceIds.length,
+                ownedProjects: ownedProjects ?? 0,
+                signupAlertPending: (pendingSignupAlerts ?? 0) > 0,
+                welcomeEmailCanceled,
+            });
+        });
 
         return NextResponse.json({ message: "Account deleted successfully" });
     } catch (error) {

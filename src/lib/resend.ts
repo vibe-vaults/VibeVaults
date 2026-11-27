@@ -17,6 +17,9 @@ export const resend = {
         send: ((...args: Parameters<typeof client.emails.send>) =>
             isPlaywrightRun() ? Promise.resolve({ data: null, error: null }) : client.emails.send(...args)
         ) as typeof client.emails.send,
+        cancel: ((...args: Parameters<typeof client.emails.cancel>) =>
+            isPlaywrightRun() ? Promise.resolve({ data: null, error: null }) : client.emails.cancel(...args)
+        ) as typeof client.emails.cancel,
     },
     batch: {
         send: ((...args: Parameters<typeof client.batch.send>) =>
